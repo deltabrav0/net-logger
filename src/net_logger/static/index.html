@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Net Logger</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Amateur Radio</p>
+        <h1>Net Logger</h1>
+        <p class="muted">Known stations → checked in. Traffic and notes stay on each station card.</p>
+      </div>
+      <form id="sessionForm" class="session-form">
+        <label>Net name <input id="netName" value="Weekly Net"></label>
+        <label>Frequency <input id="frequency" placeholder="146.520 MHz"></label>
+        <label>Net control <input id="netControl" placeholder="Your call"></label>
+        <div class="session-buttons">
+          <button type="submit" id="startNetBtn">Start Net</button>
+          <button type="button" id="stopNetBtn" class="secondary danger" disabled>Stop Net</button>
+          <button type="button" id="clearNetBtn" class="secondary" hidden>Clear Net</button>
+        </div>
+      </form>
+    </header>
+
+    <section class="toolbar">
+      <label class="search">Search known stations <input id="stationSearch" placeholder="Callsign or name"></label>
+      <form id="addStationForm" class="add-form">
+        <input id="newCallsign" placeholder="Unknown callsign" required>
+        <input id="newName" placeholder="Name optional">
+        <button type="button" id="lookupBtn">FCC lookup</button>
+        <button type="submit">Add station</button>
+      </form>
+      <span id="status" class="status">No session started.</span>
+    </section>
+
+    <section class="board" aria-label="Active net board">
+      <div class="column drop-target" id="knownDropZone">
+        <div class="column-title"><h2>Known Stations</h2><span id="knownCount">0</span></div>
+        <div id="knownStations" class="card-list" aria-label="Known stations"></div>
+      </div>
+      <div class="column drop-target" id="checkedInDropZone">
+        <div class="column-title"><h2>Checked In</h2><span id="checkinCount">0</span></div>
+        <div id="checkins" class="card-list" aria-label="Checked in stations"></div>
+      </div>
+    </section>
+
+    <section class="lower-grid">
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Saved Nets</h2>
+          <a class="button-link" href="/api/export.csv">Export all nets CSV</a>
+        </div>
+        <div id="sessionsList" class="sessions-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Metrics</h2>
+          <div class="metrics-controls">
+            <label>Summary
+              <select id="metricsPeriod">
+                <option value="week">Week</option>
+                <option value="month" selected>Month</option>
+                <option value="year">Year</option>
+              </select>
+            </label>
+            <button type="button" class="secondary" id="refreshMetricsBtn">Refresh</button>
+          </div>
+        </div>
+        <p class="muted">Check-ins by net, grouped by the selected period.</p>
+        <div id="metricsSeriesByNet" class="metrics-series"></div>
+      </section>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

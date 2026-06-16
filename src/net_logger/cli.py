@@ -1,0 +1,60 @@
+"""Command-line entry point for Net Logger."""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+from .app import create_app
+
+APP_NAME = "net-logger"
+
+
+def default_data_dir() -> Path:
+    """Return a writable per-user data directory on Windows, macOS, or Linux."""
+    override = os.environ.get("NET_LOGGER_DATA_DIR")
+    if override:
+        return Path(override).expanduser()
+
+    if sys.platform == "win32":
+        base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
+        return base / "Net Logger"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "Net Logger"
+    return Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / APP_NAME
+
+
+def default_database_path() -> Path:
+    return Path(os.environ.get("NET_LOGGER_DATABASE") or default_data_dir() / "net_logger.sqlite3").expanduser()
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="net-logger", description="Run the amateur-radio Net Logger web app.")
+    subcommands = parser.add_subparsers(dest="command")
+
+    serve = subcommands.add_parser("serve", help="Start the Net Logger web server")
+    serve.add_argument("--host", default=os.environ.get("NET_LOGGER_HOST", "127.0.0.1"), help="Bind host/interface")
+    serve.add_argument("--port", type=int, default=int(os.environ.get("NET_LOGGER_PORT", "8088")), help="Bind port")
+    serve.add_argument("--database", default=str(default_database_path()), help="SQLite database path")
+    serve.add_argument("--debug", action="store_true", default=os.environ.get("NET_LOGGER_DEBUG", "").lower() in {"1", "true", "yes", "on"}, help="Enable Flask debug mode")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.command in {None, "serve"}:
+        database = Path(args.database).expanduser()
+        database.parent.mkdir(parents=True, exist_ok=True)
+        app = create_app({"DATABASE": str(database)})
+        print(f"Net Logger database: {database}", file=sys.stderr)
+        app.run(host=args.host, port=args.port, debug=args.debug)
+        return 0
+    parser.error(f"unknown command: {args.command}")
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
