@@ -22,6 +22,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 - [Installation guide](docs/INSTALLATION.md)
 - [User guide](docs/USER_GUIDE.md)
 - [API documentation](docs/API.md)
+- [Local FCC database API](docs/FCC_DATABASE_API.md)
 - [Original MVP implementation plan](docs/plans/2026-06-16-kanban-net-logger-mvp.md)
 
 ## Quick install from GitHub
@@ -114,6 +115,8 @@ Common endpoints:
 - `GET /api/stations`
 - `POST /api/stations`
 - `GET /api/lookup?callsign=W5XYZ`
+- `GET /api/fcc/status`
+- `POST /api/fcc/update`
 - `GET /api/sessions`
 - `POST /api/sessions/start`
 - `GET /api/sessions/<id>/board`

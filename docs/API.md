@@ -65,6 +65,8 @@ Notes:
 
 ## FCC lookup
 
+Net Logger also exposes these endpoints as a small local FCC database API that other trusted local/LAN applications can reuse. See [Local FCC Database API](FCC_DATABASE_API.md) for integration guidance, client examples, and deployment notes.
+
 ### Lookup callsign
 
 ```http

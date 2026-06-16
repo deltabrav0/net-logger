@@ -253,6 +253,8 @@ If FCC files are missing, lookup returns `found: false` and the app still works.
 
 Net Logger can also update the FCC files from the browser. The **Update FCC Database** button downloads the FCC amateur-license complete dump, extracts `EN.dat` and `HD.dat`, and rebuilds `data/EN.idx` in the configured FCC lookup directory. This requires internet access on the machine running Net Logger.
 
+Other trusted local/LAN applications can use Net Logger's FCC lookup, status, and update endpoints as a small local FCC database service. See [Local FCC Database API](FCC_DATABASE_API.md).
+
 ## Running tests
 
 ```bash
