@@ -102,6 +102,51 @@ Example response when not found or local FCC files are unavailable:
 
 FCC lookup is local/off-grid. Set `NET_LOGGER_FCC_LOOKUP_PATH` to the directory containing the FCC flat-file lookup data.
 
+### Get FCC database status
+
+```http
+GET /api/fcc/status
+```
+
+Returns local FCC data availability and the age of `data/EN.dat`:
+
+```json
+{
+  "data_path": "/path/to/fcc_database_web_app",
+  "available": true,
+  "updated_at": "2026-06-16T12:00:00+00:00",
+  "age_days": 3,
+  "files": {
+    "EN.dat": true,
+    "EN.idx": true,
+    "zipcodes.csv": true
+  }
+}
+```
+
+### Update FCC database
+
+```http
+POST /api/fcc/update
+```
+
+Downloads the FCC amateur-license complete file from `https://data.fcc.gov/download/pub/uls/complete/l_amat.zip`, extracts `EN.dat` and `HD.dat`, and rebuilds `data/EN.idx`. When `HD.dat` is available, only active licenses are indexed.
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "indexed_count": 750000,
+  "active_filter": true,
+  "index_path": "/path/to/fcc_database_web_app/data/EN.idx",
+  "status": {
+    "available": true,
+    "age_days": 0
+  }
+}
+```
+
 ## Sessions
 
 ### List sessions

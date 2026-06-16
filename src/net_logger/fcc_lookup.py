@@ -10,12 +10,20 @@ from __future__ import annotations
 
 import csv
 import importlib.util
+import io
 import os
+import time
+import urllib.request
+import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .db import normalize_callsign
 
 DEFAULT_FCC_PATH = Path("/Users/dbutler/Downloads/Offgrid Tools/fcc_database_web_app")
+FCC_DOWNLOAD_URL = "https://data.fcc.gov/download/pub/uls/complete/l_amat.zip"
+
+REQUIRED_FILES = ("EN.dat", "EN.idx", "zipcodes.csv")
 
 COL_CALLSIGN = 4
 COL_ENTITY_NAME = 7
@@ -28,6 +36,108 @@ COL_ZIP = 18
 
 def _base_path() -> Path:
     return Path(os.environ.get("NET_LOGGER_FCC_LOOKUP_PATH") or DEFAULT_FCC_PATH)
+
+
+def _data_path(base: Path | None = None) -> Path:
+    return (base or _base_path()) / "data"
+
+
+def _iso_from_mtime(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
+
+
+def fcc_database_status() -> dict:
+    """Return local FCC flat-file availability and age details."""
+    base = _base_path()
+    data = _data_path(base)
+    files = {name: (data / name).exists() for name in REQUIRED_FILES}
+    en_path = data / "EN.dat"
+    updated_at = _iso_from_mtime(en_path)
+    age_days = None
+    if en_path.exists():
+        age_days = int((time.time() - en_path.stat().st_mtime) // 86400)
+        if age_days < 0:
+            age_days = 0
+    return {
+        "data_path": str(base),
+        "available": files["EN.dat"] and files["EN.idx"],
+        "updated_at": updated_at,
+        "age_days": age_days,
+        "files": files,
+    }
+
+
+def _active_unique_ids(hd_path: Path) -> set[str] | None:
+    if not hd_path.exists():
+        return None
+    active: set[str] = set()
+    with hd_path.open("rb") as fh:
+        for raw in fh:
+            fields = raw.decode("latin-1").rstrip("\n").rstrip("\r").split("|")
+            if len(fields) > 5 and fields[0] == "HD" and fields[5].strip().upper() == "A":
+                active.add(fields[1].strip())
+    return active
+
+
+def build_fcc_index(base: Path | None = None) -> dict:
+    """Build data/EN.idx from EN.dat, filtering to active HD.dat rows when present."""
+    root = base or _base_path()
+    data = _data_path(root)
+    en_path = data / "EN.dat"
+    hd_path = data / "HD.dat"
+    index_path = data / "EN.idx"
+    if not en_path.exists():
+        raise FileNotFoundError(f"FCC entity file not found: {en_path}")
+
+    active_ids = _active_unique_ids(hd_path)
+    rows: list[tuple[str, int]] = []
+    with en_path.open("rb") as fh:
+        while True:
+            offset = fh.tell()
+            raw = fh.readline()
+            if not raw:
+                break
+            fields = raw.decode("latin-1").rstrip("\n").rstrip("\r").split("|")
+            if len(fields) <= COL_CALLSIGN or fields[0] != "EN":
+                continue
+            unique_id = fields[1].strip() if len(fields) > 1 else ""
+            if active_ids is not None and unique_id not in active_ids:
+                continue
+            callsign = normalize_callsign(fields[COL_CALLSIGN])
+            if callsign:
+                rows.append((callsign, offset))
+
+    rows.sort(key=lambda item: item[0])
+    data.mkdir(parents=True, exist_ok=True)
+    with index_path.open("w", encoding="ascii", newline="") as fh:
+        for callsign, offset in rows:
+            fh.write(f"{callsign}|{offset}\n")
+    return {"indexed_count": len(rows), "active_filter": active_ids is not None, "index_path": str(index_path)}
+
+
+def download_fcc_zip(url: str = FCC_DOWNLOAD_URL) -> bytes:
+    with urllib.request.urlopen(url, timeout=120) as response:
+        return response.read()
+
+
+def update_fcc_database() -> dict:
+    """Download FCC amateur data, extract EN/HD files, rebuild index, and report status."""
+    base = _base_path()
+    data = _data_path(base)
+    data.mkdir(parents=True, exist_ok=True)
+    payload = download_fcc_zip()
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        for name in ("EN.dat", "HD.dat"):
+            try:
+                source = archive.open(name)
+            except KeyError:
+                source = archive.open(f"l_amat/{name}")
+            with source, (data / name).open("wb") as out:
+                out.write(source.read())
+    build = build_fcc_index(base)
+    return {"ok": True, **build, "status": fcc_database_status()}
 
 
 def _load_zip_table(zip_path: Path) -> dict[str, tuple[float, float]]:

@@ -32,6 +32,31 @@ function formatDateTime(value) {
   return d.toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
 }
 
+function renderFccStatus(status) {
+  if (!status || !status.available) return 'FCC database: unavailable';
+  const age = status.age_days === 0 ? 'updated today' : `${status.age_days} day${status.age_days === 1 ? '' : 's'} old`;
+  return `FCC database: ${age}`;
+}
+
+async function loadFccStatus() {
+  const status = await api('/api/fcc/status');
+  $('fccStatus').textContent = renderFccStatus(status);
+}
+
+async function updateFccDatabase() {
+  const btn = $('updateFccBtn');
+  btn.disabled = true;
+  $('fccStatus').textContent = 'FCC database: updating…';
+  setStatus('Downloading FCC data and rebuilding the local index. This may take a few minutes.');
+  try {
+    const result = await api('/api/fcc/update', { method: 'POST' });
+    $('fccStatus').textContent = renderFccStatus(result.status);
+    setStatus(`FCC database updated. Indexed ${result.indexed_count.toLocaleString()} active call signs.`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 async function startSession(evt) {
   evt.preventDefault();
   const session = await api('/api/sessions/start', {
@@ -240,6 +265,7 @@ async function refreshAll() {
   await loadBoard();
   await loadSessions();
   await loadMetrics();
+  await loadFccStatus();
 }
 
 $('sessionForm').addEventListener('submit', startSession);
@@ -247,6 +273,7 @@ $('stopNetBtn').addEventListener('click', stopSession);
 $('clearNetBtn').addEventListener('click', clearNet);
 $('addStationForm').addEventListener('submit', addStation);
 $('lookupBtn').addEventListener('click', lookupCallsign);
+$('updateFccBtn').addEventListener('click', () => updateFccDatabase().catch(err => setStatus(err.message)));
 $('refreshMetricsBtn').addEventListener('click', () => refreshAll().catch(err => setStatus(err.message)));
 $('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
 $('stationSearch').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));

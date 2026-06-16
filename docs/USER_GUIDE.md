@@ -69,6 +69,12 @@ Use the add-station form for a callsign not already listed.
 
 FCC lookup is local/off-grid. The app does not require internet lookup services such as QRZ. For FCC data setup, see the [installation guide](INSTALLATION.md#fcc-lookup-setup).
 
+## FCC database age and updates
+
+The toolbar shows the local FCC database age, for example `FCC database: 3 days old`. If local FCC data is missing, the indicator shows that the database is unavailable.
+
+Press **Update FCC Database** to download the current FCC amateur-license file, extract the local lookup files, and rebuild the callsign index. The update requires internet access and can take a few minutes.
+
 ## Last Heard timestamps
 
 Known station cards display Last Heard information when available. This helps Net Control quickly see which stations have checked in recently and which stations have not been heard in a while.

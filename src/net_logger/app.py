@@ -10,7 +10,7 @@ from typing import Any
 from flask import Flask, Response, jsonify, request, send_from_directory
 
 from . import db
-from .fcc_lookup import lookup_callsign
+from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_database
 
 
 def create_app(config: dict[str, Any] | None = None) -> Flask:
@@ -442,6 +442,17 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
     def lookup():
         callsign = request.args.get("callsign") or ""
         return jsonify(lookup_callsign(callsign))
+
+    @app.get("/api/fcc/status")
+    def fcc_status():
+        return jsonify(fcc_database_status())
+
+    @app.post("/api/fcc/update")
+    def update_fcc():
+        try:
+            return jsonify(update_fcc_database())
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "status": fcc_database_status()}), 500
 
     return app
 
