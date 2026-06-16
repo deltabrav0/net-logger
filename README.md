@@ -19,11 +19,12 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 
 ## Documentation
 
+- [Installation guide](docs/INSTALLATION.md)
+- [User guide](docs/USER_GUIDE.md)
 - [API documentation](docs/API.md)
-- [User/install guide](docs/USER_GUIDE.md)
 - [Original MVP implementation plan](docs/plans/2026-06-16-kanban-net-logger-mvp.md)
 
-## Install from GitHub
+## Quick install from GitHub
 
 Recommended with pipx:
 

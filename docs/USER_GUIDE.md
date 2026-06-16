@@ -2,217 +2,17 @@
 
 Net Logger is a small local web app for running an amateur-radio net. It keeps a list of known stations, lets you check stations into an active net, tracks traffic/notes, exports CSV, and shows check-in metrics.
 
-## Requirements
+For setup instructions, see the [installation guide](INSTALLATION.md).
 
-- Python 3.11 or newer
-- A modern web browser
-- Optional: local FCC flat-file data for offline callsign lookup
+## Opening Net Logger
 
-The app runs locally by default at:
+Start the server, then open Net Logger in a browser. The default local address is:
 
 ```text
 http://127.0.0.1:8088
 ```
 
-## Installation
-
-### Recommended installation from GitHub on Windows, macOS, and Linux with pipx
-
-`pipx` installs Python command-line apps into isolated environments.
-
-Install pipx if needed:
-
-```bash
-python -m pip install --user pipx
-python -m pipx ensurepath
-```
-
-Then install Net Logger directly from GitHub:
-
-```bash
-pipx install git+https://github.com/deltabrav0/net-logger.git
-```
-
-Run it:
-
-```bash
-net-logger serve
-```
-
-Open:
-
-```text
-http://127.0.0.1:8088
-```
-
-### Install from GitHub with pip
-
-```bash
-python -m pip install "git+https://github.com/deltabrav0/net-logger.git"
-net-logger serve
-```
-
-### Install from GitHub with uv tool
-
-```bash
-uv tool install git+https://github.com/deltabrav0/net-logger.git
-net-logger serve
-```
-
-### Developer installation from a GitHub checkout
-
-```bash
-git clone https://github.com/deltabrav0/net-logger.git
-cd net-logger
-uv sync --extra dev
-uv run net-logger serve
-```
-
-### Developer installation with uv from an existing local checkout
-
-From the project directory:
-
-```bash
-uv sync --extra dev
-uv run net-logger serve
-```
-
-Or run the Flask module directly during development:
-
-```bash
-uv run --with Flask python -m net_logger.app
-```
-
-### Developer installation with pip
-
-```bash
-cd /path/to/net-logger
-python -m venv .venv
-```
-
-Activate the virtual environment.
-
-Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-macOS/Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Install:
-
-```bash
-python -m pip install -e .
-```
-
-Run:
-
-```bash
-net-logger serve
-```
-
-## Running the server
-
-Default:
-
-```bash
-net-logger serve
-```
-
-Bind to all LAN interfaces:
-
-```bash
-net-logger serve --host 0.0.0.0 --port 8088
-```
-
-Use a custom database file:
-
-```bash
-net-logger serve --database /path/to/net_logger.sqlite3
-```
-
-Environment variables:
-
-- `NET_LOGGER_HOST`: default host, e.g. `0.0.0.0`
-- `NET_LOGGER_PORT`: default port, e.g. `8088`
-- `NET_LOGGER_DATABASE`: explicit SQLite database path
-- `NET_LOGGER_DATA_DIR`: directory used for the default database path
-- `NET_LOGGER_DEBUG`: set to `true` for Flask debug mode
-- `NET_LOGGER_FCC_LOOKUP_PATH`: local FCC flat-file lookup directory
-
-Default installed database locations:
-
-- Windows: `%APPDATA%\Net Logger\net_logger.sqlite3`
-- macOS: `~/Library/Application Support/Net Logger/net_logger.sqlite3`
-- Linux: `~/.local/share/net-logger/net_logger.sqlite3`, or `$XDG_DATA_HOME/net-logger/net_logger.sqlite3`
-
-## Packaging and distribution
-
-### Build a wheel and source distribution
-
-From the project directory:
-
-```bash
-uv build
-```
-
-The installable artifacts are written to:
-
-```text
-dist/
-```
-
-Install the wheel on Windows, macOS, or Linux:
-
-```bash
-python -m pip install dist/net_logger-0.1.0-py3-none-any.whl
-net-logger serve
-```
-
-The wheel is pure Python and cross-platform. It includes the web UI static files.
-
-### Install from a source archive
-
-```bash
-python -m pip install dist/net_logger-0.1.0.tar.gz
-net-logger serve
-```
-
-### Optional single-file executable packaging
-
-For a standalone executable, build on each target operating system with PyInstaller. Cross-building Windows executables from macOS/Linux is generally not supported; build each executable on the OS where it will run.
-
-Install PyInstaller in a build environment:
-
-```bash
-python -m pip install pyinstaller
-python -m pip install .
-```
-
-Build:
-
-```bash
-pyinstaller --name net-logger --onefile --collect-data net_logger -m net_logger.cli
-```
-
-Run the generated executable from `dist/`:
-
-Windows:
-
-```powershell
-.\dist\net-logger.exe serve
-```
-
-macOS/Linux:
-
-```bash
-./dist/net-logger serve
-```
+If the server was started on all LAN interfaces, another device on the same network can open the app by using the host computer's LAN address and configured port.
 
 ## Basic use
 
@@ -225,6 +25,39 @@ macOS/Linux:
 7. Press **Stop Net** when the net is finished.
 8. Use CSV export or Metrics as needed.
 
+## Starting a net
+
+At the top of the page, enter:
+
+- Net name
+- Frequency
+- Net Control callsign
+
+Press **Start Net**. If Net Control is not already in the station list, Net Logger attempts a local FCC lookup when FCC data is configured. Net Control is then automatically added to the **Checked In** column for the active session.
+
+## Checking in stations
+
+Net Logger uses two main board columns:
+
+- **Known Stations**: stations saved in the database that are not currently checked in
+- **Checked In**: stations checked into the active net session
+
+To check in a known station:
+
+- Click **Check in** on the station card, or
+- Drag the station card from **Known Stations** to **Checked In**.
+
+Checked-in stations remain attached to the active net session until the session is stopped or the check-in is removed.
+
+## Editing traffic and notes
+
+Expand a checked-in station card to edit:
+
+- Traffic
+- Notes
+
+Use these fields during the net to record whether the station has traffic and any follow-up details you need to preserve.
+
 ## Adding stations
 
 Use the add-station form for a callsign not already listed.
@@ -234,34 +67,27 @@ Use the add-station form for a callsign not already listed.
 - Press **FCC lookup** to populate details from local FCC data if available.
 - Press **Add station**.
 
-## FCC lookup setup
+FCC lookup is local/off-grid. The app does not require internet lookup services such as QRZ. For FCC data setup, see the [installation guide](INSTALLATION.md#fcc-lookup-setup).
 
-FCC lookup is local/off-grid. The app does not require internet lookup services such as QRZ.
+## Last Heard timestamps
 
-Set the FCC data path before starting the server:
+Known station cards display Last Heard information when available. This helps Net Control quickly see which stations have checked in recently and which stations have not been heard in a while.
 
-Windows PowerShell:
+## Stopping a net
 
-```powershell
-$env:NET_LOGGER_FCC_LOOKUP_PATH="C:\path\to\fcc_database_web_app"
-net-logger serve
-```
+Press **Stop Net** when the net is finished. The session and check-ins are saved in the SQLite database.
 
-macOS/Linux:
+## CSV export
 
-```bash
-export NET_LOGGER_FCC_LOOKUP_PATH="/path/to/fcc_database_web_app"
-net-logger serve
-```
+Use CSV export to download saved net records for spreadsheet review, archival records, or external reporting.
 
-Expected files under that directory:
+## Metrics
 
-```text
-data/EN.dat
-data/EN.idx
-data/zipcodes.csv
-maidenhead.py
-```
+The Metrics view summarizes check-in activity by net and by time period. Supported grouping periods include:
+
+- Week
+- Month
+- Year
 
 ## Deleting all records
 
@@ -283,16 +109,10 @@ Warning: this deletes stations, net sessions, and check-ins. Back up the SQLite 
 
 ## Backing up data
 
-Stop the server, then copy the SQLite database file. If using default installed paths, see the default database locations above.
+Stop the server, then copy the SQLite database file. If using default installed paths, see the default database locations in the [installation guide](INSTALLATION.md#running-the-server).
 
-Example:
+Example on macOS:
 
 ```bash
 cp "$HOME/Library/Application Support/Net Logger/net_logger.sqlite3" ./net_logger_backup.sqlite3
-```
-
-## Running tests
-
-```bash
-uv run --extra dev pytest -q
 ```
