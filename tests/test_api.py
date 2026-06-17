@@ -20,6 +20,28 @@ def client():
             os.remove(db_path)
 
 
+def test_openapi_spec_is_served_for_interactive_docs(client):
+    res = client.get("/openapi.yaml")
+
+    assert res.status_code == 200
+    assert res.mimetype in {"application/yaml", "text/yaml", "text/plain"}
+    body = res.get_data(as_text=True)
+    assert "openapi: 3.0.3" in body
+    assert "title: Net Logger API" in body
+    assert "/api/stations:" in body
+
+
+def test_interactive_api_docs_page_loads_swagger_ui(client):
+    res = client.get("/api/docs")
+
+    assert res.status_code == 200
+    assert res.mimetype == "text/html"
+    html = res.get_data(as_text=True)
+    assert "Net Logger API Docs" in html
+    assert "SwaggerUIBundle" in html
+    assert "url: '/openapi.yaml'" in html
+
+
 def test_station_can_be_created_and_listed(client):
     res = client.post("/api/stations", json={"callsign": "km4ack", "name": "Jason", "city": "Maryville", "state": "TN"})
     assert res.status_code == 201

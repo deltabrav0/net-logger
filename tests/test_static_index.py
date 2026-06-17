@@ -1,6 +1,10 @@
 from pathlib import Path
 
 
+def test_packaged_openapi_spec_matches_documented_spec():
+    assert Path("src/net_logger/openapi.yaml").read_text() == Path("docs/openapi.yaml").read_text()
+
+
 INDEX = Path("src/net_logger/static/index.html")
 
 

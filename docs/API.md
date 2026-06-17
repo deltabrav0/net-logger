@@ -8,6 +8,18 @@ For tooling, import the OpenAPI specification into Swagger UI, Redoc, Insomnia, 
 docs/openapi.yaml
 ```
 
+When the app is running, an interactive Swagger UI page is available at:
+
+```text
+http://127.0.0.1:8088/api/docs
+```
+
+The served OpenAPI document is available at:
+
+```text
+http://127.0.0.1:8088/openapi.yaml
+```
+
 Base URL when running locally:
 
 ```text

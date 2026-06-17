@@ -109,7 +109,7 @@ uv run --extra dev pytest -q
 
 ## API sketch
 
-See [docs/API.md](docs/API.md) for full Swagger-style request/response details, or import [docs/openapi.yaml](docs/openapi.yaml) into Swagger UI, Postman, Insomnia, or Redoc.
+See [docs/API.md](docs/API.md) for full Swagger-style request/response details, or import [docs/openapi.yaml](docs/openapi.yaml) into Swagger UI, Postman, Insomnia, or Redoc. When the app is running, open `http://127.0.0.1:8088/api/docs` for an interactive Swagger UI page that can invoke and test API methods.
 
 Common endpoints:
 

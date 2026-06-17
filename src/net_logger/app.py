@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import os
+from pathlib import Path
 from typing import Any
 
 from flask import Flask, Response, jsonify, request, send_from_directory
@@ -53,6 +54,42 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
     @app.get("/")
     def index():
         return send_from_directory(app.static_folder, "index.html")
+
+    @app.get("/openapi.yaml")
+    def openapi_spec():
+        spec_path = Path(__file__).resolve().parent / "openapi.yaml"
+        return Response(spec_path.read_text(encoding="utf-8"), mimetype="application/yaml")
+
+    @app.get("/api/docs")
+    def api_docs():
+        return Response(
+            """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Net Logger API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+  <style>
+    body { margin: 0; background: #fafafa; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: '/openapi.yaml',
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      presets: [SwaggerUIBundle.presets.apis],
+      layout: 'BaseLayout'
+    });
+  </script>
+</body>
+</html>
+""",
+            mimetype="text/html",
+        )
 
     @app.get("/api/stations")
     def list_stations():

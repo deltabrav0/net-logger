@@ -1,0 +1,816 @@
+openapi: 3.0.3
+info:
+  title: Net Logger API
+  version: 0.1.0
+  description: |
+    Local JSON/CSV API for the Net Logger amateur-radio net logging application.
+
+    The application is intended for trusted local or LAN use. It does not currently
+    implement built-in authentication or authorization.
+servers:
+  - url: http://127.0.0.1:8088
+    description: Local development server
+  - url: http://192.168.1.70:8088
+    description: Example LAN server
+tags:
+  - name: Stations
+    description: Known callsign/operator records
+  - name: FCC Lookup
+    description: Local FCC flat-file lookup and maintenance endpoints
+  - name: Sessions
+    description: Net sessions and active-board state
+  - name: Check-ins
+    description: Station check-ins within sessions
+  - name: Metrics
+    description: Aggregate check-in reporting
+  - name: Export
+    description: CSV export endpoints
+  - name: Administrative
+    description: Destructive maintenance endpoints
+paths:
+  /api/stations:
+    get:
+      tags: [Stations]
+      summary: List known stations
+      operationId: listStations
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Optional case-insensitive callsign/name search string.
+          schema:
+            type: string
+            example: K5
+      responses:
+        '200':
+          description: Stations ordered by callsign.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+    post:
+      tags: [Stations]
+      summary: Create a station
+      operationId: createStation
+      description: |
+        Creates a station by callsign. Callsigns are normalized to uppercase with
+        whitespace removed. If the callsign already exists, the existing station is
+        returned with HTTP 200.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationCreateRequest'
+            examples:
+              manualStation:
+                value:
+                  callsign: K5SUB
+                  name: Daniel Butler
+                  city: Lufkin
+                  state: TX
+                  grid: EM21QG
+                  lat: 31.27
+                  lon: -94.6469
+                  notes: optional
+                  source: manual
+      responses:
+        '201':
+          description: Station created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Station'
+        '200':
+          description: Station already existed; existing record returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Station'
+        '400':
+          description: Callsign is missing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/lookup:
+    get:
+      tags: [FCC Lookup]
+      summary: Look up a callsign in the local FCC database
+      operationId: lookupCallsign
+      description: |
+        Uses local/off-grid FCC flat-file data. Set NET_LOGGER_FCC_LOOKUP_PATH to
+        the directory containing the FCC lookup files. See docs/FCC_DATABASE_API.md
+        for integration notes.
+      parameters:
+        - name: callsign
+          in: query
+          required: true
+          schema:
+            type: string
+            example: K5SUB
+      responses:
+        '200':
+          description: Lookup result. Not-found responses still return 200 with found=false.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FccLookupFoundResponse'
+                  - $ref: '#/components/schemas/FccLookupNotFoundResponse'
+  /api/fcc/status:
+    get:
+      tags: [FCC Lookup]
+      summary: Get local FCC database status
+      operationId: getFccStatus
+      responses:
+        '200':
+          description: FCC data availability and approximate age.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FccStatus'
+  /api/fcc/update:
+    post:
+      tags: [FCC Lookup]
+      summary: Download and rebuild the local FCC database index
+      operationId: updateFccDatabase
+      description: |
+        Downloads the FCC amateur-license complete file, extracts EN.dat and HD.dat,
+        and rebuilds data/EN.idx. When HD.dat is available, only active licenses are
+        indexed.
+      responses:
+        '200':
+          description: FCC database update succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FccUpdateResponse'
+        '500':
+          description: FCC database update failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FccUpdateErrorResponse'
+  /api/sessions:
+    get:
+      tags: [Sessions]
+      summary: List saved net sessions
+      operationId: listSessions
+      responses:
+        '200':
+          description: Sessions ordered by start time descending.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionSummary'
+  /api/sessions/start:
+    post:
+      tags: [Sessions]
+      summary: Start a new net session
+      operationId: startSession
+      description: |
+        Creates a new open net session. If net_control is provided, the callsign is
+        normalized, ensured as a station, and automatically checked in as sequence 1.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStartRequest'
+            example:
+              name: Weekly Net
+              frequency: 146.520 MHz
+              net_control: K5SUB
+      responses:
+        '201':
+          description: Session created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetSession'
+  /api/sessions/{session_id}/board:
+    get:
+      tags: [Sessions]
+      summary: Get the active board for a session
+      operationId: getSessionBoard
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Session metadata, known stations not checked in, and check-ins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionBoard'
+        '404':
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/sessions/{session_id}/checkins:
+    post:
+      tags: [Check-ins]
+      summary: Create a check-in for a session
+      operationId: createCheckin
+      description: |
+        Adds a station to the selected session. Duplicate check-ins for the same
+        session/station are idempotent and return the existing check-in with HTTP 200.
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinCreateRequest'
+            example:
+              station_id: 1
+              traffic: true
+              traffic_details: Announcement for the group
+              notes: Optional signal/report notes
+      responses:
+        '201':
+          description: Check-in created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkin'
+        '200':
+          description: Check-in already existed; existing record returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkin'
+        '400':
+          description: Station ID is missing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/checkins/{checkin_id}:
+    patch:
+      tags: [Check-ins]
+      summary: Update check-in traffic or notes
+      operationId: updateCheckin
+      parameters:
+        - $ref: '#/components/parameters/CheckinId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinUpdateRequest'
+            example:
+              traffic: true
+              traffic_details: Updated details
+              notes: Updated notes
+      responses:
+        '200':
+          description: Updated check-in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkin'
+        '404':
+          description: Check-in not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Check-ins]
+      summary: Delete one check-in
+      operationId: deleteCheckin
+      parameters:
+        - $ref: '#/components/parameters/CheckinId'
+      responses:
+        '204':
+          description: Check-in deleted. Empty response body.
+        '404':
+          description: Check-in not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/sessions/{session_id}/stop:
+    post:
+      tags: [Sessions]
+      summary: Stop a net session
+      operationId: stopSession
+      description: Marks the session closed and sets closed_at if it was not already closed.
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Updated session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetSession'
+        '404':
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/metrics:
+    get:
+      tags: [Metrics]
+      summary: Get aggregate check-in metrics
+      operationId: getMetrics
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: Bucket size for series_by_net. Invalid values default to month.
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: month
+      responses:
+        '200':
+          description: Check-in metrics grouped by net and selected period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+  /api/export.csv:
+    get:
+      tags: [Export]
+      summary: Export all or one session as CSV
+      operationId: exportCsv
+      parameters:
+        - name: session_id
+          in: query
+          required: false
+          description: Optional session ID. If omitted, all sessions are exported.
+          schema:
+            type: integer
+            example: 12
+      responses:
+        '200':
+          description: CSV export.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename=net-logger-export.csv
+          content:
+            text/csv:
+              schema:
+                type: string
+                example: |
+                  session_id,session_name,frequency,net_control,status,started_at,closed_at,sequence,checked_in_at,callsign,station_name,city,state,grid,lat,lon,traffic,traffic_details,checkin_notes
+                  1,Weekly Net,146.520 MHz,K5SUB,closed,2026-06-16 19:00:00,2026-06-16 20:00:00,1,2026-06-16 19:01:00,K5SUB,Daniel Butler,Lufkin,TX,EM21QG,31.27,-94.6469,no,,
+  /api/records:
+    delete:
+      tags: [Administrative]
+      summary: Delete all application records
+      operationId: deleteAllRecords
+      description: |
+        Deletes all check-ins, net sessions, and stations from the SQLite database.
+        This is destructive and cannot be undone except by restoring a backup.
+      parameters:
+        - name: dry_run
+          in: query
+          required: false
+          description: Return record counts without deleting anything.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Delete result or dry-run counts.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/DeleteRecordsResponse'
+                  - $ref: '#/components/schemas/DeleteRecordsDryRunResponse'
+components:
+  parameters:
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 12
+    CheckinId:
+      name: checkin_id
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 34
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: session not found
+    Station:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        callsign:
+          type: string
+          example: K5SUB
+        name:
+          type: string
+          example: Daniel Butler
+        city:
+          type: string
+          example: Lufkin
+        state:
+          type: string
+          example: TX
+        grid:
+          type: string
+          example: EM21QG
+        lat:
+          type: number
+          nullable: true
+          example: 31.27
+        lon:
+          type: number
+          nullable: true
+          example: -94.6469
+        notes:
+          type: string
+          example: optional
+        source:
+          type: string
+          example: manual
+        created_at:
+          type: string
+          example: '2026-06-16 19:00:00'
+        last_heard_at:
+          type: string
+          nullable: true
+          example: '2026-06-16 19:01:00'
+    StationCreateRequest:
+      type: object
+      required: [callsign]
+      properties:
+        callsign:
+          type: string
+          example: K5SUB
+        name:
+          type: string
+          default: ''
+        city:
+          type: string
+          default: ''
+        state:
+          type: string
+          default: ''
+        grid:
+          type: string
+          default: ''
+        lat:
+          type: number
+          nullable: true
+        lon:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          default: ''
+        source:
+          type: string
+          default: manual
+    NetSession:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        name:
+          type: string
+          example: Weekly Net
+        frequency:
+          type: string
+          example: 146.520 MHz
+        net_control:
+          type: string
+          example: K5SUB
+        status:
+          type: string
+          enum: [open, closed]
+          example: open
+        started_at:
+          type: string
+          example: '2026-06-16 19:00:00'
+        closed_at:
+          type: string
+          nullable: true
+          example: null
+    SessionSummary:
+      allOf:
+        - $ref: '#/components/schemas/NetSession'
+        - type: object
+          properties:
+            checkin_count:
+              type: integer
+              example: 24
+            traffic_count:
+              type: integer
+              example: 2
+    SessionStartRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Weekly Net
+        frequency:
+          type: string
+          example: 146.520 MHz
+        net_control:
+          type: string
+          example: K5SUB
+    CheckinStationSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        callsign:
+          type: string
+          example: K5SUB
+        name:
+          type: string
+          example: Daniel Butler
+        city:
+          type: string
+          example: Lufkin
+        state:
+          type: string
+          example: TX
+        grid:
+          type: string
+          example: EM21QG
+        lat:
+          type: number
+          nullable: true
+          example: 31.27
+        lon:
+          type: number
+          nullable: true
+          example: -94.6469
+        last_heard_at:
+          type: string
+          nullable: true
+          example: '2026-06-16 19:01:00'
+    Checkin:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 34
+        session_id:
+          type: integer
+          example: 12
+        sequence:
+          type: integer
+          example: 1
+        checked_in_at:
+          type: string
+          example: '2026-06-16 19:01:00'
+        traffic:
+          type: boolean
+          example: false
+        traffic_details:
+          type: string
+          example: ''
+        notes:
+          type: string
+          example: Optional signal/report notes
+        station:
+          $ref: '#/components/schemas/CheckinStationSummary'
+    CheckinCreateRequest:
+      type: object
+      required: [station_id]
+      properties:
+        station_id:
+          type: integer
+          example: 1
+        traffic:
+          type: boolean
+          default: false
+        traffic_details:
+          type: string
+          default: ''
+        notes:
+          type: string
+          default: ''
+    CheckinUpdateRequest:
+      type: object
+      properties:
+        traffic:
+          type: boolean
+        traffic_details:
+          type: string
+        notes:
+          type: string
+    SessionBoard:
+      type: object
+      properties:
+        session:
+          $ref: '#/components/schemas/NetSession'
+        known_stations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Station'
+        checkins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Checkin'
+    FccLookupRecord:
+      type: object
+      properties:
+        callsign:
+          type: string
+          example: K5SUB
+        name:
+          type: string
+          example: DANIEL BUTLER
+        city:
+          type: string
+          example: LUFKIN
+        state:
+          type: string
+          example: TX
+        zip:
+          type: string
+          example: '75901'
+        grid:
+          type: string
+          example: EM21QG
+        lat:
+          type: number
+          nullable: true
+          example: 31.27
+        lon:
+          type: number
+          nullable: true
+          example: -94.6469
+    FccLookupFoundResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        found:
+          type: boolean
+          example: true
+        result:
+          $ref: '#/components/schemas/FccLookupRecord'
+    FccLookupNotFoundResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        found:
+          type: boolean
+          example: false
+        callsign:
+          type: string
+          example: K5SUB
+    FccStatus:
+      type: object
+      properties:
+        data_path:
+          type: string
+          example: /path/to/fcc_database_web_app
+        available:
+          type: boolean
+          example: true
+        updated_at:
+          type: string
+          nullable: true
+          example: '2026-06-16T12:00:00+00:00'
+        age_days:
+          type: integer
+          nullable: true
+          example: 3
+        files:
+          type: object
+          additionalProperties:
+            type: boolean
+          example:
+            EN.dat: true
+            EN.idx: true
+            zipcodes.csv: true
+    FccUpdateResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        indexed_count:
+          type: integer
+          example: 750000
+        active_filter:
+          type: boolean
+          example: true
+        index_path:
+          type: string
+          example: /path/to/fcc_database_web_app/data/EN.idx
+        status:
+          $ref: '#/components/schemas/FccStatus'
+    FccUpdateErrorResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: download failed
+        status:
+          $ref: '#/components/schemas/FccStatus'
+    MetricsResponse:
+      type: object
+      properties:
+        period:
+          type: string
+          enum: [week, month, year]
+          example: month
+        by_net:
+          type: array
+          items:
+            type: object
+            properties:
+              net_name:
+                type: string
+                example: Weekly Net
+              checkin_count:
+                type: integer
+                example: 24
+        by_date:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                example: '2026-06-16'
+              checkin_count:
+                type: integer
+                example: 8
+        series_by_net:
+          type: array
+          items:
+            type: object
+            properties:
+              net_name:
+                type: string
+                example: Weekly Net
+              points:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    bucket:
+                      type: string
+                      example: '2026-06'
+                    checkin_count:
+                      type: integer
+                      example: 24
+    DeleteCounts:
+      type: object
+      properties:
+        checkins:
+          type: integer
+          example: 24
+        net_sessions:
+          type: integer
+          example: 8
+        stations:
+          type: integer
+          example: 12
+    DeleteRecordsResponse:
+      type: object
+      properties:
+        deleted:
+          $ref: '#/components/schemas/DeleteCounts'
+    DeleteRecordsDryRunResponse:
+      type: object
+      properties:
+        dry_run:
+          type: boolean
+          example: true
+        would_delete:
+          $ref: '#/components/schemas/DeleteCounts'
