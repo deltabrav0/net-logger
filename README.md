@@ -22,6 +22,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 - [Installation guide](docs/INSTALLATION.md)
 - [User guide](docs/USER_GUIDE.md)
 - [API documentation](docs/API.md)
+- [OpenAPI specification](docs/openapi.yaml)
 - [Local FCC database API](docs/FCC_DATABASE_API.md)
 - [Original MVP implementation plan](docs/plans/2026-06-16-kanban-net-logger-mvp.md)
 
@@ -108,7 +109,7 @@ uv run --extra dev pytest -q
 
 ## API sketch
 
-See [docs/API.md](docs/API.md) for full request/response details.
+See [docs/API.md](docs/API.md) for full Swagger-style request/response details, or import [docs/openapi.yaml](docs/openapi.yaml) into Swagger UI, Postman, Insomnia, or Redoc.
 
 Common endpoints:
 
