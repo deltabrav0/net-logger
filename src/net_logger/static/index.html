@@ -24,8 +24,8 @@
         </div>
       </div>
       <form id="sessionForm" class="session-form">
-        <label>Net name <input id="netName" value="Weekly Net"></label>
-        <label>Frequency <input id="frequency" placeholder="146.520 MHz"></label>
+        <label>Net name <input id="netName" list="netNameSuggestions" value="Weekly Net"><datalist id="netNameSuggestions"></datalist></label>
+        <label>Frequency <input id="frequency" list="frequencySuggestions" placeholder="146.520 MHz"><datalist id="frequencySuggestions"></datalist></label>
         <label>Net control <input id="netControl" placeholder="Your call"></label>
         <div class="session-buttons">
           <button type="submit" id="startNetBtn">Start Net</button>

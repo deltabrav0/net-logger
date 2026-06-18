@@ -1,6 +1,7 @@
 let sessionId = null;
 let currentSession = null;
 let board = { known_stations: [], checkins: [] };
+let latestFrequencyByNetName = new Map();
 
 const $ = (id) => document.getElementById(id);
 const statusEl = $('status');
@@ -257,6 +258,31 @@ async function handleStationLookup(evt) {
   else await refreshAll();
 }
 
+function populateSessionSuggestions(sessions) {
+  const nameList = $('netNameSuggestions');
+  const frequencyList = $('frequencySuggestions');
+  latestFrequencyByNetName = new Map();
+  const names = [];
+  const frequencies = [];
+  for (const session of sessions) {
+    const name = (session.name || '').trim();
+    const frequency = (session.frequency || '').trim();
+    if (name && !latestFrequencyByNetName.has(name)) {
+      names.push(name);
+      if (frequency) latestFrequencyByNetName.set(name, frequency);
+    }
+    if (frequency && !frequencies.includes(frequency)) frequencies.push(frequency);
+  }
+  if (nameList) nameList.innerHTML = names.map(name => `<option value="${esc(name)}">`).join('');
+  if (frequencyList) frequencyList.innerHTML = frequencies.map(frequency => `<option value="${esc(frequency)}">`).join('');
+}
+
+function autofillFrequencyForNetName() {
+  const name = $('netName').value.trim();
+  const frequency = latestFrequencyByNetName.get(name);
+  if (frequency) $('frequency').value = frequency;
+}
+
 async function loadSessions() {
   const sessions = await api('/api/sessions');
   $('sessionsList').innerHTML = sessions.length ? sessions.map(s => `
@@ -265,6 +291,7 @@ async function loadSessions() {
       <div class="details">${esc(s.status)} • ${formatDateTime(s.started_at)} • check-ins: ${s.checkin_count} • traffic: ${s.traffic_count}</div></div>
       <a class="button-link secondary" href="/api/export.csv?session_id=${s.id}">Export CSV</a>
     </div>`).join('') : '<div class="empty">No saved nets yet.</div>';
+  populateSessionSuggestions(sessions);
   populateMetricsNetFilter(sessions);
 }
 
@@ -331,6 +358,8 @@ async function refreshAll() {
 }
 
 $('sessionForm').addEventListener('submit', startSession);
+$('netName').addEventListener('input', autofillFrequencyForNetName);
+$('netName').addEventListener('change', autofillFrequencyForNetName);
 $('stopNetBtn').addEventListener('click', stopSession);
 $('cancelNetBtn').addEventListener('click', cancelSession);
 $('clearNetBtn').addEventListener('click', clearNet);

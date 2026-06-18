@@ -39,6 +39,15 @@ def test_installation_docs_explain_logo_customization():
     assert "NET_LOGGER_LOGO_PATH" in text
 
 
+def test_session_form_uses_editable_previous_net_and_frequency_suggestions():
+    html = INDEX.read_text()
+
+    assert '<input id="netName" list="netNameSuggestions" value="Weekly Net">' in html
+    assert '<datalist id="netNameSuggestions"></datalist>' in html
+    assert '<input id="frequency" list="frequencySuggestions" placeholder="146.520 MHz">' in html
+    assert '<datalist id="frequencySuggestions"></datalist>' in html
+
+
 def test_session_buttons_are_capitalized_and_grouped_on_one_row():
     html = INDEX.read_text()
 
@@ -111,3 +120,5 @@ def test_user_guide_html_page_exists_with_matching_theme_and_updated_lookup_inst
     assert 'Enter a callsign in the single station lookup box' in html
     assert 'Net Logger searches known stations first' in html
     assert 'then searches the local FCC database' in html
+    assert 'editable suggestion boxes' in html
+    assert "automatically fills the frequency" in html

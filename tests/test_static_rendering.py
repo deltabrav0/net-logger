@@ -299,6 +299,68 @@ context.loadSessions().then(() => {
     assert "Skywarn Net" in result["options"]
 
 
+def test_load_sessions_populates_session_suggestions_and_autofills_latest_frequency():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const listeners = new Map();
+const makeElement = (id) => ({
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: (event, handler) => { listeners.set(`${id}:${event}`, handler); },
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  api = async (path) => {
+    return [
+      { id: 3, name: 'Weekly Net', frequency: '147.240 MHz', status: 'closed', started_at: '2026-01-03 19:00:00', checkin_count: 1, traffic_count: 0 },
+      { id: 2, name: 'Skywarn Net', frequency: '146.940 MHz', status: 'closed', started_at: '2026-01-02 19:00:00', checkin_count: 1, traffic_count: 0 },
+      { id: 1, name: 'Weekly Net', frequency: '146.520 MHz', status: 'closed', started_at: '2026-01-01 19:00:00', checkin_count: 1, traffic_count: 0 },
+    ];
+  };
+`, context);
+context.loadSessions().then(() => {
+  elements.get('netName').value = 'Weekly Net';
+  listeners.get('netName:change')();
+  const weeklyFrequency = elements.get('frequency').value;
+  elements.get('netName').value = 'Skywarn Net';
+  listeners.get('netName:input')();
+  console.log(JSON.stringify({
+    names: elements.get('netNameSuggestions').innerHTML,
+    frequencies: elements.get('frequencySuggestions').innerHTML,
+    weeklyFrequency,
+    skywarnFrequency: elements.get('frequency').value,
+  }));
+});
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert result["names"].count('<option value="Weekly Net">') == 1
+    assert '<option value="Skywarn Net">' in result["names"]
+    assert '<option value="147.240 MHz">' in result["frequencies"]
+    assert '<option value="146.940 MHz">' in result["frequencies"]
+    assert result["weeklyFrequency"] == "147.240 MHz"
+    assert result["skywarnFrequency"] == "146.940 MHz"
+
+
 def test_load_metrics_passes_selected_net_name_to_api():
     script = """
 const vm = require('node:vm');
