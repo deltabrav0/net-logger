@@ -46,6 +46,8 @@ def test_session_form_uses_editable_previous_net_and_frequency_suggestions():
     assert '<datalist id="netNameSuggestions"></datalist>' in html
     assert '<input id="frequency" list="frequencySuggestions" placeholder="146.520 MHz">' in html
     assert '<datalist id="frequencySuggestions"></datalist>' in html
+    assert '<select id="netNamePreset" aria-label="Previous net names"><option value="">Previous nets…</option></select>' in html
+    assert '<select id="frequencyPreset" aria-label="Previous frequencies"><option value="">Previous frequencies…</option></select>' in html
 
 
 def test_session_buttons_are_capitalized_and_grouped_on_one_row():

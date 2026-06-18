@@ -62,7 +62,8 @@ def test_docker_compose_defines_persistent_data_logo_and_fcc_mounts():
     assert "NET_LOGGER_FCC_LOOKUP_PATH: /fcc" in compose
     assert "NET_LOGGER_LOGO_PATH: /config/app-logo.png" in compose
     assert "net-logger-data:/data" in compose
-    assert "./fcc-data:/fcc:ro" in compose
+    assert "./fcc-data:/fcc" in compose
+    assert "./fcc-data:/fcc:ro" not in compose
     assert "./config:/config:ro" in compose
     assert "net-logger-data:" in compose
 

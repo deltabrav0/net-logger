@@ -85,7 +85,7 @@ If `./config/app-logo.png` is missing, Net Logger falls back to the bundled logo
 The compose file mounts optional FCC lookup files from:
 
 ```text
-./fcc-data:/fcc:ro
+./fcc-data:/fcc
 ```
 
 Set up the directory so it contains the expected FCC lookup files:
@@ -99,10 +99,10 @@ Set up the directory so it contains the expected FCC lookup files:
 
 If the FCC files are missing, callsign lookup returns `found: false` and the rest of the app still works.
 
-The browser's **Update FCC Database** button needs a writable FCC directory. The default compose mount is read-only so Docker deployments do not accidentally mutate host files. If you want browser-based FCC updates inside Docker, change the FCC volume to writable:
+The browser's **Update FCC Database** button writes downloaded FCC data and rebuilt indexes under `/fcc/data`. For that reason, the default compose mount is writable. If you only want to provide prebuilt FCC files and do not want browser-based updates, you may change the mount to read-only:
 
 ```yaml
-- ./fcc-data:/fcc
+- ./fcc-data:/fcc:ro
 ```
 
 ## Build without Compose
@@ -121,7 +121,7 @@ docker run --rm \
   -e NET_LOGGER_DATA_DIR=/data \
   -v net-logger-data:/data \
   -v "$PWD/config:/config:ro" \
-  -v "$PWD/fcc-data:/fcc:ro" \
+  -v "$PWD/fcc-data:/fcc" \
   net-logger
 ```
 

@@ -261,6 +261,8 @@ async function handleStationLookup(evt) {
 function populateSessionSuggestions(sessions) {
   const nameList = $('netNameSuggestions');
   const frequencyList = $('frequencySuggestions');
+  const namePreset = $('netNamePreset');
+  const frequencyPreset = $('frequencyPreset');
   latestFrequencyByNetName = new Map();
   const names = [];
   const frequencies = [];
@@ -275,11 +277,29 @@ function populateSessionSuggestions(sessions) {
   }
   if (nameList) nameList.innerHTML = names.map(name => `<option value="${esc(name)}">`).join('');
   if (frequencyList) frequencyList.innerHTML = frequencies.map(frequency => `<option value="${esc(frequency)}">`).join('');
+  if (namePreset) {
+    namePreset.innerHTML = '<option value="">Previous nets…</option>' + names.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+  }
+  if (frequencyPreset) {
+    frequencyPreset.innerHTML = '<option value="">Previous frequencies…</option>' + frequencies.map(frequency => `<option value="${esc(frequency)}">${esc(frequency)}</option>`).join('');
+  }
 }
 
 function autofillFrequencyForNetName() {
   const name = $('netName').value.trim();
   const frequency = latestFrequencyByNetName.get(name);
+  if (frequency) $('frequency').value = frequency;
+}
+
+function applyNetNamePreset() {
+  const name = $('netNamePreset').value;
+  if (!name) return;
+  $('netName').value = name;
+  autofillFrequencyForNetName();
+}
+
+function applyFrequencyPreset() {
+  const frequency = $('frequencyPreset').value;
   if (frequency) $('frequency').value = frequency;
 }
 
@@ -360,6 +380,8 @@ async function refreshAll() {
 $('sessionForm').addEventListener('submit', startSession);
 $('netName').addEventListener('input', autofillFrequencyForNetName);
 $('netName').addEventListener('change', autofillFrequencyForNetName);
+$('netNamePreset').addEventListener('change', applyNetNamePreset);
+$('frequencyPreset').addEventListener('change', applyFrequencyPreset);
 $('stopNetBtn').addEventListener('click', stopSession);
 $('cancelNetBtn').addEventListener('click', cancelSession);
 $('clearNetBtn').addEventListener('click', clearNet);

@@ -33,7 +33,7 @@ At the top of the page, enter:
 - Frequency
 - Net Control callsign
 
-The **Net name** and **Frequency** fields are editable suggestion boxes. After you have saved nets, Net Logger suggests previous net names and previous frequencies. Choosing a previous net name, such as **Weekly Net**, automatically fills the frequency with that net's most recently used frequency. You can still type a new net name or frequency at any time.
+The **Net name** and **Frequency** fields are editable suggestion boxes. After you have saved nets, Net Logger suggests previous net names and previous frequencies. Use the **Previous nets** dropdown for a click-open list of saved net names, or type directly in the field. Choosing a previous net name, such as **Weekly Net**, automatically fills the frequency with that net's most recently used frequency. You can still type a new net name or frequency at any time.
 
 Press **Start Net**. If Net Control is not already in the station list, Net Logger attempts a local FCC lookup when FCC data is configured. Net Control is then automatically added to the **Checked In** column for the active session.
 

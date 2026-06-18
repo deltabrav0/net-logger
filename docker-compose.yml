@@ -12,7 +12,7 @@ services:
       NET_LOGGER_LOGO_PATH: /config/app-logo.png
     volumes:
       - net-logger-data:/data
-      - ./fcc-data:/fcc:ro
+      - ./fcc-data:/fcc
       - ./config:/config:ro
     restart: unless-stopped
     healthcheck:
