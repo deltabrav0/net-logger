@@ -715,11 +715,12 @@ Get aggregate check-in metrics.
   - Allowed values: `week`, `month`, `year`
   - Default: `month`
   - Invalid values default to `month`.
+- `net_name` string, optional — exact net name to include. Omit or pass an empty value to include all nets.
 
 #### Example request
 
 ```bash
-curl "http://127.0.0.1:8088/api/metrics?period=month"
+curl "http://127.0.0.1:8088/api/metrics?period=month&net_name=Weekly%20Net"
 ```
 
 #### Responses
@@ -731,6 +732,7 @@ curl "http://127.0.0.1:8088/api/metrics?period=month"
 ```json
 {
   "period": "month",
+  "net_name": "Weekly Net",
   "by_net": [
     {
       "net_name": "Weekly Net",

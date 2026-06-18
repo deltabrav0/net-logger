@@ -405,6 +405,13 @@ paths:
           - month
           - year
           default: month
+      - name: net_name
+        in: query
+        required: false
+        description: Exact net name to include. Omit or pass an empty value to include all nets.
+        schema:
+          type: string
+          example: Weekly Net
       responses:
         '200':
           description: Check-in metrics grouped by net and selected period.
@@ -882,6 +889,10 @@ components:
                     checkin_count:
                       type: integer
                       example: 24
+        net_name:
+          type: string
+          description: Selected net-name filter, or an empty string when all nets are included.
+          example: Weekly Net
     DeleteCounts:
       type: object
       properties:

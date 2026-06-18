@@ -234,6 +234,7 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
     @app.get("/api/metrics")
     def metrics():
         period = (request.args.get("period") or "month").strip().lower()
+        net_name = (request.args.get("net_name") or "").strip()
         bucket_exprs = {
             "week": "strftime('%Y-W%W', ch.checked_in_at)",
             "month": "strftime('%Y-%m', ch.checked_in_at)",
@@ -242,23 +243,32 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
         if period not in bucket_exprs:
             period = "month"
         bucket_expr = bucket_exprs[period]
+        where_sql = "WHERE ns.name = ?" if net_name else ""
+        date_join_sql = "JOIN net_sessions ns ON ns.id = ch.session_id" if net_name else ""
+        date_where_sql = "WHERE ns.name = ?" if net_name else ""
+        params = (net_name,) if net_name else ()
         with con() as c:
             by_net = c.execute(
-                """
+                f"""
                 SELECT ns.name AS net_name, COUNT(ch.id) AS checkin_count
                 FROM net_sessions ns
                 LEFT JOIN checkins ch ON ch.session_id = ns.id
+                {where_sql}
                 GROUP BY ns.name
                 ORDER BY checkin_count DESC, ns.name
-                """
+                """,
+                params,
             ).fetchall()
             by_date = c.execute(
-                """
+                f"""
                 SELECT DATE(ch.checked_in_at) AS date, COUNT(ch.id) AS checkin_count
                 FROM checkins ch
+                {date_join_sql}
+                {date_where_sql}
                 GROUP BY DATE(ch.checked_in_at)
                 ORDER BY date
-                """
+                """,
+                params,
             ).fetchall()
             series_rows = c.execute(
                 f"""
@@ -267,9 +277,11 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
                        COUNT(ch.id) AS checkin_count
                 FROM checkins ch
                 JOIN net_sessions ns ON ns.id = ch.session_id
+                {where_sql}
                 GROUP BY ns.name, bucket
                 ORDER BY ns.name, bucket
-                """
+                """,
+                params,
             ).fetchall()
         series_by_net: list[dict[str, Any]] = []
         series_index: dict[str, dict[str, Any]] = {}
@@ -284,6 +296,7 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             series["points"].append({"bucket": item["bucket"], "checkin_count": item["checkin_count"]})
         return jsonify({
             "period": period,
+            "net_name": net_name,
             "by_net": [db.row_to_dict(r) for r in by_net],
             "by_date": [db.row_to_dict(r) for r in by_date],
             "series_by_net": series_by_net,

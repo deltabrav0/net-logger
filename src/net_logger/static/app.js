@@ -245,11 +245,24 @@ async function loadSessions() {
       <div class="details">${esc(s.status)} • ${formatDateTime(s.started_at)} • check-ins: ${s.checkin_count} • traffic: ${s.traffic_count}</div></div>
       <a class="button-link secondary" href="/api/export.csv?session_id=${s.id}">Export CSV</a>
     </div>`).join('') : '<div class="empty">No saved nets yet.</div>';
+  populateMetricsNetFilter(sessions);
+}
+
+function populateMetricsNetFilter(sessions) {
+  const select = $('metricsNetName');
+  if (!select) return;
+  const selected = select.value;
+  const names = Array.from(new Set(sessions.map(s => s.name || 'Untitled net'))).sort((a, b) => a.localeCompare(b));
+  select.innerHTML = '<option value="">All nets</option>' + names.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+  if (names.includes(selected)) select.value = selected;
 }
 
 async function loadMetrics() {
   const period = $('metricsPeriod') ? $('metricsPeriod').value : 'month';
-  const metrics = await api('/api/metrics?period=' + encodeURIComponent(period));
+  const netName = $('metricsNetName') ? $('metricsNetName').value : '';
+  const params = ['period=' + encodeURIComponent(period)];
+  if (netName) params.push('net_name=' + encodeURIComponent(netName));
+  const metrics = await api('/api/metrics?' + params.join('&'));
   renderNetSeriesCharts('metricsSeriesByNet', metrics.series_by_net || []);
 }
 
@@ -304,6 +317,7 @@ $('stationLookupForm').addEventListener('submit', handleStationLookup);
 $('updateFccBtn').addEventListener('click', () => updateFccDatabase().catch(err => setStatus(err.message)));
 $('refreshMetricsBtn').addEventListener('click', () => refreshAll().catch(err => setStatus(err.message)));
 $('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
+$('metricsNetName').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
 $('stationLookup').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
 
 const checkedDrop = $('checkedInDropZone');

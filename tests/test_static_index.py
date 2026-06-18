@@ -62,6 +62,14 @@ def test_toolbar_uses_one_station_lookup_box_instead_of_separate_search_and_unkn
     assert 'id="lookupBtn"' not in html
 
 
+def test_metrics_panel_has_net_name_filter_dropdown():
+    html = INDEX.read_text()
+
+    assert 'id="metricsNetName"' in html
+    assert 'Net name' in html
+    assert '<option value="">All nets</option>' in html
+
+
 def test_user_guide_html_page_exists_with_matching_theme_and_updated_lookup_instructions():
     html = Path("src/net_logger/static/user-guide.html").read_text()
 

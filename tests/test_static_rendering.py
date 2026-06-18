@@ -183,6 +183,99 @@ def test_delete_station_calls_delete_api_and_updates_board():
     assert "Station deleted" in result["status"]
 
 
+def test_load_sessions_populates_metrics_net_name_filter_with_unique_net_names():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const calls = [];
+const makeElement = () => ({
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  calls,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement());
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  api = async (path) => {
+    calls.push(path);
+    return [
+      { id: 1, name: 'Weekly Net', status: 'closed', started_at: '2026-01-01 19:00:00', checkin_count: 1, traffic_count: 0 },
+      { id: 2, name: 'Skywarn Net', status: 'closed', started_at: '2026-01-02 19:00:00', checkin_count: 1, traffic_count: 0 },
+      { id: 3, name: 'Weekly Net', status: 'closed', started_at: '2026-01-03 19:00:00', checkin_count: 1, traffic_count: 0 },
+    ];
+  };
+`, context);
+context.loadSessions().then(() => {
+  console.log(JSON.stringify({ options: elements.get('metricsNetName').innerHTML }));
+});
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert '<option value="">All nets</option>' in result["options"]
+    assert result["options"].count('<option value="Weekly Net">Weekly Net</option>') == 1
+    assert "Skywarn Net" in result["options"]
+
+
+def test_load_metrics_passes_selected_net_name_to_api():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const calls = [];
+const makeElement = (id) => ({
+  textContent: '',
+  innerHTML: '',
+  value: id === 'metricsPeriod' ? 'week' : id === 'metricsNetName' ? 'Skywarn Net' : '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  calls,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  api = async (path) => { calls.push(path); return { series_by_net: [] }; };
+`, context);
+context.loadMetrics().then(() => {
+  console.log(JSON.stringify({ calls }));
+});
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert result["calls"] == ["/api/metrics?period=week&net_name=Skywarn%20Net"]
+
+
 def _run_station_lookup(board, query, session_open=True, fcc_found=False):
     session_json = json.dumps(12 if session_open else None)
     current_session_json = json.dumps({"status": "open"} if session_open else None)

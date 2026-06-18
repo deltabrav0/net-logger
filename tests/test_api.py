@@ -439,6 +439,21 @@ def test_metrics_group_checkins_by_net_and_date(client):
     assert sum(row["checkin_count"] for row in metrics["by_date"]) == 2
 
 
+def test_metrics_filters_by_net_name(client):
+    _make_session_with_checkin(client, "Tuesday Net", "W5XYZ")
+    _make_session_with_checkin(client, "Thursday Net", "K5SUB")
+
+    res = client.get("/api/metrics?period=month&net_name=Thursday%20Net")
+
+    assert res.status_code == 200
+    metrics = res.get_json()
+    assert metrics["net_name"] == "Thursday Net"
+    assert {row["net_name"]: row["checkin_count"] for row in metrics["by_net"]} == {"Thursday Net": 1}
+    assert metrics["series_by_net"] == [
+        {"net_name": "Thursday Net", "points": [{"bucket": metrics["series_by_net"][0]["points"][0]["bucket"], "checkin_count": 1}]}
+    ]
+
+
 def _set_session_and_checkin_time(client, session_id, checked_in_at):
     import sqlite3
 

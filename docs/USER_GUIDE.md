@@ -104,6 +104,8 @@ The Metrics view summarizes check-in activity by net and by time period. Support
 - Month
 - Year
 
+Use **Net name** to filter metrics to one saved net name, or leave it on **All nets** to compare every saved net.
+
 ## Deleting all records
 
 Use the administrative reset API when you want a clean database.
