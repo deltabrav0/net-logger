@@ -42,6 +42,31 @@ def test_interactive_api_docs_page_loads_swagger_ui(client):
     assert "url: '/openapi.yaml'" in html
 
 
+def test_custom_logo_path_overrides_packaged_logo(tmp_path):
+    logo = tmp_path / "app-logo.png"
+    logo.write_bytes(b"custom-logo")
+    db_path = tmp_path / "net_logger.sqlite3"
+    app = create_app({"DATABASE": str(db_path), "TESTING": True, "LOGO_PATH": str(logo)})
+
+    with app.test_client() as custom_client:
+        res = custom_client.get("/app-logo.png")
+
+    assert res.status_code == 200
+    assert res.get_data() == b"custom-logo"
+    assert res.mimetype == "image/png"
+
+
+def test_missing_custom_logo_path_falls_back_to_packaged_logo(tmp_path):
+    db_path = tmp_path / "net_logger.sqlite3"
+    app = create_app({"DATABASE": str(db_path), "TESTING": True, "LOGO_PATH": str(tmp_path / "missing.png")})
+
+    with app.test_client() as custom_client:
+        res = custom_client.get("/app-logo.png")
+
+    assert res.status_code == 200
+    assert res.get_data().startswith(b"\x89PNG\r\n\x1a\n")
+
+
 def test_station_can_be_created_and_listed(client):
     res = client.post("/api/stations", json={"callsign": "km4ack", "name": "Jason", "city": "Maryville", "state": "TN"})
     assert res.status_code == 201

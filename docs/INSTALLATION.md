@@ -150,12 +150,55 @@ Environment variables:
 - `NET_LOGGER_DATA_DIR`: directory used for the default database path
 - `NET_LOGGER_DEBUG`: set to `true` for Flask debug mode
 - `NET_LOGGER_FCC_LOOKUP_PATH`: local FCC flat-file lookup directory
+- `NET_LOGGER_LOGO_PATH`: optional path to a custom PNG logo file
 
 Default installed database locations:
 
 - Windows: `%APPDATA%\Net Logger\net_logger.sqlite3`
 - macOS: `~/Library/Application Support/Net Logger/net_logger.sqlite3`
 - Linux: `~/.local/share/net-logger/net_logger.sqlite3`, or `$XDG_DATA_HOME/net-logger/net_logger.sqlite3`
+
+## Customizing the application logo
+
+Net Logger ships with a default logo at:
+
+```text
+src/net_logger/static/app-logo.png
+```
+
+The default logo is a square PNG image sized `1024 x 1024` pixels. The browser displays it as a smaller header image, but keeping the source image square prevents distortion on high-resolution displays.
+
+There are two supported customization approaches.
+
+### Runtime logo override
+
+For an installed app, save your replacement PNG anywhere readable by the user running Net Logger and set `NET_LOGGER_LOGO_PATH` before starting the server.
+
+Windows PowerShell:
+
+```powershell
+$env:NET_LOGGER_LOGO_PATH="C:\path\to\app-logo.png"
+net-logger serve
+```
+
+macOS/Linux:
+
+```bash
+export NET_LOGGER_LOGO_PATH="/path/to/app-logo.png"
+net-logger serve
+```
+
+Use the same practical shape and format as the bundled logo: PNG, square, ideally `1024 x 1024` pixels. The file may be named anything when using `NET_LOGGER_LOGO_PATH`, but naming it `app-logo.png` keeps deployments consistent.
+
+### Source/distribution logo replacement
+
+If you are building your own branded copy from a Git checkout, replace the bundled file with your logo while keeping the same filename:
+
+```text
+src/net_logger/static/app-logo.png
+```
+
+Then reinstall or rebuild the package. For best results, use a square `1024 x 1024` PNG. The package configuration includes `static/*.png`, so the replacement logo is included in wheels, source distributions, and PyInstaller builds that collect package data.
 
 ## Packaging and distribution
 

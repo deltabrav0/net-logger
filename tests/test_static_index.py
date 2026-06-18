@@ -1,11 +1,42 @@
 from pathlib import Path
+import struct
+
+
+ROOT = Path(__file__).resolve().parents[1]
+INDEX = ROOT / "src" / "net_logger" / "static" / "index.html"
+USER_GUIDE_HTML = ROOT / "src" / "net_logger" / "static" / "user-guide.html"
+LOGO = ROOT / "src" / "net_logger" / "static" / "app-logo.png"
+INSTALLATION = ROOT / "docs" / "INSTALLATION.md"
+PYPROJECT = ROOT / "pyproject.toml"
 
 
 def test_packaged_openapi_spec_matches_documented_spec():
-    assert Path("src/net_logger/openapi.yaml").read_text() == Path("docs/openapi.yaml").read_text()
+    assert (ROOT / "src/net_logger/openapi.yaml").read_text() == (ROOT / "docs/openapi.yaml").read_text()
 
 
-INDEX = Path("src/net_logger/static/index.html")
+def test_header_includes_customizable_app_logo():
+    html = INDEX.read_text()
+
+    assert '<img class="app-logo" src="/app-logo.png" alt="Net Logger logo" width="96" height="96">' in html
+
+
+def test_default_logo_asset_is_packaged_square_png():
+    assert LOGO.exists()
+    assert LOGO.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+    with LOGO.open("rb") as f:
+        f.seek(16)
+        width, height = struct.unpack(">II", f.read(8))
+    assert (width, height) == (1024, 1024)
+    assert '"static/*.png"' in PYPROJECT.read_text()
+
+
+def test_installation_docs_explain_logo_customization():
+    text = INSTALLATION.read_text()
+
+    assert "## Customizing the application logo" in text
+    assert "app-logo.png" in text
+    assert "1024 x 1024" in text
+    assert "NET_LOGGER_LOGO_PATH" in text
 
 
 def test_session_buttons_are_capitalized_and_grouped_on_one_row():

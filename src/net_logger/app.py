@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, Response, jsonify, request, send_from_directory
+from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 
 from . import db
 from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_database
@@ -17,7 +17,7 @@ from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_databas
 def create_app(config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__, static_folder="static", static_url_path="")
     database = os.path.join(app.instance_path, "net_logger.sqlite3")
-    app.config.update(DATABASE=database)
+    app.config.update(DATABASE=database, LOGO_PATH=os.environ.get("NET_LOGGER_LOGO_PATH"))
     if config:
         app.config.update(config)
     os.makedirs(app.instance_path, exist_ok=True)
@@ -54,6 +54,13 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
     @app.get("/")
     def index():
         return send_from_directory(app.static_folder, "index.html")
+
+    @app.get("/app-logo.png")
+    def app_logo():
+        custom_logo = app.config.get("LOGO_PATH")
+        if custom_logo and Path(custom_logo).is_file():
+            return send_file(custom_logo, mimetype="image/png")
+        return send_from_directory(app.static_folder, "app-logo.png")
 
     @app.get("/openapi.yaml")
     def openapi_spec():
