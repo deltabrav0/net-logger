@@ -40,7 +40,7 @@
       </ol>
 
       <h2>Starting a net</h2>
-      <p>At the top of the page, enter the net name, frequency, and Net Control callsign. The <strong>Net name</strong> and <strong>Frequency</strong> fields are editable suggestion boxes. After you have saved nets, Net Logger suggests previous net names and previous frequencies. Use the <strong>Previous nets</strong> dropdown for a click-open list of saved net names, or type directly in the field. Choosing a previous net name, such as <strong>Weekly Net</strong>, automatically fills the frequency with that net's most recently used frequency. You can still type a new net name or frequency at any time.</p>
+      <p>At the top of the page, enter the net name, frequency, and Net Control callsign. After you have saved at least one net, Net Logger pre-fills <strong>Net name</strong> and <strong>Frequency</strong> with the most recent saved values. You can still type over either field at any time.</p>
       <p>Press <strong>Start Net</strong>. If Net Control is not already known, Net Logger attempts a local FCC lookup when FCC data is configured. Net Control is then automatically added to the <strong>Checked In</strong> column for the active session.</p>
 
       <h2>Searching, adding, and checking in stations</h2>
@@ -54,7 +54,8 @@
 
       <h2>FCC database age and updates</h2>
       <p>The toolbar shows the local FCC database age, for example <code>FCC database: 3 days old</code>. If local FCC data is missing, the indicator shows that the database is unavailable.</p>
-      <p>Press <strong>Update FCC Database</strong> to download the current FCC amateur-license file, extract the local lookup files, and rebuild the callsign index. The update requires internet access and can take a few minutes.</p>
+      <p>Press <strong>Update FCC Database</strong> to download the current FCC amateur-license file, extract the local lookup files, and rebuild the callsign index. The update requires internet access and can take a few minutes. While it is running, the toolbar shows <code>FCC database: updating…</code>. When it finishes successfully, the age should change to <code>updated today</code>.</p>
+      <p>From a Docker host, check status with <code>curl http://127.0.0.1:8088/api/fcc/status</code>. A healthy updated database reports <code>available: true</code>, <code>age_days: 0</code>, and present <code>EN.dat</code> / <code>EN.idx</code> files. You can also run <code>docker compose exec net-logger ls -lh /fcc/data/EN.dat /fcc/data/EN.idx /fcc/data/HD.dat</code>.</p>
 
       <h2>Last Heard timestamps</h2>
       <p>Known station cards display Last Heard information when available. This helps Net Control quickly see which stations have checked in recently.</p>

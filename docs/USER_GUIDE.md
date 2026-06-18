@@ -33,7 +33,7 @@ At the top of the page, enter:
 - Frequency
 - Net Control callsign
 
-The **Net name** and **Frequency** fields are editable suggestion boxes. After you have saved nets, Net Logger suggests previous net names and previous frequencies. Use the **Previous nets** dropdown for a click-open list of saved net names, or type directly in the field. Choosing a previous net name, such as **Weekly Net**, automatically fills the frequency with that net's most recently used frequency. You can still type a new net name or frequency at any time.
+After you have saved at least one net, Net Logger pre-fills **Net name** and **Frequency** with the most recent saved values. You can still type over either field at any time.
 
 Press **Start Net**. If Net Control is not already in the station list, Net Logger attempts a local FCC lookup when FCC data is configured. Net Control is then automatically added to the **Checked In** column for the active session.
 
@@ -84,7 +84,25 @@ FCC lookup is local/off-grid. The app does not require internet lookup services 
 
 The toolbar shows the local FCC database age, for example `FCC database: 3 days old`. If local FCC data is missing, the indicator shows that the database is unavailable.
 
-Press **Update FCC Database** to download the current FCC amateur-license file, extract the local lookup files, and rebuild the callsign index. The update requires internet access and can take a few minutes.
+Press **Update FCC Database** to download the current FCC amateur-license file, extract the local lookup files, and rebuild the callsign index. The update requires internet access and can take a few minutes. While it is running, the toolbar shows `FCC database: updating…`. When it finishes successfully, the age should change to `updated today`.
+
+To check the update from the command line on a Docker host:
+
+```bash
+curl http://127.0.0.1:8088/api/fcc/status
+```
+
+A healthy updated database reports `available: true`, `age_days: 0`, and `EN.dat` / `EN.idx` present under `files`. You can also check the files in the container:
+
+```bash
+docker compose exec net-logger ls -lh /fcc/data/EN.dat /fcc/data/EN.idx /fcc/data/HD.dat
+```
+
+During an update, `EN.dat` and `HD.dat` are downloaded/extracted first, then `EN.idx` is rebuilt. If the browser still says `updating…` for much longer than several minutes, check container logs:
+
+```bash
+docker compose logs --tail=100 net-logger
+```
 
 ## Last Heard timestamps
 

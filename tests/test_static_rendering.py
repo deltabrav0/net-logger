@@ -299,7 +299,7 @@ context.loadSessions().then(() => {
     assert "Skywarn Net" in result["options"]
 
 
-def test_load_sessions_populates_session_suggestions_and_autofills_latest_frequency():
+def test_load_sessions_prefills_form_with_most_recent_saved_net_without_extra_selectors():
     script = """
 const vm = require('node:vm');
 const fs = require('node:fs');
@@ -338,46 +338,22 @@ vm.runInContext(`
   };
 `, context);
 context.loadSessions().then(() => {
-  elements.get('netName').value = 'Weekly Net';
-  listeners.get('netName:change')();
-  const weeklyFrequency = elements.get('frequency').value;
-  elements.get('netName').value = 'Skywarn Net';
-  listeners.get('netName:input')();
-  const typedSkywarnFrequency = elements.get('frequency').value;
-  elements.get('netNamePreset').value = 'Weekly Net';
-  listeners.get('netNamePreset:change')();
-  const presetName = elements.get('netName').value;
-  const presetFrequency = elements.get('frequency').value;
-  elements.get('frequencyPreset').value = '146.940 MHz';
-  listeners.get('frequencyPreset:change')();
   console.log(JSON.stringify({
-    names: elements.get('netNameSuggestions').innerHTML,
-    frequencies: elements.get('frequencySuggestions').innerHTML,
-    namePreset: elements.get('netNamePreset').innerHTML,
-    frequencyPreset: elements.get('frequencyPreset').innerHTML,
-    weeklyFrequency,
-    typedSkywarnFrequency,
-    presetName,
-    presetFrequency,
-    frequencyAfterPreset: elements.get('frequency').value,
-    skywarnFrequency: elements.get('frequency').value,
+    netName: elements.get('netName').value,
+    frequency: elements.get('frequency').value,
+    hasNetNameChangeListener: listeners.has('netName:change'),
+    hasNetPresetChangeListener: listeners.has('netNamePreset:change'),
+    hasFrequencyPresetChangeListener: listeners.has('frequencyPreset:change'),
   }));
 });
 """
     result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
 
-    assert result["names"].count('<option value="Weekly Net">') == 1
-    assert '<option value="Skywarn Net">' in result["names"]
-    assert '<option value="147.240 MHz">' in result["frequencies"]
-    assert '<option value="146.940 MHz">' in result["frequencies"]
-    assert '<option value="Weekly Net">Weekly Net</option>' in result["namePreset"]
-    assert '<option value="146.940 MHz">146.940 MHz</option>' in result["frequencyPreset"]
-    assert result["weeklyFrequency"] == "147.240 MHz"
-    assert result["typedSkywarnFrequency"] == "146.940 MHz"
-    assert result["presetName"] == "Weekly Net"
-    assert result["presetFrequency"] == "147.240 MHz"
-    assert result["frequencyAfterPreset"] == "146.940 MHz"
-    assert result["skywarnFrequency"] == "146.940 MHz"
+    assert result["netName"] == "Weekly Net"
+    assert result["frequency"] == "147.240 MHz"
+    assert result["hasNetNameChangeListener"] is False
+    assert result["hasNetPresetChangeListener"] is False
+    assert result["hasFrequencyPresetChangeListener"] is False
 
 
 def test_load_metrics_passes_selected_net_name_to_api():
