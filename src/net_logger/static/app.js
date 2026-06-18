@@ -1,7 +1,6 @@
 let sessionId = null;
 let currentSession = null;
 let board = { known_stations: [], checkins: [] };
-let pendingLookupResult = null;
 
 const $ = (id) => document.getElementById(id);
 const statusEl = $('status');
@@ -92,14 +91,14 @@ async function clearNet() {
 
 async function loadBoard() {
   if (!sessionId) {
-    const stations = await api('/api/stations?q=' + encodeURIComponent($('stationSearch').value));
+    const stations = await api('/api/stations?q=' + encodeURIComponent($('stationLookup').value));
     board = { known_stations: stations, checkins: [] };
   } else {
     board = await api(`/api/sessions/${sessionId}/board`);
     currentSession = board.session;
     $('stopNetBtn').disabled = currentSession.status === 'closed';
     $('clearNetBtn').hidden = currentSession.status !== 'closed';
-    const q = $('stationSearch').value.trim().toUpperCase();
+    const q = $('stationLookup').value.trim().toUpperCase();
     if (q) board.known_stations = board.known_stations.filter(s => s.callsign.includes(q) || (s.name || '').toUpperCase().includes(q));
   }
   renderBoard();
@@ -169,43 +168,60 @@ async function updateCheckin(id, patch) {
   await loadBoard();
 }
 
-async function addStation(evt) {
-  evt.preventDefault();
-  const payload = { callsign: $('newCallsign').value, name: $('newName').value };
-  if (pendingLookupResult && pendingLookupResult.callsign === $('newCallsign').value.trim().toUpperCase()) {
-    Object.assign(payload, {
-      callsign: pendingLookupResult.callsign,
-      name: pendingLookupResult.name,
-      city: pendingLookupResult.city,
-      state: pendingLookupResult.state,
-      grid: pendingLookupResult.grid,
-      lat: pendingLookupResult.lat,
-      lon: pendingLookupResult.lon,
-      source: 'fcc',
-    });
-  }
-  const station = await api('/api/stations', { method: 'POST', body: JSON.stringify(payload) });
-  $('newCallsign').value = '';
-  $('newName').value = '';
-  pendingLookupResult = null;
-  await loadBoard();
-  if (sessionOpen()) await checkIn(station.id);
+function normalizedLookupValue() {
+  return $('stationLookup').value.trim().toUpperCase();
 }
 
-async function lookupCallsign() {
-  const call = $('newCallsign').value;
-  if (!call.trim()) return;
-  const result = await api('/api/lookup?callsign=' + encodeURIComponent(call));
-  if (result.found && result.result) {
-    pendingLookupResult = result.result;
-    $('newCallsign').value = result.result.callsign || call;
-    $('newName').value = result.result.name || '';
-    const where = place(result.result) ? ` (${place(result.result)})` : '';
-    setStatus('FCC lookup found ' + $('newCallsign').value + where + '.');
-  } else {
-    pendingLookupResult = null;
-    setStatus('No local FCC result for ' + result.callsign + '; enter manually.');
+function findKnownStation(query) {
+  const q = query.trim().toUpperCase();
+  if (!q) return null;
+  const candidates = [...(board.known_stations || []), ...(board.checkins || []).map(c => c.station)].filter(Boolean);
+  return candidates.find(s => (s.callsign || '').toUpperCase() === q) || null;
+}
+
+function payloadFromFccResult(result, fallbackCallsign) {
+  if (!result) return { callsign: fallbackCallsign };
+  return {
+    callsign: result.callsign || fallbackCallsign,
+    name: result.name || '',
+    city: result.city || '',
+    state: result.state || '',
+    grid: result.grid || '',
+    lat: result.lat,
+    lon: result.lon,
+    source: 'fcc',
+  };
+}
+
+async function handleStationLookup(evt) {
+  evt.preventDefault();
+  const query = normalizedLookupValue();
+  if (!query) return;
+
+  const known = findKnownStation(query);
+  if (known) {
+    setStatus(`Known station ${known.callsign} found${sessionOpen() ? '; checking in.' : '.'}`);
+    $('stationLookup').value = '';
+    if (sessionOpen()) await checkIn(known.id);
+    else await loadBoard();
+    return;
   }
+
+  setStatus(`No known station for ${query}; searching local FCC database…`);
+  const result = await api('/api/lookup?callsign=' + encodeURIComponent(query));
+  const payload = result.found && result.result ? payloadFromFccResult(result.result, query) : { callsign: result.callsign || query };
+  const station = await api('/api/stations', { method: 'POST', body: JSON.stringify(payload) });
+  $('stationLookup').value = '';
+
+  if (result.found && result.result) {
+    const where = place(result.result) ? ` (${place(result.result)})` : '';
+    setStatus(`FCC lookup found ${station.callsign}${where}; station saved${sessionOpen() ? ' and checked in.' : '.'}`);
+  } else {
+    setStatus(`No local FCC result for ${payload.callsign}; callsign-only station saved${sessionOpen() ? ' and checked in.' : '.'}`);
+  }
+
+  if (sessionOpen()) await checkIn(station.id);
+  else await refreshAll();
 }
 
 async function loadSessions() {
@@ -271,13 +287,11 @@ async function refreshAll() {
 $('sessionForm').addEventListener('submit', startSession);
 $('stopNetBtn').addEventListener('click', stopSession);
 $('clearNetBtn').addEventListener('click', clearNet);
-$('addStationForm').addEventListener('submit', addStation);
-$('lookupBtn').addEventListener('click', lookupCallsign);
+$('stationLookupForm').addEventListener('submit', handleStationLookup);
 $('updateFccBtn').addEventListener('click', () => updateFccDatabase().catch(err => setStatus(err.message)));
 $('refreshMetricsBtn').addEventListener('click', () => refreshAll().catch(err => setStatus(err.message)));
 $('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
-$('stationSearch').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
-$('newCallsign').addEventListener('input', () => { pendingLookupResult = null; });
+$('stationLookup').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
 
 const checkedDrop = $('checkedInDropZone');
 checkedDrop.addEventListener('dragover', e => { if (sessionOpen()) { e.preventDefault(); checkedDrop.classList.add('dragover'); } });

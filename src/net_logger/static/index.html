@@ -10,7 +10,13 @@
   <main class="shell">
     <header class="hero">
       <div>
-        <p class="eyebrow">Amateur Radio</p>
+        <div class="eyebrow-row">
+          <p class="eyebrow">Amateur Radio</p>
+          <nav class="header-links" aria-label="Documentation links">
+            <a href="/user-guide.html">User Docs</a>
+            <a href="/api/docs">API Docs</a>
+          </nav>
+        </div>
         <h1>Net Logger</h1>
         <p class="muted">Known stations → checked in. Traffic and notes stay on each station card.</p>
       </div>
@@ -27,12 +33,11 @@
     </header>
 
     <section class="toolbar">
-      <label class="search">Search known stations <input id="stationSearch" placeholder="Callsign or name"></label>
-      <form id="addStationForm" class="add-form">
-        <input id="newCallsign" placeholder="Unknown callsign" required>
-        <input id="newName" placeholder="Name optional">
-        <button type="button" id="lookupBtn">FCC lookup</button>
-        <button type="submit">Add station</button>
+      <form id="stationLookupForm" class="station-lookup-form">
+        <label class="search">Search or add station
+          <input id="stationLookup" placeholder="Callsign or name" autocomplete="off" required>
+        </label>
+        <button type="submit">Find / Check in</button>
       </form>
       <span id="status" class="status">No session started.</span>
       <div class="fcc-tools" aria-label="FCC database tools">

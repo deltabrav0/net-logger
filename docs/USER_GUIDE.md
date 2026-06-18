@@ -58,14 +58,18 @@ Expand a checked-in station card to edit:
 
 Use these fields during the net to record whether the station has traffic and any follow-up details you need to preserve.
 
-## Adding stations
+## Adding and checking in stations
 
-Use the add-station form for a callsign not already listed.
+Use the single station lookup box labeled **Search or add station**.
 
-- Enter the callsign.
-- Optional: enter a name manually.
-- Press **FCC lookup** to populate details from local FCC data if available.
-- Press **Add station**.
+- Enter a callsign.
+- Net Logger searches known stations first.
+- If a matching known callsign is found and a net is open, the station is checked in.
+- If no known station matches, Net Logger then searches the local FCC database.
+- If FCC data is found, the station is saved with FCC details.
+- If FCC data is not found, a callsign-only station is saved.
+
+When a net is open, stations found or created from the lookup box are automatically checked into the active net. When no net is open, the box filters the known-station list as you type and can still be used to save a new station.
 
 FCC lookup is local/off-grid. The app does not require internet lookup services such as QRZ. For FCC data setup, see the [installation guide](INSTALLATION.md#fcc-lookup-setup).
 

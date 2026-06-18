@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Net Logger User Guide</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell docs-page">
+    <header class="hero docs-hero">
+      <div>
+        <div class="eyebrow-row">
+          <p class="eyebrow">Amateur Radio</p>
+          <nav class="header-links" aria-label="Documentation links">
+            <a href="/">Net Logger</a>
+            <a href="/api/docs">API Docs</a>
+          </nav>
+        </div>
+        <h1>Net Logger User Guide</h1>
+        <p class="muted">A quick guide for running nets, checking in stations, updating FCC data, and exporting records.</p>
+      </div>
+    </header>
+
+    <section class="panel docs-content">
+      <h2>Opening Net Logger</h2>
+      <p>Start the server, then open Net Logger in a browser. The default local address is:</p>
+      <pre><code>http://127.0.0.1:8088</code></pre>
+      <p>If the server was started on all LAN interfaces, another device on the same network can open the app by using the host computer's LAN address and configured port.</p>
+
+      <h2>Basic use</h2>
+      <ol>
+        <li>Enter a net name, frequency, and Net Control callsign.</li>
+        <li>Press <strong>Start Net</strong>.</li>
+        <li>Net Control is automatically added to <strong>Checked In</strong>.</li>
+        <li>Check in stations with the single station lookup box, a card's <strong>Check in</strong> button, or drag-and-drop.</li>
+        <li>Expand a checked-in card to edit traffic and notes.</li>
+        <li>Press <strong>Stop Net</strong> when the net is finished.</li>
+        <li>Use CSV export or Metrics as needed.</li>
+      </ol>
+
+      <h2>Starting a net</h2>
+      <p>At the top of the page, enter the net name, frequency, and Net Control callsign, then press <strong>Start Net</strong>. If Net Control is not already known, Net Logger attempts a local FCC lookup when FCC data is configured. Net Control is then automatically added to the <strong>Checked In</strong> column for the active session.</p>
+
+      <h2>Searching, adding, and checking in stations</h2>
+      <p>Enter a callsign in the single station lookup box labeled <strong>Search or add station</strong>. Net Logger searches known stations first. If no known callsign matches, it then searches the local FCC database. If FCC data is found, the station is saved with FCC details; otherwise a callsign-only station is saved.</p>
+      <p>When a net is open, a station found or created from this box is checked into the active net automatically. When no net is open, the station list is filtered as you type and new stations are saved for later use.</p>
+      <p>You can also check in a known station by clicking <strong>Check in</strong> on the station card or dragging the station card from <strong>Known Stations</strong> to <strong>Checked In</strong>.</p>
+
+      <h2>Editing traffic and notes</h2>
+      <p>Expand a checked-in station card to edit whether the station has traffic, traffic details, and notes.</p>
+
+      <h2>FCC database age and updates</h2>
+      <p>The toolbar shows the local FCC database age, for example <code>FCC database: 3 days old</code>. If local FCC data is missing, the indicator shows that the database is unavailable.</p>
+      <p>Press <strong>Update FCC Database</strong> to download the current FCC amateur-license file, extract the local lookup files, and rebuild the callsign index. The update requires internet access and can take a few minutes.</p>
+
+      <h2>Last Heard timestamps</h2>
+      <p>Known station cards display Last Heard information when available. This helps Net Control quickly see which stations have checked in recently.</p>
+
+      <h2>Stopping a net</h2>
+      <p>Press <strong>Stop Net</strong> when the net is finished. The session and check-ins are saved in the SQLite database.</p>
+
+      <h2>CSV export</h2>
+      <p>Use CSV export to download saved net records for spreadsheet review, archival records, or external reporting.</p>
+
+      <h2>Metrics</h2>
+      <p>The Metrics view summarizes check-in activity by net and by week, month, or year.</p>
+
+      <h2>Backing up data</h2>
+      <p>Stop the server, then copy the SQLite database file. On macOS with default installed paths:</p>
+      <pre><code>cp "$HOME/Library/Application Support/Net Logger/net_logger.sqlite3" ./net_logger_backup.sqlite3</code></pre>
+    </section>
+  </main>
+</body>
+</html>
