@@ -528,6 +528,14 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             return jsonify({"error": "session not found"}), 404
         return jsonify(db.row_to_dict(row))
 
+    @app.delete("/api/sessions/<int:session_id>")
+    def cancel_session(session_id: int):
+        with con() as c:
+            cur = c.execute("DELETE FROM net_sessions WHERE id = ?", (session_id,))
+        if cur.rowcount == 0:
+            return jsonify({"error": "session not found"}), 404
+        return "", 204
+
     @app.get("/api/lookup")
     def lookup():
         callsign = request.args.get("callsign") or ""

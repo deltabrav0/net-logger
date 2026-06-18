@@ -65,6 +65,7 @@ async function startSession(evt) {
   sessionId = session.id;
   currentSession = session;
   $('stopNetBtn').disabled = false;
+  $('cancelNetBtn').disabled = false;
   $('clearNetBtn').hidden = true;
   setStatus(`Session #${sessionId} open.`);
   await refreshAll();
@@ -75,15 +76,33 @@ async function stopSession() {
   const session = await api(`/api/sessions/${sessionId}/stop`, { method: 'POST' });
   currentSession = session;
   $('stopNetBtn').disabled = true;
+  $('cancelNetBtn').disabled = true;
   $('clearNetBtn').hidden = false;
   setStatus(`Session #${sessionId} stopped. Records were already saved; this marks the net closed.`);
   await refreshAll();
+}
+
+async function cancelSession() {
+  if (!sessionId) return;
+  const canceledId = sessionId;
+  if (!confirm('Cancel this net and discard its saved session/check-ins? Known station records will remain.')) return;
+  await api(`/api/sessions/${canceledId}`, { method: 'DELETE' });
+  sessionId = null;
+  currentSession = null;
+  $('stopNetBtn').disabled = true;
+  $('cancelNetBtn').disabled = true;
+  $('clearNetBtn').hidden = true;
+  setStatus(`Session #${canceledId} canceled. Net session and check-ins were discarded.`);
+  await loadBoard();
+  await loadSessions();
+  await loadMetrics();
 }
 
 async function clearNet() {
   sessionId = null;
   currentSession = null;
   $('stopNetBtn').disabled = true;
+  $('cancelNetBtn').disabled = true;
   $('clearNetBtn').hidden = true;
   setStatus('Cleared the active board. The stopped net remains saved and exportable.');
   await loadBoard();
@@ -97,6 +116,7 @@ async function loadBoard() {
     board = await api(`/api/sessions/${sessionId}/board`);
     currentSession = board.session;
     $('stopNetBtn').disabled = currentSession.status === 'closed';
+    $('cancelNetBtn').disabled = currentSession.status === 'closed';
     $('clearNetBtn').hidden = currentSession.status !== 'closed';
     const q = $('stationLookup').value.trim().toUpperCase();
     if (q) board.known_stations = board.known_stations.filter(s => s.callsign.includes(q) || (s.name || '').toUpperCase().includes(q));
@@ -312,6 +332,7 @@ async function refreshAll() {
 
 $('sessionForm').addEventListener('submit', startSession);
 $('stopNetBtn').addEventListener('click', stopSession);
+$('cancelNetBtn').addEventListener('click', cancelSession);
 $('clearNetBtn').addEventListener('click', clearNet);
 $('stationLookupForm').addEventListener('submit', handleStationLookup);
 $('updateFccBtn').addEventListener('click', () => updateFccDatabase().catch(err => setStatus(err.message)));

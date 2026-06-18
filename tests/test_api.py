@@ -269,6 +269,27 @@ def test_stop_net_marks_session_closed_without_losing_checkins(client):
     assert [c["station"]["callsign"] for c in board["checkins"]] == ["W5XYZ"]
 
 
+def test_cancel_net_deletes_session_and_checkins_without_deleting_stations(client):
+    station = client.post("/api/stations", json={"callsign": "W5XYZ"}).get_json()
+    session = client.post("/api/sessions/start", json={"name": "Practice Net"}).get_json()
+    client.post(f"/api/sessions/{session['id']}/checkins", json={"station_id": station["id"], "traffic": True})
+
+    res = client.delete(f"/api/sessions/{session['id']}")
+
+    assert res.status_code == 204
+    assert client.get(f"/api/sessions/{session['id']}/board").status_code == 404
+    assert client.get("/api/sessions").get_json() == []
+    assert [s["callsign"] for s in client.get("/api/stations").get_json()] == ["W5XYZ"]
+    assert client.get("/api/metrics").get_json()["series_by_net"] == []
+
+
+def test_cancel_unknown_net_returns_404(client):
+    res = client.delete("/api/sessions/999")
+
+    assert res.status_code == 404
+    assert res.get_json() == {"error": "session not found"}
+
+
 def test_lookup_without_fcc_data_returns_not_found_not_error(monkeypatch, client):
     monkeypatch.setenv("NET_LOGGER_FCC_LOOKUP_PATH", "/path/that/does/not/exist")
     res = client.get("/api/lookup?callsign=W5XYZ")

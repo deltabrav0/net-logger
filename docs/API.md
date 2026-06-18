@@ -586,6 +586,27 @@ Marks the session `closed` and sets `closed_at` if it was not already closed.
 
 ---
 
+### `DELETE /api/sessions/{session_id}`
+
+Cancel a net session.
+
+**Tags:** `Sessions`
+
+**Operation ID:** `cancelSession`
+
+Deletes the net session and its check-ins so the net is not retained in Saved Nets, exports, or metrics. Known station records are not deleted.
+
+#### Path parameters
+
+- `session_id` integer, required — session ID.
+
+#### Responses
+
+- `204 No Content` — session canceled/deleted. Empty response body.
+- `404 Not Found` — session not found.
+
+---
+
 ## Check-ins
 
 ### `POST /api/sessions/{session_id}/checkins`

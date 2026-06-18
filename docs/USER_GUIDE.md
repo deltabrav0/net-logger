@@ -88,9 +88,11 @@ Press **Update FCC Database** to download the current FCC amateur-license file, 
 
 Known station cards display Last Heard information when available. This helps Net Control quickly see which stations have checked in recently and which stations have not been heard in a while.
 
-## Stopping a net
+## Stopping or canceling a net
 
 Press **Stop Net** when the net is finished. The session and check-ins are saved in the SQLite database.
+
+Press **Cancel Net** when the net was started by mistake or should be discarded. Canceling deletes that net session and its check-ins so it does not appear in Saved Nets, exports, or Metrics. Known station records remain available.
 
 ## CSV export
 

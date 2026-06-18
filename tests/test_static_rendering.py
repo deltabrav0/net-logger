@@ -183,6 +183,71 @@ def test_delete_station_calls_delete_api_and_updates_board():
     assert "Station deleted" in result["status"]
 
 
+def test_cancel_net_calls_delete_session_api_and_clears_active_board():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const calls = [];
+const makeElement = (id) => ({
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  calls,
+  confirm: () => true,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  sessionId = 12;
+  currentSession = { id: 12, status: 'open' };
+  api = async (path, options = {}) => {
+    calls.push([path, options.method || 'GET', options.body || '']);
+    return null;
+  };
+  loadBoard = async () => { calls.push(['loadBoard', 'CALL', '']); };
+  loadSessions = async () => { calls.push(['loadSessions', 'CALL', '']); };
+  loadMetrics = async () => { calls.push(['loadMetrics', 'CALL', '']); };
+`, context);
+context.cancelSession().then(() => {
+  console.log(JSON.stringify({
+    calls,
+    status: elements.get('status').textContent,
+    stopDisabled: elements.get('stopNetBtn').disabled,
+    cancelDisabled: elements.get('cancelNetBtn').disabled,
+    clearHidden: elements.get('clearNetBtn').hidden,
+    sessionId: vm.runInContext('sessionId', context),
+    currentSession: vm.runInContext('currentSession', context),
+  }));
+});
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert result["calls"] == [["/api/sessions/12", "DELETE", ""], ["loadBoard", "CALL", ""], ["loadSessions", "CALL", ""], ["loadMetrics", "CALL", ""]]
+    assert "Session #12 canceled" in result["status"]
+    assert result["stopDisabled"] is True
+    assert result["cancelDisabled"] is True
+    assert result["clearHidden"] is True
+    assert result["sessionId"] is None
+    assert result["currentSession"] is None
+
+
 def test_load_sessions_populates_metrics_net_name_filter_with_unique_net_names():
     script = """
 const vm = require('node:vm');

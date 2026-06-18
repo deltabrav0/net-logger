@@ -14,10 +14,12 @@ def test_session_buttons_are_capitalized_and_grouped_on_one_row():
     assert '<div class="session-buttons">' in html
     assert '<button type="submit" id="startNetBtn">Start Net</button>' in html
     assert '<button type="button" id="stopNetBtn" class="secondary danger" disabled>Stop Net</button>' in html
+    assert '<button type="button" id="cancelNetBtn" class="secondary danger" disabled>Cancel Net</button>' in html
     assert '<button type="button" id="clearNetBtn" class="secondary" hidden>Clear Net</button>' in html
     buttons = html.split('<div class="session-buttons">', 1)[1].split('</div>', 1)[0]
     assert 'id="startNetBtn"' in buttons
     assert 'id="stopNetBtn"' in buttons
+    assert 'id="cancelNetBtn"' in buttons
     assert 'id="clearNetBtn"' in buttons
 
 

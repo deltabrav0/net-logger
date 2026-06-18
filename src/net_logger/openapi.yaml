@@ -478,6 +478,30 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/DeleteRecordsResponse'
                 - $ref: '#/components/schemas/DeleteRecordsDryRunResponse'
+  /api/sessions/{session_id}:
+    delete:
+      tags:
+      - Sessions
+      summary: Cancel a net session
+      operationId: cancelSession
+      description: Delete a net session and its check-ins so the canceled net is not retained in Saved Nets, exports, or metrics. Known station records are not deleted.
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        description: Session ID.
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '204':
+          description: Session canceled/deleted. Empty response body.
+        '404':
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     SessionId:
