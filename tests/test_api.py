@@ -74,6 +74,31 @@ def test_health_endpoint_reports_ok_for_container_healthcheck(client):
     assert res.get_json() == {"status": "ok"}
 
 
+def test_explicit_database_path_does_not_require_writable_flask_instance_path(tmp_path, monkeypatch):
+    import flask
+    import net_logger.app as app_module
+
+    blocked_instance = tmp_path / "blocked-instance"
+    database = tmp_path / "data" / "net_logger.sqlite3"
+
+    def fake_flask(*args, **kwargs):
+        kwargs["instance_path"] = str(blocked_instance)
+        return flask.Flask(*args, **kwargs)
+
+    def fail_if_instance_path_created(path, *args, **kwargs):
+        if Path(path) == blocked_instance:
+            raise PermissionError("simulated unwritable installed-package instance path")
+        return os.makedirs(path, *args, **kwargs)
+
+    monkeypatch.setattr(app_module, "Flask", fake_flask)
+    monkeypatch.setattr(app_module.os, "makedirs", fail_if_instance_path_created)
+
+    app = app_module.create_app({"DATABASE": str(database)})
+
+    assert app.config["DATABASE"] == str(database)
+    assert database.exists()
+
+
 def test_station_can_be_created_and_listed(client):
     res = client.post("/api/stations", json={"callsign": "km4ack", "name": "Jason", "city": "Maryville", "state": "TN"})
     assert res.status_code == 201

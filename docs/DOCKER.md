@@ -160,3 +160,37 @@ docker compose ps
 ## Security note
 
 Do not expose Net Logger directly to the public internet. It is intended for local or trusted LAN use. The API includes station/session mutation endpoints and a destructive reset endpoint. If you need remote access, place it behind a properly configured reverse proxy with TLS and authentication, or use a VPN into your local network.
+
+## Troubleshooting
+
+### Container starts but `localhost:8088` does not respond
+
+First check whether the container is still running and whether port `8088` is published:
+
+```bash
+docker compose ps
+docker compose logs --tail=100 net-logger
+docker port net-logger
+```
+
+If the logs show a permission error like this:
+
+```text
+PermissionError: [Errno 13] Permission denied: '/usr/local/var'
+```
+
+update to a version that includes the Docker instance-path fix, then rebuild without using the old cached image layer:
+
+```bash
+git pull
+docker compose build --no-cache
+docker compose up -d
+```
+
+The container should use `/data/net_logger.sqlite3` for writable SQLite state and should not need to create Flask's installed-package instance directory under `/usr/local/var`.
+
+If Docker is running on another machine, browse to that machine's LAN address rather than your own local loopback address:
+
+```text
+http://<docker-host-ip>:8088
+```

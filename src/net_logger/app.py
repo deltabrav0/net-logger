@@ -20,7 +20,7 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
     app.config.update(DATABASE=database, LOGO_PATH=os.environ.get("NET_LOGGER_LOGO_PATH"))
     if config:
         app.config.update(config)
-    os.makedirs(app.instance_path, exist_ok=True)
+    Path(app.config["DATABASE"]).expanduser().parent.mkdir(parents=True, exist_ok=True)
     db.init_db(app.config["DATABASE"])
 
     def con():
