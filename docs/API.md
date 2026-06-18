@@ -110,6 +110,8 @@ A station checked into a specific net session.
 
 - `GET /api/stations`
 - `POST /api/stations`
+- `DELETE /api/stations/{station_id}`
+- `POST /api/stations/{station_id}/refresh-fcc`
 - `GET /api/lookup?callsign=K5SUB`
 - `GET /api/fcc/status`
 - `POST /api/fcc/update`
@@ -226,6 +228,70 @@ curl -X POST http://127.0.0.1:8088/api/stations \
 - `201 Created` — station created.
 - `200 OK` — station already existed; existing record returned.
 - `400 Bad Request` — callsign is missing.
+
+---
+
+### `DELETE /api/stations/{station_id}`
+
+Delete one known station.
+
+**Tags:** `Stations`
+
+**Operation ID:** `deleteStation`
+
+Deleting a station also removes saved check-ins for that station by database cascade, so use this endpoint only when the station record itself is wrong or unwanted.
+
+#### Path parameters
+
+- `station_id` integer, required — station ID.
+
+#### Example request
+
+```bash
+curl -X DELETE http://127.0.0.1:8088/api/stations/1
+```
+
+#### Responses
+
+- `204 No Content` — station deleted.
+- `404 Not Found` — station not found.
+
+---
+
+### `POST /api/stations/{station_id}/refresh-fcc`
+
+Refresh a known station's details from the local FCC database.
+
+**Tags:** `Stations`
+
+**Operation ID:** `refreshStationFromFcc`
+
+This endpoint looks up the station's existing callsign in the configured local FCC database and updates these station fields when a record is found:
+
+- `name`
+- `city`
+- `state`
+- `grid`
+- `lat`
+- `lon`
+- `source` set to `fcc`
+
+It preserves the station ID, callsign, notes, created timestamp, and last-heard timestamp.
+
+#### Path parameters
+
+- `station_id` integer, required — station ID.
+
+#### Example request
+
+```bash
+curl -X POST http://127.0.0.1:8088/api/stations/1/refresh-fcc
+```
+
+#### Responses
+
+- `200 OK` — station updated from FCC data; returns the updated `Station`.
+- `404 Not Found` — station was not found, or the FCC database has no record for the station's callsign.
 
 ---
 

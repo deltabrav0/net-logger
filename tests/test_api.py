@@ -55,6 +55,71 @@ def test_station_can_be_created_and_listed(client):
     assert [s["callsign"] for s in data] == ["KM4ACK"]
 
 
+def test_station_can_be_deleted_by_id(client):
+    station = client.post("/api/stations", json={"callsign": "W5DEL", "name": "Delete Me"}).get_json()
+
+    res = client.delete(f"/api/stations/{station['id']}")
+
+    assert res.status_code == 204
+    assert client.get("/api/stations").get_json() == []
+
+
+def test_deleting_unknown_station_returns_404(client):
+    res = client.delete("/api/stations/999")
+
+    assert res.status_code == 404
+    assert res.get_json() == {"error": "station not found"}
+
+
+def test_station_can_be_refreshed_from_fcc_lookup(monkeypatch, client):
+    from net_logger import app as app_module
+
+    station = client.post("/api/stations", json={"callsign": "WD5EFY"}).get_json()
+    monkeypatch.setattr(app_module, "lookup_callsign", lambda callsign: {
+        "ok": True,
+        "found": True,
+        "result": {
+            "callsign": "WD5EFY",
+            "name": "FCC UPDATED OP",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG",
+            "lat": 31.27,
+            "lon": -94.64,
+        },
+    })
+
+    res = client.post(f"/api/stations/{station['id']}/refresh-fcc")
+
+    assert res.status_code == 200
+    updated = res.get_json()
+    assert updated["callsign"] == "WD5EFY"
+    assert updated["name"] == "FCC UPDATED OP"
+    assert updated["city"] == "Lufkin"
+    assert updated["state"] == "TX"
+    assert updated["grid"] == "EM21QG"
+    assert updated["source"] == "fcc"
+
+
+def test_station_fcc_refresh_returns_404_when_station_missing(client):
+    res = client.post("/api/stations/999/refresh-fcc")
+
+    assert res.status_code == 404
+    assert res.get_json() == {"error": "station not found"}
+
+
+def test_station_fcc_refresh_returns_404_when_fcc_has_no_match(monkeypatch, client):
+    from net_logger import app as app_module
+
+    station = client.post("/api/stations", json={"callsign": "WD5EFY"}).get_json()
+    monkeypatch.setattr(app_module, "lookup_callsign", lambda callsign: {"ok": True, "found": False, "callsign": callsign})
+
+    res = client.post(f"/api/stations/{station['id']}/refresh-fcc")
+
+    assert res.status_code == 404
+    assert res.get_json() == {"error": "FCC record not found", "callsign": "WD5EFY"}
+
+
 def test_session_board_starts_with_known_station_not_checked_in_without_net_control(client):
     created = client.post("/api/stations", json={"callsign": "W5XYZ", "name": "Example Op"}).get_json()
     session = client.post("/api/sessions/start", json={"name": "Tuesday Net", "frequency": "146.520"}).get_json()

@@ -43,9 +43,9 @@ def test_header_has_small_user_and_api_doc_links_next_to_eyebrow():
     eyebrow_row = html.split('<div class="eyebrow-row">', 1)[1].split('</div>', 1)[0]
     assert '<p class="eyebrow">Amateur Radio</p>' in eyebrow_row
     assert 'class="header-links"' in eyebrow_row
-    assert 'href="/user-guide.html"' in eyebrow_row
+    assert 'href="/user-guide.html" target="_blank" rel="noopener"' in eyebrow_row
     assert 'User Docs' in eyebrow_row
-    assert 'href="/api/docs"' in eyebrow_row
+    assert 'href="/api/docs" target="_blank" rel="noopener"' in eyebrow_row
     assert 'API Docs' in eyebrow_row
 
 

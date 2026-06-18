@@ -108,6 +108,81 @@ def test_checkin_details_show_grid_square_after_location():
     assert "#2 Danny • Memphis, TN • EM55AA" in html
 
 
+def test_known_station_card_includes_fcc_update_and_delete_buttons():
+    html = _render_known_card({
+        "id": 1,
+        "callsign": "WD5EFY",
+        "name": "",
+        "city": "",
+        "state": "",
+        "grid": "",
+    })
+
+    assert 'onclick="refreshStationFromFcc(1)"' in html
+    assert "Update details" in html
+    assert 'onclick="deleteStation(1)"' in html
+    assert "Delete" in html
+
+
+def _run_station_action(action):
+    script = f"""
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const calls = [];
+const makeElement = () => ({{
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {{}},
+  classList: {{ add: () => {{}}, remove: () => {{}} }},
+}});
+const context = {{
+  console,
+  calls,
+  confirm: () => true,
+  fetch: async () => ({{ status: 204 }}),
+  document: {{
+    getElementById: (id) => {{
+      if (!elements.has(id)) elements.set(id, makeElement());
+      return elements.get(id);
+    }},
+    querySelectorAll: () => [],
+  }},
+}};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  api = async (path, options = {{}}) => {{
+    calls.push([path, options.method || 'GET', options.body || '']);
+    return {{ id: 1, callsign: 'WD5EFY', name: 'Updated Op' }};
+  }};
+  refreshAll = async () => {{ calls.push(['refreshAll', 'CALL', '']); }};
+`, context);
+context[{json.dumps(action)}](1).then(() => {{
+  console.log(JSON.stringify({{ calls, status: elements.get('status').textContent }}));
+}});
+"""
+    return json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+
+def test_refresh_station_from_fcc_calls_refresh_api_and_updates_board():
+    result = _run_station_action("refreshStationFromFcc")
+
+    assert result["calls"] == [["/api/stations/1/refresh-fcc", "POST", ""], ["refreshAll", "CALL", ""]]
+    assert "Updated WD5EFY from FCC details" in result["status"]
+
+
+def test_delete_station_calls_delete_api_and_updates_board():
+    result = _run_station_action("deleteStation")
+
+    assert result["calls"] == [["/api/stations/1", "DELETE", ""], ["refreshAll", "CALL", ""]]
+    assert "Station deleted" in result["status"]
+
+
 def _run_station_lookup(board, query, session_open=True, fcc_found=False):
     session_json = json.dumps(12 if session_open else None)
     current_session_json = json.dumps({"status": "open"} if session_open else None)

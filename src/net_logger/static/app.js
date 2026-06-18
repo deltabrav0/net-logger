@@ -123,7 +123,7 @@ function renderKnownCard(s) {
   const disabled = sessionOpen() ? '' : 'disabled';
   return `<article class="card" draggable="${sessionOpen()}" data-station-id="${s.id}">
     <div class="card-head"><div><div class="call">${esc(s.callsign)}</div><div class="meta">${esc(stationMeta(s))}</div></div>${s.last_heard_at ? `<div class="last-heard"><div class="last-heard-label">Last Heard</div><div class="last-heard-time">${esc(formatDateTime(s.last_heard_at))}</div></div>` : ''}</div>
-    <div class="card-actions"><button ${disabled} onclick="checkIn(${s.id})">Check in</button></div>
+    <div class="card-actions"><button ${disabled} onclick="checkIn(${s.id})">Check in</button><button class="secondary" onclick="refreshStationFromFcc(${s.id})">Update details</button><button class="secondary danger" onclick="deleteStation(${s.id})">Delete</button></div>
   </article>`;
 }
 
@@ -166,6 +166,19 @@ async function removeCheckin(id) {
 async function updateCheckin(id, patch) {
   await api(`/api/checkins/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
   await loadBoard();
+}
+
+async function refreshStationFromFcc(id) {
+  const station = await api(`/api/stations/${id}/refresh-fcc`, { method: 'POST' });
+  setStatus(`Updated ${station.callsign} from FCC details.`);
+  await refreshAll();
+}
+
+async function deleteStation(id) {
+  if (!confirm('Delete this station and any saved check-ins for it?')) return;
+  await api(`/api/stations/${id}`, { method: 'DELETE' });
+  setStatus('Station deleted.');
+  await refreshAll();
 }
 
 function normalizedLookupValue() {

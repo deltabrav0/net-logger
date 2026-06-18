@@ -135,6 +135,46 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             row = c.execute("SELECT * FROM stations WHERE id = ?", (cur.lastrowid,)).fetchone()
         return jsonify(station_from_row(row)), 201
 
+    @app.delete("/api/stations/<int:station_id>")
+    def delete_station(station_id: int):
+        with con() as c:
+            cur = c.execute("DELETE FROM stations WHERE id = ?", (station_id,))
+        if cur.rowcount == 0:
+            return jsonify({"error": "station not found"}), 404
+        return "", 204
+
+    @app.post("/api/stations/<int:station_id>/refresh-fcc")
+    def refresh_station_from_fcc(station_id: int):
+        with con() as c:
+            station = c.execute("SELECT * FROM stations WHERE id = ?", (station_id,)).fetchone()
+            if station is None:
+                return jsonify({"error": "station not found"}), 404
+
+            callsign = station["callsign"]
+            lookup = lookup_callsign(callsign)
+            if not (lookup.get("ok") and lookup.get("found") and lookup.get("result")):
+                return jsonify({"error": "FCC record not found", "callsign": callsign}), 404
+
+            result = lookup["result"]
+            c.execute(
+                """
+                UPDATE stations
+                SET name = ?, city = ?, state = ?, grid = ?, lat = ?, lon = ?, source = 'fcc'
+                WHERE id = ?
+                """,
+                (
+                    (result.get("name") or "").strip(),
+                    (result.get("city") or "").strip(),
+                    (result.get("state") or "").strip().upper(),
+                    (result.get("grid") or "").strip().upper(),
+                    result.get("lat"),
+                    result.get("lon"),
+                    station_id,
+                ),
+            )
+            row = c.execute("SELECT * FROM stations WHERE id = ?", (station_id,)).fetchone()
+        return jsonify(station_from_row(row))
+
     @app.get("/api/sessions")
     def list_sessions():
         with con() as c:

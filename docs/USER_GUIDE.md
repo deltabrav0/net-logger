@@ -71,6 +71,11 @@ Use the single station lookup box labeled **Search or add station**.
 
 When a net is open, stations found or created from the lookup box are automatically checked into the active net. When no net is open, the box filters the known-station list as you type and can still be used to save a new station.
 
+Known station cards include two maintenance actions:
+
+- **Update details** — looks up the station's existing callsign in the local FCC database and updates the name, location, grid, latitude, and longitude if FCC data is now available.
+- **Delete** — removes the station. Use this only for wrong or unwanted station records; deleting a station also removes saved check-ins for that station.
+
 FCC lookup is local/off-grid. The app does not require internet lookup services such as QRZ. For FCC data setup, see the [installation guide](INSTALLATION.md#fcc-lookup-setup).
 
 ## FCC database age and updates
