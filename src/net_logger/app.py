@@ -62,6 +62,10 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             return send_file(custom_logo, mimetype="image/png")
         return send_from_directory(app.static_folder, "app-logo.png")
 
+    @app.get("/api/health")
+    def health():
+        return jsonify({"status": "ok"})
+
     @app.get("/openapi.yaml")
     def openapi_spec():
         spec_path = Path(__file__).resolve().parent / "openapi.yaml"

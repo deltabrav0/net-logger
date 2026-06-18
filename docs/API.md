@@ -129,6 +129,30 @@ A station checked into a specific net session.
 
 ---
 
+## System
+
+### `GET /api/health`
+
+Return a minimal health-check payload for container and process monitors.
+
+**Tags:** `System`
+
+**Operation ID:** `health`
+
+#### Responses
+
+- `200 OK` — service is running.
+
+Example response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
 ## Stations
 
 ### `GET /api/stations`

@@ -67,6 +67,13 @@ def test_missing_custom_logo_path_falls_back_to_packaged_logo(tmp_path):
     assert res.get_data().startswith(b"\x89PNG\r\n\x1a\n")
 
 
+def test_health_endpoint_reports_ok_for_container_healthcheck(client):
+    res = client.get("/api/health")
+
+    assert res.status_code == 200
+    assert res.get_json() == {"status": "ok"}
+
+
 def test_station_can_be_created_and_listed(client):
     res = client.post("/api/stations", json={"callsign": "km4ack", "name": "Jason", "city": "Maryville", "state": "TN"})
     assert res.status_code == 201

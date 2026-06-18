@@ -1,0 +1,26 @@
+services:
+  net-logger:
+    build: .
+    container_name: net-logger
+    ports:
+      - "8088:8088"
+    environment:
+      NET_LOGGER_HOST: 0.0.0.0
+      NET_LOGGER_PORT: "8088"
+      NET_LOGGER_DATA_DIR: /data
+      NET_LOGGER_FCC_LOOKUP_PATH: /fcc
+      NET_LOGGER_LOGO_PATH: /config/app-logo.png
+    volumes:
+      - net-logger-data:/data
+      - ./fcc-data:/fcc:ro
+      - ./config:/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/api/health', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  net-logger-data:

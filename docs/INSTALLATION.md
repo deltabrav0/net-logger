@@ -16,6 +16,72 @@ The app runs locally by default at:
 http://127.0.0.1:8088
 ```
 
+## Cross-platform installer script
+
+The repository includes a standard-library Python installer that works on Windows, macOS, and Linux when Python 3.11+ is available.
+
+From a downloaded or cloned checkout:
+
+```bash
+python install.py
+```
+
+On Windows, you can also use:
+
+```powershell
+py install.py
+```
+
+The installer defaults to `pipx` and installs from GitHub:
+
+```bash
+python install.py --source github --method pipx
+```
+
+Useful options:
+
+```bash
+python install.py --source local --method pipx
+python install.py --source github --method pip
+python install.py --source github --method uv
+python install.py --upgrade
+python install.py --dry-run
+```
+
+Small platform wrappers are also included:
+
+macOS/Linux:
+
+```bash
+./install.sh
+```
+
+Windows PowerShell:
+
+```powershell
+.\install.ps1
+```
+
+The wrappers delegate to `install.py` so the installation logic stays the same across platforms.
+
+## Docker installation
+
+If Docker Desktop or Docker Engine is installed, Net Logger can run in a container with persistent SQLite data in a Docker volume.
+
+From the repository root:
+
+```bash
+docker compose up -d --build
+```
+
+Open:
+
+```text
+http://localhost:8088
+```
+
+The default compose file stores data in the `net-logger-data` volume, optionally reads a custom logo from `./config/app-logo.png`, and optionally reads FCC lookup files from `./fcc-data`. See [Docker guide](DOCKER.md) for full details, backup notes, and security guidance.
+
 ## Recommended installation from GitHub with pipx
 
 `pipx` installs Python command-line apps into isolated environments. This is the recommended installation method for normal use.

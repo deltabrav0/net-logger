@@ -20,6 +20,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 ## Documentation
 
 - [Installation guide](docs/INSTALLATION.md)
+- [Docker guide](docs/DOCKER.md)
 - [User guide](docs/USER_GUIDE.md)
 - [API documentation](docs/API.md)
 - [OpenAPI specification](docs/openapi.yaml)
@@ -27,6 +28,13 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 - [Original MVP implementation plan](docs/plans/2026-06-16-kanban-net-logger-mvp.md)
 
 ## Quick install from GitHub
+
+Cross-platform installer from a checkout:
+
+```bash
+python install.py
+net-logger serve
+```
 
 Recommended with pipx:
 
@@ -56,6 +64,20 @@ http://127.0.0.1:8088/
 ```
 
 The package is pure Python and runs on Windows, macOS, and Linux with Python 3.11+.
+
+## Docker quick start
+
+```bash
+docker compose up -d --build
+```
+
+Open:
+
+```text
+http://localhost:8088/
+```
+
+Docker stores the SQLite database in the `net-logger-data` volume. See [docs/DOCKER.md](docs/DOCKER.md) for custom logo, FCC data, backup, and security notes.
 
 ## Developer quick start from GitHub
 
@@ -100,6 +122,7 @@ Environment variables:
 - `NET_LOGGER_DATA_DIR`
 - `NET_LOGGER_DEBUG`
 - `NET_LOGGER_FCC_LOOKUP_PATH`
+- `NET_LOGGER_LOGO_PATH`
 
 ## Run tests
 
@@ -113,6 +136,7 @@ See [docs/API.md](docs/API.md) for full Swagger-style request/response details, 
 
 Common endpoints:
 
+- `GET /api/health`
 - `GET /api/stations`
 - `POST /api/stations`
 - `GET /api/lookup?callsign=W5XYZ`

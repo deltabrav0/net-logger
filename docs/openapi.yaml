@@ -59,7 +59,8 @@ paths:
       - Stations
       summary: Create a station
       operationId: createStation
-      description: 'Creates a station by callsign. Callsigns are normalized to uppercase with
+      description: 'Creates a station by callsign. Callsigns are normalized to uppercase
+        with
 
         whitespace removed. If the callsign already exists, the existing station is
 
@@ -109,7 +110,8 @@ paths:
       - Stations
       summary: Delete a station
       operationId: deleteStation
-      description: Deletes one known station. Any check-ins for the station are removed by database cascade.
+      description: Deletes one known station. Any check-ins for the station are removed
+        by database cascade.
       parameters:
       - $ref: '#/components/parameters/StationId'
       responses:
@@ -127,7 +129,9 @@ paths:
       - Stations
       summary: Refresh station details from the local FCC database
       operationId: refreshStationFromFcc
-      description: Looks up the station callsign in the configured local FCC database and updates name, city, state, grid, latitude, longitude, and source=fcc. Notes and last-heard timestamps are preserved.
+      description: Looks up the station callsign in the configured local FCC database
+        and updates name, city, state, grid, latitude, longitude, and source=fcc.
+        Notes and last-heard timestamps are preserved.
       parameters:
       - $ref: '#/components/parameters/StationId'
       responses:
@@ -149,7 +153,8 @@ paths:
       - FCC Lookup
       summary: Look up a callsign in the local FCC database
       operationId: lookupCallsign
-      description: 'Uses local/off-grid FCC flat-file data. Set NET_LOGGER_FCC_LOOKUP_PATH to
+      description: 'Uses local/off-grid FCC flat-file data. Set NET_LOGGER_FCC_LOOKUP_PATH
+        to
 
         the directory containing the FCC lookup files. See docs/FCC_DATABASE_API.md
 
@@ -191,7 +196,8 @@ paths:
       - FCC Lookup
       summary: Download and rebuild the local FCC database index
       operationId: updateFccDatabase
-      description: 'Downloads the FCC amateur-license complete file, extracts EN.dat and HD.dat,
+      description: 'Downloads the FCC amateur-license complete file, extracts EN.dat
+        and HD.dat,
 
         and rebuilds data/EN.idx. When HD.dat is available, only active licenses are
 
@@ -232,9 +238,11 @@ paths:
       - Sessions
       summary: Start a new net session
       operationId: startSession
-      description: 'Creates a new open net session. If net_control is provided, the callsign is
+      description: 'Creates a new open net session. If net_control is provided, the
+        callsign is
 
-        normalized, ensured as a station, and automatically checked in as sequence 1.
+        normalized, ensured as a station, and automatically checked in as sequence
+        1.
 
         '
       requestBody:
@@ -281,9 +289,11 @@ paths:
       - Check-ins
       summary: Create a check-in for a session
       operationId: createCheckin
-      description: 'Adds a station to the selected session. Duplicate check-ins for the same
+      description: 'Adds a station to the selected session. Duplicate check-ins for
+        the same
 
-        session/station are idempotent and return the existing check-in with HTTP 200.
+        session/station are idempotent and return the existing check-in with HTTP
+        200.
 
         '
       parameters:
@@ -371,7 +381,8 @@ paths:
       - Sessions
       summary: Stop a net session
       operationId: stopSession
-      description: Marks the session closed and sets closed_at if it was not already closed.
+      description: Marks the session closed and sets closed_at if it was not already
+        closed.
       parameters:
       - $ref: '#/components/parameters/SessionId'
       responses:
@@ -408,7 +419,8 @@ paths:
       - name: net_name
         in: query
         required: false
-        description: Exact net name to include. Omit or pass an empty value to include all nets.
+        description: Exact net name to include. Omit or pass an empty value to include
+          all nets.
         schema:
           type: string
           example: Weekly Net
@@ -447,7 +459,8 @@ paths:
                 type: string
                 example: 'session_id,session_name,frequency,net_control,status,started_at,closed_at,sequence,checked_in_at,callsign,station_name,city,state,grid,lat,lon,traffic,traffic_details,checkin_notes
 
-                  1,Weekly Net,146.520 MHz,K5SUB,closed,2026-06-16 19:00:00,2026-06-16 20:00:00,1,2026-06-16 19:01:00,K5SUB,Daniel Butler,Lufkin,TX,EM21QG,31.27,-94.6469,no,,
+                  1,Weekly Net,146.520 MHz,K5SUB,closed,2026-06-16 19:00:00,2026-06-16
+                  20:00:00,1,2026-06-16 19:01:00,K5SUB,Daniel Butler,Lufkin,TX,EM21QG,31.27,-94.6469,no,,
 
                   '
   /api/records:
@@ -456,7 +469,8 @@ paths:
       - Administrative
       summary: Delete all application records
       operationId: deleteAllRecords
-      description: 'Deletes all check-ins, net sessions, and stations from the SQLite database.
+      description: 'Deletes all check-ins, net sessions, and stations from the SQLite
+        database.
 
         This is destructive and cannot be undone except by restoring a backup.
 
@@ -484,7 +498,9 @@ paths:
       - Sessions
       summary: Cancel a net session
       operationId: cancelSession
-      description: Delete a net session and its check-ins so the canceled net is not retained in Saved Nets, exports, or metrics. Known station records are not deleted.
+      description: Delete a net session and its check-ins so the canceled net is not
+        retained in Saved Nets, exports, or metrics. Known station records are not
+        deleted.
       parameters:
       - name: session_id
         in: path
@@ -502,6 +518,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/health:
+    get:
+      tags:
+      - System
+      summary: Health check
+      operationId: health
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                properties:
+                  status:
+                    type: string
+                    example: ok
 components:
   parameters:
     SessionId:
@@ -915,7 +950,8 @@ components:
                       example: 24
         net_name:
           type: string
-          description: Selected net-name filter, or an empty string when all nets are included.
+          description: Selected net-name filter, or an empty string when all nets
+            are included.
           example: Weekly Net
     DeleteCounts:
       type: object
