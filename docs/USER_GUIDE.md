@@ -23,7 +23,7 @@ If the server was started on all LAN interfaces, another device on the same netw
 5. Check in stations by clicking **Check in** or dragging known stations into **Checked In**.
 6. Expand a checked-in card to edit traffic and notes.
 7. Press **Stop Net** when the net is finished.
-8. Use CSV export or Metrics as needed.
+8. Open **Saved Nets / Metrics** for CSV export or metrics as needed.
 
 ## Starting a net
 
@@ -118,11 +118,11 @@ Press **Cancel Net** when the net was started by mistake or should be discarded.
 
 ## CSV export
 
-Use CSV export to download saved net records for spreadsheet review, archival records, or external reporting.
+Use CSV export to download saved net records for spreadsheet review, archival records, or external reporting. In the web app, open **Saved Nets / Metrics** from the main page header to reach saved sessions and export links.
 
 ## Metrics
 
-The Metrics view summarizes check-in activity by net and by time period. Supported grouping periods include:
+Open **Saved Nets / Metrics** from the main page header to view metrics. The Metrics view summarizes check-in activity by net and by time period. Supported grouping periods include:
 
 - Week
 - Month

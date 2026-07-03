@@ -3,6 +3,7 @@ let currentSession = null;
 let board = { known_stations: [], checkins: [] };
 
 const $ = (id) => document.getElementById(id);
+function pageHas(id) { return $(id) !== null; }
 const statusEl = $('status');
 
 async function api(path, options = {}) {
@@ -16,7 +17,7 @@ async function api(path, options = {}) {
   return data;
 }
 
-function setStatus(text) { statusEl.textContent = text; }
+function setStatus(text) { if (statusEl) statusEl.textContent = text; }
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function place(station) { return [station.city, station.state].filter(Boolean).join(', '); }
 function stationMeta(station) {
@@ -109,8 +110,10 @@ async function clearNet() {
 }
 
 async function loadBoard() {
+  if (!pageHas('knownStations') || !pageHas('checkins')) return;
+  const lookup = pageHas('stationLookup') ? $('stationLookup').value : '';
   if (!sessionId) {
-    const stations = await api('/api/stations?q=' + encodeURIComponent($('stationLookup').value));
+    const stations = await api('/api/stations?q=' + encodeURIComponent(lookup));
     board = { known_stations: stations, checkins: [] };
   } else {
     board = await api(`/api/sessions/${sessionId}/board`);
@@ -118,7 +121,7 @@ async function loadBoard() {
     $('stopNetBtn').disabled = currentSession.status === 'closed';
     $('cancelNetBtn').disabled = currentSession.status === 'closed';
     $('clearNetBtn').hidden = currentSession.status !== 'closed';
-    const q = $('stationLookup').value.trim().toUpperCase();
+    const q = lookup.trim().toUpperCase();
     if (q) board.known_stations = board.known_stations.filter(s => s.callsign.includes(q) || (s.name || '').toUpperCase().includes(q));
   }
   renderBoard();
@@ -238,6 +241,7 @@ function renderStationLookupHint(query) {
 }
 
 function updateStationLookupAssist() {
+  if (!pageHas('stationLookup')) return;
   const suggestions = $('stationSuggestions');
   const hint = $('stationLookupHint');
   if (suggestions) suggestions.innerHTML = renderStationSuggestions(stationCandidates());
@@ -297,6 +301,7 @@ function prefillSessionFormFromLastSession(sessions) {
 }
 
 async function loadSessions() {
+  if (!pageHas('sessionsList')) return;
   const sessions = await api('/api/sessions');
   $('sessionsList').innerHTML = sessions.length ? sessions.map(s => `
     <div class="session-row">
@@ -318,6 +323,7 @@ function populateMetricsNetFilter(sessions) {
 }
 
 async function loadMetrics() {
+  if (!pageHas('metricsSeriesByNet')) return;
   const period = $('metricsPeriod') ? $('metricsPeriod').value : 'month';
   const netName = $('metricsNetName') ? $('metricsNetName').value : '';
   const params = ['period=' + encodeURIComponent(period)];
@@ -364,41 +370,49 @@ function renderChart(id, rows, labelKey) {
 }
 
 async function refreshAll() {
-  await loadBoard();
-  await loadSessions();
-  await loadMetrics();
-  await loadFccStatus();
+  await refreshPage();
 }
 
-$('sessionForm').addEventListener('submit', startSession);
-$('stopNetBtn').addEventListener('click', stopSession);
-$('cancelNetBtn').addEventListener('click', cancelSession);
-$('clearNetBtn').addEventListener('click', clearNet);
-$('stationLookupForm').addEventListener('submit', handleStationLookup);
-$('updateFccBtn').addEventListener('click', () => updateFccDatabase().catch(err => setStatus(err.message)));
-$('refreshMetricsBtn').addEventListener('click', () => refreshAll().catch(err => setStatus(err.message)));
-$('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
-$('metricsNetName').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
-$('stationLookup').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
+async function refreshPage() {
+  if (pageHas('knownStations')) await loadBoard();
+  if (pageHas('sessionsList')) await loadSessions();
+  if (pageHas('metricsSeriesByNet')) await loadMetrics();
+  if (pageHas('fccStatus')) await loadFccStatus();
+}
+
+if (pageHas('sessionForm')) $('sessionForm').addEventListener('submit', startSession);
+if (pageHas('stopNetBtn')) $('stopNetBtn').addEventListener('click', stopSession);
+if (pageHas('cancelNetBtn')) $('cancelNetBtn').addEventListener('click', cancelSession);
+if (pageHas('clearNetBtn')) $('clearNetBtn').addEventListener('click', clearNet);
+if (pageHas('stationLookupForm')) $('stationLookupForm').addEventListener('submit', handleStationLookup);
+if (pageHas('updateFccBtn')) $('updateFccBtn').addEventListener('click', () => updateFccDatabase().catch(err => setStatus(err.message)));
+if (pageHas('refreshMetricsBtn')) $('refreshMetricsBtn').addEventListener('click', () => refreshAll().catch(err => setStatus(err.message)));
+if (pageHas('metricsPeriod')) $('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
+if (pageHas('metricsNetName')) $('metricsNetName').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
+if (pageHas('stationLookup')) $('stationLookup').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
 
 const checkedDrop = $('checkedInDropZone');
-checkedDrop.addEventListener('dragover', e => { if (sessionOpen()) { e.preventDefault(); checkedDrop.classList.add('dragover'); } });
-checkedDrop.addEventListener('dragleave', () => checkedDrop.classList.remove('dragover'));
-checkedDrop.addEventListener('drop', async e => {
-  e.preventDefault(); checkedDrop.classList.remove('dragover');
-  const id = e.dataTransfer.getData('application/x-station-id');
-  if (id) await checkIn(Number(id));
-});
+if (checkedDrop) {
+  checkedDrop.addEventListener('dragover', e => { if (sessionOpen()) { e.preventDefault(); checkedDrop.classList.add('dragover'); } });
+  checkedDrop.addEventListener('dragleave', () => checkedDrop.classList.remove('dragover'));
+  checkedDrop.addEventListener('drop', async e => {
+    e.preventDefault(); checkedDrop.classList.remove('dragover');
+    const id = e.dataTransfer.getData('application/x-station-id');
+    if (id) await checkIn(Number(id));
+  });
+}
 
 const knownDrop = $('knownDropZone');
-knownDrop.addEventListener('dragover', e => {
-  if (e.dataTransfer.types.includes('application/x-checkin-id')) { e.preventDefault(); knownDrop.classList.add('dragover'); }
-});
-knownDrop.addEventListener('dragleave', () => knownDrop.classList.remove('dragover'));
-knownDrop.addEventListener('drop', async e => {
-  e.preventDefault(); knownDrop.classList.remove('dragover');
-  const id = e.dataTransfer.getData('application/x-checkin-id');
-  if (id) await removeCheckin(Number(id));
-});
+if (knownDrop) {
+  knownDrop.addEventListener('dragover', e => {
+    if (e.dataTransfer.types.includes('application/x-checkin-id')) { e.preventDefault(); knownDrop.classList.add('dragover'); }
+  });
+  knownDrop.addEventListener('dragleave', () => knownDrop.classList.remove('dragover'));
+  knownDrop.addEventListener('drop', async e => {
+    e.preventDefault(); knownDrop.classList.remove('dragover');
+    const id = e.dataTransfer.getData('application/x-checkin-id');
+    if (id) await removeCheckin(Number(id));
+  });
+}
 
-refreshAll().catch(err => setStatus(err.message));
+refreshPage().catch(err => setStatus(err.message));

@@ -115,12 +115,38 @@ def test_station_lookup_has_known_station_suggestions_and_reuse_hint():
     assert 'Known station details appear here as you type.' in html
 
 
-def test_metrics_panel_has_net_name_filter_dropdown():
+def test_main_page_links_to_reports_instead_of_rendering_saved_nets_and_metrics_below_board():
     html = INDEX.read_text()
 
+    assert 'href="/reports.html"' in html
+    assert 'Saved Nets / Metrics' in html
+    assert 'id="sessionsList"' not in html
+    assert 'id="metricsSeriesByNet"' not in html
+    assert 'class="lower-grid"' not in html
+
+
+def test_reports_page_contains_saved_nets_metrics_and_export_controls():
+    html = (ROOT / "src" / "net_logger" / "static" / "reports.html").read_text()
+
+    assert '<title>Net Logger Reports</title>' in html
+    assert '<link rel="stylesheet" href="/styles.css">' in html
+    assert 'href="/"' in html
+    assert 'id="sessionsList"' in html
+    assert 'id="metricsSeriesByNet"' in html
     assert 'id="metricsNetName"' in html
     assert 'Net name' in html
     assert '<option value="">All nets</option>' in html
+    assert 'href="/api/export.csv"' in html
+
+
+def test_static_app_initializes_main_and_reports_pages_conditionally():
+    js = (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
+
+    assert "function pageHas(id)" in js
+    assert "if (pageHas('sessionForm'))" in js
+    assert "if (pageHas('sessionsList'))" in js
+    assert "if (pageHas('metricsSeriesByNet'))" in js
+    assert "function refreshPage()" in js
 
 
 def test_user_guide_html_page_exists_with_matching_theme_and_updated_lookup_instructions():
@@ -128,6 +154,8 @@ def test_user_guide_html_page_exists_with_matching_theme_and_updated_lookup_inst
 
     assert '<title>Net Logger User Guide</title>' in html
     assert '<link rel="stylesheet" href="/styles.css">' in html
+    assert 'href="/reports.html"' in html
+    assert 'Saved Nets / Metrics' in html
     assert 'Enter a callsign or operator name in the single station lookup box' in html
     assert 'reusable known-station suggestions' in html
     assert 'helper text confirms the saved station details' in html

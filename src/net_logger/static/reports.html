@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Net Logger Reports</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero docs-hero">
+      <div class="hero-brand">
+        <img class="app-logo" src="/app-logo.png" alt="Net Logger logo" width="96" height="96">
+        <div>
+          <div class="eyebrow-row">
+            <p class="eyebrow">Amateur Radio</p>
+            <nav class="header-links" aria-label="Application links">
+              <a href="/">Main Board</a>
+              <a href="/user-guide.html" target="_blank" rel="noopener">User Docs</a>
+              <a href="/api/docs" target="_blank" rel="noopener">API Docs</a>
+            </nav>
+          </div>
+          <h1>Saved Nets / Metrics</h1>
+          <p class="muted">Saved sessions, CSV exports, and check-in summaries live here so the active net board stays compact.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="lower-grid reports-grid">
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Saved Nets</h2>
+          <a class="button-link" href="/api/export.csv">Export all nets CSV</a>
+        </div>
+        <div id="sessionsList" class="sessions-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Metrics</h2>
+          <div class="metrics-controls">
+            <label>Summary
+              <select id="metricsPeriod">
+                <option value="week">Week</option>
+                <option value="month" selected>Month</option>
+                <option value="year">Year</option>
+              </select>
+            </label>
+            <label>Net name
+              <select id="metricsNetName">
+                <option value="">All nets</option>
+              </select>
+            </label>
+            <button type="button" class="secondary" id="refreshMetricsBtn">Refresh</button>
+          </div>
+        </div>
+        <p class="muted">Check-ins by net, grouped by the selected period.</p>
+        <div id="metricsSeriesByNet" class="metrics-series"></div>
+      </section>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

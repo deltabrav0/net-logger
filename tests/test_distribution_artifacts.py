@@ -41,6 +41,21 @@ def test_unix_and_windows_install_wrappers_delegate_to_python_installer():
     assert "install.py" in install_ps1
 
 
+def test_unix_and_windows_install_wrappers_check_python_version_before_running_installer():
+    install_sh = (ROOT / "install.sh").read_text()
+    install_ps1 = (ROOT / "install.ps1").read_text()
+
+    assert "PYTHON_VERSION_CHECK" in install_sh
+    assert "sys.version_info >= (3, 11)" in install_sh
+    assert "Found Python" in install_sh
+    assert "is too old; Python 3.11 or newer is required" in install_sh
+
+    assert "$VersionCheck" in install_ps1
+    assert "sys.version_info >= (3, 11)" in install_ps1
+    assert "Found Python" in install_ps1
+    assert "is too old; Python 3.11 or newer is required" in install_ps1
+
+
 def test_dockerfile_runs_installed_app_as_non_root_on_lan_port():
     dockerfile = (ROOT / "Dockerfile").read_text()
 

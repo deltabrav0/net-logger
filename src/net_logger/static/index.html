@@ -16,6 +16,7 @@
             <p class="eyebrow">Amateur Radio</p>
             <nav class="header-links" aria-label="Documentation links">
               <a href="/user-guide.html" target="_blank" rel="noopener">User Docs</a>
+              <a href="/reports.html">Saved Nets / Metrics</a>
               <a href="/api/docs" target="_blank" rel="noopener">API Docs</a>
             </nav>
           </div>
@@ -61,39 +62,6 @@
         <div class="column-title"><h2>Checked In</h2><span id="checkinCount">0</span></div>
         <div id="checkins" class="card-list" aria-label="Checked in stations"></div>
       </div>
-    </section>
-
-    <section class="lower-grid">
-      <section class="panel">
-        <div class="panel-title">
-          <h2>Saved Nets</h2>
-          <a class="button-link" href="/api/export.csv">Export all nets CSV</a>
-        </div>
-        <div id="sessionsList" class="sessions-list"></div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-title">
-          <h2>Metrics</h2>
-          <div class="metrics-controls">
-            <label>Summary
-              <select id="metricsPeriod">
-                <option value="week">Week</option>
-                <option value="month" selected>Month</option>
-                <option value="year">Year</option>
-              </select>
-            </label>
-            <label>Net name
-              <select id="metricsNetName">
-                <option value="">All nets</option>
-              </select>
-            </label>
-            <button type="button" class="secondary" id="refreshMetricsBtn">Refresh</button>
-          </div>
-        </div>
-        <p class="muted">Check-ins by net, grouped by the selected period.</p>
-        <div id="metricsSeriesByNet" class="metrics-series"></div>
-      </section>
     </section>
   </main>
   <script src="/app.js"></script>
