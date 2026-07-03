@@ -489,3 +489,98 @@ def test_station_lookup_searches_fcc_and_creates_station_when_not_known():
     assert '"source":"fcc"' in result["calls"][1][2]
     assert result["calls"][2] == ['/api/sessions/12/checkins', 'POST', '{"station_id":99}']
     assert result["value"] == ""
+
+
+def test_station_suggestions_include_callsign_name_and_location_for_reuse():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const makeElement = (id) => ({
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  board = {
+    known_stations: [
+      { id: 7, callsign: 'K5SUB', name: 'Danny', city: 'Memphis', state: 'TN', grid: 'EM55AA' },
+      { id: 8, callsign: 'W5XYZ', name: '', city: '', state: '', grid: '' },
+    ],
+    checkins: [
+      { station: { id: 9, callsign: 'N5ABC', name: 'Checked Op', city: 'Dallas', state: 'TX', grid: '' } },
+    ],
+  };
+  updateStationLookupAssist();
+`, context);
+console.log(JSON.stringify({ suggestions: elements.get('stationSuggestions').innerHTML }));
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert '<option value="K5SUB" label="Danny • Memphis, TN • EM55AA"></option>' in result["suggestions"]
+    assert '<option value="W5XYZ" label="—"></option>' in result["suggestions"]
+    assert '<option value="N5ABC" label="Checked Op • Dallas, TX"></option>' in result["suggestions"]
+
+
+def test_station_lookup_hint_shows_exact_known_station_and_enter_action():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const makeElement = (id) => ({
+  textContent: '',
+  innerHTML: '',
+  value: id === 'stationLookup' ? 'k5sub' : '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  sessionId = 12;
+  currentSession = { status: 'open' };
+  board = {
+    known_stations: [{ id: 7, callsign: 'K5SUB', name: 'Danny', city: 'Memphis', state: 'TN', grid: 'EM55AA' }],
+    checkins: [],
+  };
+  updateStationLookupAssist();
+`, context);
+console.log(JSON.stringify({ hint: elements.get('stationLookupHint').innerHTML }));
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert "Known station: <strong>K5SUB</strong>" in result["hint"]
+    assert "Danny • Memphis, TN • EM55AA" in result["hint"]
+    assert "Press Enter to check in this station." in result["hint"]

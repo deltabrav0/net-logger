@@ -39,9 +39,11 @@
     <section class="toolbar">
       <form id="stationLookupForm" class="station-lookup-form">
         <label class="search">Search or add station
-          <input id="stationLookup" placeholder="Callsign or name" autocomplete="off" required>
+          <input id="stationLookup" placeholder="Callsign or name" autocomplete="off" list="stationSuggestions" required>
+          <datalist id="stationSuggestions"></datalist>
         </label>
         <button type="submit">Find / Check in</button>
+        <span id="stationLookupHint" class="lookup-hint">Known station details appear here as you type.</span>
       </form>
       <span id="status" class="status">No session started.</span>
       <div class="fcc-tools" aria-label="FCC database tools">

@@ -106,6 +106,15 @@ def test_toolbar_uses_one_station_lookup_box_instead_of_separate_search_and_unkn
     assert 'id="lookupBtn"' not in html
 
 
+def test_station_lookup_has_known_station_suggestions_and_reuse_hint():
+    html = INDEX.read_text()
+
+    assert 'list="stationSuggestions"' in html
+    assert '<datalist id="stationSuggestions"></datalist>' in html
+    assert 'id="stationLookupHint"' in html
+    assert 'Known station details appear here as you type.' in html
+
+
 def test_metrics_panel_has_net_name_filter_dropdown():
     html = INDEX.read_text()
 
@@ -119,7 +128,9 @@ def test_user_guide_html_page_exists_with_matching_theme_and_updated_lookup_inst
 
     assert '<title>Net Logger User Guide</title>' in html
     assert '<link rel="stylesheet" href="/styles.css">' in html
-    assert 'Enter a callsign in the single station lookup box' in html
+    assert 'Enter a callsign or operator name in the single station lookup box' in html
+    assert 'reusable known-station suggestions' in html
+    assert 'helper text confirms the saved station details' in html
     assert 'Net Logger searches known stations first' in html
     assert 'then searches the local FCC database' in html
     assert 'pre-fills' in html

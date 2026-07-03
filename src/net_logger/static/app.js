@@ -122,6 +122,7 @@ async function loadBoard() {
     if (q) board.known_stations = board.known_stations.filter(s => s.callsign.includes(q) || (s.name || '').toUpperCase().includes(q));
   }
   renderBoard();
+  updateStationLookupAssist();
 }
 
 function renderBoard() {
@@ -205,11 +206,42 @@ function normalizedLookupValue() {
   return $('stationLookup').value.trim().toUpperCase();
 }
 
+function stationCandidates() {
+  const byCallsign = new Map();
+  [...(board.known_stations || []), ...(board.checkins || []).map(c => c.station)].filter(Boolean).forEach(station => {
+    const call = (station.callsign || '').toUpperCase();
+    if (call && !byCallsign.has(call)) byCallsign.set(call, station);
+  });
+  return Array.from(byCallsign.values()).sort((a, b) => (a.callsign || '').localeCompare(b.callsign || ''));
+}
+
 function findKnownStation(query) {
   const q = query.trim().toUpperCase();
   if (!q) return null;
-  const candidates = [...(board.known_stations || []), ...(board.checkins || []).map(c => c.station)].filter(Boolean);
-  return candidates.find(s => (s.callsign || '').toUpperCase() === q) || null;
+  return stationCandidates().find(s => (s.callsign || '').toUpperCase() === q) || null;
+}
+
+function renderStationSuggestions(stations) {
+  return stations.map(s => `<option value="${esc(s.callsign)}" label="${esc(stationMeta(s))}"></option>`).join('');
+}
+
+function renderStationLookupHint(query) {
+  const q = query.trim().toUpperCase();
+  if (!q) return 'Known station details appear here as you type.';
+  const exact = findKnownStation(q);
+  if (exact) {
+    return `Known station: <strong>${esc(exact.callsign)}</strong> — ${esc(stationMeta(exact))}. ${sessionOpen() ? 'Press Enter to check in this station.' : 'Press Enter to select this station.'}`;
+  }
+  const matches = stationCandidates().filter(s => (s.callsign || '').toUpperCase().includes(q) || (s.name || '').toUpperCase().includes(q));
+  if (matches.length) return `${matches.length} known station match${matches.length === 1 ? '' : 'es'} available. Choose a suggestion or press Enter to add/search FCC.`;
+  return `No known station match for ${esc(q)}. Press Enter to search the local FCC database and add it.`;
+}
+
+function updateStationLookupAssist() {
+  const suggestions = $('stationSuggestions');
+  const hint = $('stationLookupHint');
+  if (suggestions) suggestions.innerHTML = renderStationSuggestions(stationCandidates());
+  if (hint) hint.innerHTML = renderStationLookupHint($('stationLookup').value);
 }
 
 function payloadFromFccResult(result, fallbackCallsign) {

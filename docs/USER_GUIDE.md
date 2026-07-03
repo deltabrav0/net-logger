@@ -64,9 +64,11 @@ Use these fields during the net to record whether the station has traffic and an
 
 Use the single station lookup box labeled **Search or add station**.
 
-- Enter a callsign.
+- Enter a callsign or operator name.
+- As you type, Net Logger shows reusable known-station suggestions with the saved name, location, and grid when those details are available.
+- If the typed callsign exactly matches a known station, the helper text confirms the saved station details before you press Enter.
 - Net Logger searches known stations first.
-- If a matching known callsign is found and a net is open, the station is checked in.
+- If a matching known callsign is found and a net is open, the existing station record is reused and checked in.
 - If no known station matches, Net Logger then searches the local FCC database.
 - If FCC data is found, the station is saved with FCC details.
 - If FCC data is not found, a callsign-only station is saved.
