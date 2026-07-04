@@ -503,3 +503,33 @@ macOS/Linux:
 ```bash
 uv run --extra dev pytest -q
 ```
+
+## Uninstalling Net Logger
+
+Stop the running server first with `Ctrl+C` in the terminal or PowerShell window where `net-logger serve` is running.
+
+If installed with pipx, remove the application environment:
+
+```bash
+pipx uninstall net-logger
+```
+
+On Windows, this may also be run as:
+
+```powershell
+py -m pipx uninstall net-logger
+```
+
+If installed with direct pip instead of pipx, use:
+
+```bash
+python -m pip uninstall net-logger
+```
+
+Uninstalling the Python package does not delete saved nets or settings. Remove these directories only after backing up any data you need:
+
+- Windows: `%APPDATA%\Net Logger`
+- macOS: `~/Library/Application Support/Net Logger`
+- Linux: `~/.local/share/net-logger`, or `$XDG_DATA_HOME/net-logger` when XDG is configured
+
+For the optional WordPress integration, a WordPress administrator can deactivate and delete **Net & Meeting Attendance** under **Plugins → Installed Plugins**, remove the reports page under **Pages**, and revoke any Application Password created only for Net Logger. Deleting the plugin files may not remove previously imported attendance records from the WordPress database; back up WordPress before deleting site data.

@@ -347,6 +347,101 @@ https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions
 
 Net Logger remembers successful sends and disables the send button for that saved net. The WordPress importer is also designed to avoid duplicate records if a request is retried.
 
+## Part 9 — Uninstall Net Logger
+
+Use this section only if you want to remove Net Logger from a computer or remove the optional WordPress reporting setup.
+
+### Stop Net Logger first
+
+If Net Logger is running, go to the command window where `net-logger serve` is running and press:
+
+```text
+Ctrl+C
+```
+
+Then close that command window.
+
+### Uninstall Net Logger from the operator computer
+
+If you installed Net Logger with the recommended `pipx` commands, uninstall it with:
+
+On Windows PowerShell:
+
+```powershell
+py -m pipx uninstall net-logger
+```
+
+On macOS or Linux Terminal:
+
+```bash
+python3 -m pipx uninstall net-logger
+```
+
+This removes the Net Logger program, but it does **not** automatically delete your saved nets, configuration file, or WordPress connection settings. That is intentional so you do not lose records by accident.
+
+### Optional: delete saved Net Logger data and settings
+
+Only do this if you are sure you no longer need the saved nets, station list, WordPress settings, custom logo setting, or FCC lookup settings on that computer.
+
+Default data and settings locations:
+
+- Windows: `%APPDATA%\Net Logger`
+- macOS: `~/Library/Application Support/Net Logger`
+- Linux: `~/.local/share/net-logger`
+
+On Windows PowerShell, you can open the folder first to inspect or back it up:
+
+```powershell
+explorer "$env:APPDATA\Net Logger"
+```
+
+To delete it from Windows PowerShell after you have backed up anything you need:
+
+```powershell
+Remove-Item -Recurse -Force "$env:APPDATA\Net Logger"
+```
+
+On macOS Terminal, delete it with:
+
+```bash
+rm -rf "$HOME/Library/Application Support/Net Logger"
+```
+
+On Linux Terminal, delete it with:
+
+```bash
+rm -rf "$HOME/.local/share/net-logger"
+```
+
+### If you installed Net Logger with direct pip instead of pipx
+
+Most users should have used `pipx`. If older instructions were used with direct `pip`, uninstall with:
+
+On Windows PowerShell:
+
+```powershell
+py -m pip uninstall net-logger
+```
+
+On macOS or Linux Terminal:
+
+```bash
+python3 -m pip uninstall net-logger
+```
+
+### Optional: remove the WordPress plugin and reports page
+
+**WordPress administrator only.** Do this only if the website should stop receiving and displaying Net Logger attendance reports.
+
+1. In WordPress, go to **Plugins → Installed Plugins**.
+2. Find **Net & Meeting Attendance**.
+3. Click **Deactivate**.
+4. If you also want to remove the plugin files, click **Delete** after it is deactivated.
+5. If you created a reports page, go to **Pages**, find that page, and move it to the Trash.
+6. If you created a WordPress Application Password only for Net Logger, open that user's profile and revoke/delete that Application Password.
+
+Deleting the plugin from WordPress removes the plugin files. It may not remove previously imported attendance records from the WordPress database, depending on the plugin's current uninstall behavior. Back up WordPress before deleting site data.
+
 ## Daily use after everything is installed
 
 For normal use, the operator only needs this:
