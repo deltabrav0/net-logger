@@ -115,3 +115,18 @@ def test_installation_docs_reference_installer_and_docker_options():
     assert "install.ps1" in text
     assert "## Docker installation" in text
     assert "docker compose up -d" in text
+
+
+def test_dummies_guide_separates_operator_and_wordpress_admin_tasks():
+    text = (ROOT / "docs" / "INSTALLATION_FOR_DUMMIES.md").read_text()
+
+    assert "Parts 3 through 6 are WordPress administrator setup tasks" in text
+    assert "Part 7 is also usually a WordPress administrator or website manager task" in text
+    assert "## Part 3 — Install the WordPress plugin" in text
+    assert "**WordPress administrator only.** Skip this part" in text
+    assert "## Part 6 — Connect Net Logger to WordPress" in text
+    assert "trusted operator working with administrator-provided settings" in text
+    assert "## Part 7 — Create the WordPress reports page" in text
+    assert "Usually a WordPress administrator or website manager task" in text
+    assert "Option B — User creates their own Application Password" in text
+    assert "Users → Profile" in text

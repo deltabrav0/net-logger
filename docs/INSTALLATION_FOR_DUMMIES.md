@@ -11,6 +11,8 @@ There are two separate pieces:
 
 You can use Net Logger by itself. Install the WordPress plugin only if you want saved nets to appear in WordPress.
 
+For most users, **Part 1** and **Part 2** are the only parts needed to run a net. **Parts 3 through 6 are WordPress administrator setup tasks** for enabling the WordPress website to receive Net Logger attendance reports. **Part 7 is also usually a WordPress administrator or website manager task** because it creates or changes a public/member website page.
+
 ## Before you start
 
 You need:
@@ -120,7 +122,7 @@ You should see the Net Logger page.
 
 ## Part 3 — Install the WordPress plugin
 
-Skip this part if you do not want WordPress reports.
+**WordPress administrator only.** Skip this part if you do not want WordPress reports. A normal net-control operator does not need to do this unless they also administer the WordPress site.
 
 ### Step 1 — Log in to WordPress
 
@@ -159,7 +161,7 @@ If you see that menu, the plugin is installed.
 
 ## Part 4 — Allow the right WordPress users to receive Net Logger imports
 
-This step lets a non-administrator WordPress user send saved nets from Net Logger.
+**WordPress administrator only.** This step lets a non-administrator WordPress user send saved nets from Net Logger after the administrator grants the proper import permission.
 
 1. In WordPress, go to **Net Attendance → Settings**.
 2. Find **API Import Permissions**.
@@ -170,7 +172,11 @@ Administrators can always import. This step is mainly for allowing trusted non-a
 
 ## Part 5 — Create a WordPress Application Password
 
-Do this for the WordPress user that Net Logger will use.
+**WordPress administrator setup, or a user working under administrator direction.** Do this for the WordPress user that Net Logger will use. The Application Password belongs to a specific WordPress user account; it is not the user's normal login password.
+
+There are two common ways to create it.
+
+### Option A — Administrator creates it for a user
 
 1. In WordPress, go to **Users**.
 2. Open the user account that Net Logger should use.
@@ -184,9 +190,28 @@ Do this for the WordPress user that Net Logger will use.
 5. Click **Add New Application Password**.
 6. Copy the password WordPress shows you.
 
-Important: WordPress shows this password only once. If you lose it, delete it and create a new one.
+### Option B — User creates their own Application Password
+
+If the WordPress administrator has already given the user permission to import Net Logger reports, the user can usually create their own Application Password this way:
+
+1. Log in to WordPress.
+2. In the top-right corner, click the user's name, or go to **Users → Profile**.
+3. Scroll down to **Application Passwords**.
+4. Enter a name such as:
+
+   ```text
+   Net Logger
+   ```
+
+5. Click **Add New Application Password**.
+6. Copy the password WordPress shows you.
+7. Give the password only to the person configuring Net Logger, or paste it directly into Net Logger yourself.
+
+Important: WordPress shows this password only once. If you lose it, delete it and create a new one. Do not email or post this password publicly.
 
 ## Part 6 — Connect Net Logger to WordPress
+
+**WordPress administrator setup, or a trusted operator working with administrator-provided settings.** This connects the operator's Net Logger installation to the WordPress REST endpoint so saved nets can be sent to WordPress.
 
 1. Start Net Logger if it is not already running:
 
@@ -223,6 +248,8 @@ Important: WordPress shows this password only once. If you lose it, delete it an
 12. Click **Send to WordPress** again if needed.
 
 ## Part 7 — Create the WordPress reports page
+
+**Usually a WordPress administrator or website manager task.** This part creates or changes a WordPress page on the website. A normal net-control operator usually does not need to do this.
 
 1. In WordPress, go to **Pages → Add New Page**.
 2. Name the page something like:
