@@ -33,3 +33,33 @@ def test_cli_parser_defaults_to_serve_options(tmp_path):
     assert args.host == "0.0.0.0"
     assert args.port == 9000
     assert args.database.endswith("net.sqlite3")
+
+
+def test_cli_parser_reads_defaults_from_config_file(monkeypatch, tmp_path):
+    db_path = tmp_path / "configured.sqlite3"
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(f"""
+[server]
+host = 0.0.0.0
+port = 8091
+debug = true
+
+[paths]
+database = {db_path}
+""")
+    monkeypatch.setenv("NET_LOGGER_CONFIG", str(config_path))
+
+    parser = cli.build_parser()
+    args = parser.parse_args(["serve"])
+
+    assert args.host == "0.0.0.0"
+    assert args.port == 8091
+    assert args.database == str(db_path)
+    assert args.debug is True
+
+
+def test_cli_parser_documents_config_file_option():
+    help_text = cli.build_parser().format_help()
+
+    assert "--config" in help_text
+    assert "configuration file" in help_text

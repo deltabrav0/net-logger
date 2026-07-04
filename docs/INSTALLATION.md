@@ -208,19 +208,64 @@ Use a custom database file:
 net-logger serve --database /path/to/net_logger.sqlite3
 ```
 
-Environment variables:
+## Configuration file
 
-- `NET_LOGGER_HOST`: default host, e.g. `0.0.0.0`
-- `NET_LOGGER_PORT`: default port, e.g. `8088`
-- `NET_LOGGER_DATABASE`: explicit SQLite database path
-- `NET_LOGGER_DATA_DIR`: directory used for the default database path
-- `NET_LOGGER_DEBUG`: set to `true` for Flask debug mode
-- `NET_LOGGER_FCC_LOOKUP_PATH`: local FCC flat-file lookup directory
-- `NET_LOGGER_LOGO_PATH`: optional path to a custom PNG logo file
-- `NET_LOGGER_WORDPRESS_ENDPOINT`: optional WordPress import endpoint, e.g. `https://example.org/wp-json/net-attendance/v1/net-logger/sessions`
-- `NET_LOGGER_WORDPRESS_USERNAME`: WordPress username for Application Password authentication
-- `NET_LOGGER_WORDPRESS_APPLICATION_PASSWORD`: WordPress Application Password value; keep this out of shell history, notes, and source control
-- `NET_LOGGER_WORDPRESS_TIMEOUT`: optional WordPress request timeout in seconds, default `20`
+A configuration file is a small text file Net Logger reads when it starts. It lets you change settings without typing long commands or learning shell environment variables. Edit the values after the equals signs, save the file, and restart Net Logger.
+
+Net Logger creates this file automatically the first time it starts:
+
+- Windows: `%APPDATA%\Net Logger\config.ini`
+- macOS: `~/Library/Application Support/Net Logger/config.ini`
+- Linux: `~/.local/share/net-logger/config.ini`, or `$XDG_DATA_HOME/net-logger/config.ini` when XDG is configured
+
+If you want to keep the file somewhere else, start Net Logger with:
+
+```bash
+net-logger --config /path/to/config.ini serve
+```
+
+Advanced users may also set `NET_LOGGER_CONFIG` to point to a different configuration file. Other `NET_LOGGER_...` environment variables still work and override the config file, but ordinary users should prefer editing `config.ini`.
+
+Example `config.ini`:
+
+```ini
+[server]
+# Use 127.0.0.1 for this computer only.
+# Use 0.0.0.0 if other computers on your LAN should be able to open Net Logger.
+host = 127.0.0.1
+port = 8088
+debug = false
+
+[paths]
+# Leave database blank to use the normal location.
+database =
+# Optional path to a custom square PNG logo image.
+logo_path =
+# Optional folder containing local FCC lookup files.
+fcc_lookup_path =
+
+[wordpress]
+# These settings enable the Saved Nets / Metrics "Send to WordPress" button.
+# The endpoint normally ends with /wp-json/net-attendance/v1/net-logger/sessions
+endpoint = https://example.org/wp-json/net-attendance/v1/net-logger/sessions
+username = your-wordpress-username
+application_password = paste-your-wordpress-application-password-here
+timeout = 20
+```
+
+### WordPress configuration notes
+
+To use **Send to WordPress**, create a WordPress Application Password for a trusted WordPress user that can manage the Net & Meeting Attendance plugin. Paste the generated password into `application_password`. This is not your normal WordPress login password; WordPress shows it once when you create it.
+
+Keep `application_password` private. Do not paste it into GitHub issues, screenshots, email, or public documentation.
+
+### Command-line overrides
+
+You can still override the most common settings from the command line:
+
+```bash
+net-logger serve --host 0.0.0.0 --port 8088 --database /path/to/net_logger.sqlite3
+```
 
 Default installed database locations:
 
@@ -242,23 +287,23 @@ There are two supported customization approaches.
 
 ### Runtime logo override
 
-For an installed app, save your replacement PNG anywhere readable by the user running Net Logger and set `NET_LOGGER_LOGO_PATH` before starting the server.
+For an installed app, save your replacement PNG anywhere readable by the user running Net Logger. Then open `config.ini`, find the `[paths]` section, and set `logo_path` to the image file.
 
-Windows PowerShell:
+Example:
 
-```powershell
-$env:NET_LOGGER_LOGO_PATH="C:\path\to\app-logo.png"
-net-logger serve
+```ini
+[paths]
+logo_path = /path/to/app-logo.png
 ```
 
-macOS/Linux:
+On Windows, the path will usually look more like:
 
-```bash
-export NET_LOGGER_LOGO_PATH="/path/to/app-logo.png"
-net-logger serve
+```ini
+[paths]
+logo_path = C:\path\to\app-logo.png
 ```
 
-Use the same practical shape and format as the bundled logo: PNG, square, ideally `1024 x 1024` pixels. The file may be named anything when using `NET_LOGGER_LOGO_PATH`, but naming it `app-logo.png` keeps deployments consistent.
+Use the same practical shape and format as the bundled logo: PNG, square, ideally `1024 x 1024` pixels. The file may be named anything when using `logo_path`, but naming it `app-logo.png` keeps deployments consistent.
 
 ### Source/distribution logo replacement
 
@@ -337,20 +382,18 @@ macOS/Linux:
 
 FCC lookup is local/off-grid. The app does not require internet lookup services such as QRZ.
 
-Set the FCC data path before starting the server:
+Set `fcc_lookup_path` in the `[paths]` section of `config.ini`:
 
-Windows PowerShell:
-
-```powershell
-$env:NET_LOGGER_FCC_LOOKUP_PATH="C:\path\to\fcc_database_web_app"
-net-logger serve
+```ini
+[paths]
+fcc_lookup_path = /path/to/fcc_database_web_app
 ```
 
-macOS/Linux:
+On Windows, use the Windows folder path:
 
-```bash
-export NET_LOGGER_FCC_LOOKUP_PATH="/path/to/fcc_database_web_app"
-net-logger serve
+```ini
+[paths]
+fcc_lookup_path = C:\path\to\fcc_database_web_app
 ```
 
 Expected files under that directory:

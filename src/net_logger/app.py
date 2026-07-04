@@ -15,22 +15,26 @@ from urllib import request as request_lib
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 
 from . import db
+from .config import load_app_settings
 from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_database
 
 
 def create_app(config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__, static_folder="static", static_url_path="")
-    database = os.path.join(app.instance_path, "net_logger.sqlite3")
+    settings = load_app_settings()
     app.config.update(
-        DATABASE=database,
-        LOGO_PATH=os.environ.get("NET_LOGGER_LOGO_PATH"),
-        WORDPRESS_ENDPOINT=os.environ.get("NET_LOGGER_WORDPRESS_ENDPOINT", ""),
-        WORDPRESS_USERNAME=os.environ.get("NET_LOGGER_WORDPRESS_USERNAME", ""),
-        WORDPRESS_APPLICATION_PASSWORD=os.environ.get("NET_LOGGER_WORDPRESS_APPLICATION_PASSWORD", ""),
-        WORDPRESS_TIMEOUT=int(os.environ.get("NET_LOGGER_WORDPRESS_TIMEOUT", "20")),
+        DATABASE=settings["DATABASE"],
+        LOGO_PATH=settings.get("LOGO_PATH") or None,
+        WORDPRESS_ENDPOINT=settings.get("WORDPRESS_ENDPOINT", ""),
+        WORDPRESS_USERNAME=settings.get("WORDPRESS_USERNAME", ""),
+        WORDPRESS_APPLICATION_PASSWORD=settings.get("WORDPRESS_APPLICATION_PASSWORD", ""),
+        WORDPRESS_TIMEOUT=settings.get("WORDPRESS_TIMEOUT", 20),
+        CONFIG_PATH=settings.get("CONFIG_PATH", ""),
     )
     if config:
         app.config.update(config)
+    if settings.get("FCC_LOOKUP_PATH") and not os.environ.get("NET_LOGGER_FCC_LOOKUP_PATH"):
+        os.environ["NET_LOGGER_FCC_LOOKUP_PATH"] = str(settings["FCC_LOOKUP_PATH"])
     Path(app.config["DATABASE"]).expanduser().parent.mkdir(parents=True, exist_ok=True)
     db.init_db(app.config["DATABASE"])
 

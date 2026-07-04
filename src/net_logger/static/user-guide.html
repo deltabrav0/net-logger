@@ -72,6 +72,16 @@
       <h2>Metrics</h2>
       <p>Open <strong>Saved Nets / Metrics</strong> from the main page header to view metrics. The Metrics view summarizes check-in activity by net and by week, month, or year. Use the <strong>Net name</strong> dropdown to show one saved net name, or choose <strong>All nets</strong> to compare every saved net.</p>
 
+      <h2>WordPress export</h2>
+      <p>If the Net &amp; Meeting Attendance WordPress plugin is configured, open <strong>Saved Nets / Metrics</strong> and press <strong>Send to WordPress</strong> on a saved net.</p>
+      <p>The WordPress settings live in Net Logger's <code>config.ini</code> file under <code>[wordpress]</code>. A configuration file is just a small text file. Edit it, save it, and restart Net Logger.</p>
+      <pre><code>[wordpress]
+endpoint = https://example.org/wp-json/net-attendance/v1/net-logger/sessions
+username = your-wordpress-username
+application_password = paste-your-wordpress-application-password-here
+timeout = 20</code></pre>
+      <p>Net Logger records a successful push locally and disables the button for that saved net afterward.</p>
+
       <h2>Backing up data</h2>
       <p>Stop the server, then copy the SQLite database file. On macOS with default installed paths:</p>
       <pre><code>cp "$HOME/Library/Application Support/Net Logger/net_logger.sqlite3" ./net_logger_backup.sqlite3</code></pre>

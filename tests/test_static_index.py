@@ -36,7 +36,23 @@ def test_installation_docs_explain_logo_customization():
     assert "## Customizing the application logo" in text
     assert "app-logo.png" in text
     assert "1024 x 1024" in text
-    assert "NET_LOGGER_LOGO_PATH" in text
+    assert "logo_path" in text
+
+
+def test_installation_docs_explain_plain_language_config_file_and_wordpress_options():
+    text = INSTALLATION.read_text()
+
+    assert "## Configuration file" in text
+    assert "A configuration file is a small text file" in text
+    assert "Windows" in text
+    assert "macOS" in text
+    assert "Linux" in text
+    assert "config.ini" in text
+    assert "[wordpress]" in text
+    assert "endpoint =" in text
+    assert "username =" in text
+    assert "application_password =" in text
+    assert "NET_LOGGER_CONFIG" in text
 
 
 def test_session_form_uses_plain_inputs_without_extra_suggestion_controls():

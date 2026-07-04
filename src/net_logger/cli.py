@@ -3,46 +3,37 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
 from .app import create_app
+from .config import default_config_path, default_data_dir, default_database_path, ensure_config_file, load_app_settings
 
 APP_NAME = "net-logger"
 
 
-def default_data_dir() -> Path:
-    """Return a writable per-user data directory on Windows, macOS, or Linux."""
-    override = os.environ.get("NET_LOGGER_DATA_DIR")
-    if override:
-        return Path(override).expanduser()
-
-    if sys.platform == "win32":
-        base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
-        return base / "Net Logger"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "Net Logger"
-    return Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / APP_NAME
-
-
-def default_database_path() -> Path:
-    return Path(os.environ.get("NET_LOGGER_DATABASE") or default_data_dir() / "net_logger.sqlite3").expanduser()
-
-
 def build_parser() -> argparse.ArgumentParser:
+    settings = load_app_settings()
     parser = argparse.ArgumentParser(prog="net-logger", description="Run the amateur-radio Net Logger web app.")
+    parser.add_argument("--config", default=settings["CONFIG_PATH"], help="Path to the Net Logger configuration file")
     subcommands = parser.add_subparsers(dest="command")
 
     serve = subcommands.add_parser("serve", help="Start the Net Logger web server")
-    serve.add_argument("--host", default=os.environ.get("NET_LOGGER_HOST", "127.0.0.1"), help="Bind host/interface")
-    serve.add_argument("--port", type=int, default=int(os.environ.get("NET_LOGGER_PORT", "8088")), help="Bind port")
+    serve.add_argument("--host", default=settings["HOST"], help="Bind host/interface")
+    serve.add_argument("--port", type=int, default=settings["PORT"], help="Bind port")
     serve.add_argument("--database", default=str(default_database_path()), help="SQLite database path")
-    serve.add_argument("--debug", action="store_true", default=os.environ.get("NET_LOGGER_DEBUG", "").lower() in {"1", "true", "yes", "on"}, help="Enable Flask debug mode")
+    serve.add_argument("--debug", action="store_true", default=settings["DEBUG"], help="Enable Flask debug mode")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser.add_argument("--config")
+    pre_args, _ = pre_parser.parse_known_args(argv)
+    if pre_args.config:
+        import os
+        os.environ["NET_LOGGER_CONFIG"] = pre_args.config
+
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command in {None, "serve"}:
