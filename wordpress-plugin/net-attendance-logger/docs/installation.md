@@ -85,6 +85,8 @@ The reports page can also be tested with filters:
 
 ## Configure REST API import access
 
+![Net Attendance settings page showing API Import Permissions](images/settings.png)
+
 REST imports use a separate custom capability so a non-administrator API user can push saved Net Logger sessions without receiving full site administration privileges:
 
 ```text

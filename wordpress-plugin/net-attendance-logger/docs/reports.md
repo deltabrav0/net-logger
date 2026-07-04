@@ -2,6 +2,8 @@
 
 ## Admin reports page
 
+![Net Attendance Reports & Charts page](images/reports-charts.png)
+
 Administrators can view the internal reports page at:
 
 ```text

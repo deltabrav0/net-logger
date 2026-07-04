@@ -36,6 +36,8 @@ Administrators can delete an attendance event from either the event list or the 
 
 ### Take Attendance page
 
+![Net Attendance Take Attendance page](images/take-attendance.png)
+
 The Take Attendance page is intentionally simple and manual:
 
 ```text
@@ -63,6 +65,8 @@ The manual attendance screen does not include drag/drop, FCC lookup, advanced st
 
 ### Import JSON page
 
+![Net Attendance Import JSON page](images/import-json.png)
+
 The Import JSON page accepts:
 
 - pasted JSON;
@@ -73,6 +77,8 @@ The Import JSON page accepts:
 Use `Validate Only` before running a real import.
 
 ### Reports & Charts page
+
+![Net Attendance Reports & Charts page](images/reports-charts.png)
 
 The reports page shows:
 
@@ -172,4 +178,16 @@ Future enhancements may add:
 - FCC lookup;
 - faster keyboard-first check-in flow;
 - optional REST endpoints for Net Logger integration;
+- **rapid summary entry** for historical or paper-log nets where the operator only knows the date, net name, frequency, and total head count;
 - a more polished board if manual attendance use becomes common.
+
+### Potential rapid summary entry enhancement
+
+A useful intermediate workflow would be a small **Rapid Summary Entry** form in the plugin. It would let an authorized WordPress user enter only:
+
+- date/time;
+- net or event name;
+- frequency, when the event is an RF net;
+- total head count.
+
+That would not replace full participant-level logging, because there would be no individual callsigns, traffic notes, or check-in sequence. It would, however, let the reports and charts stay current when an older paper log, meeting roster, or off-system net only has a reliable aggregate count. The implementation should mark these as summary-only events so reports can include the head count without pretending individual attendance records exist.
