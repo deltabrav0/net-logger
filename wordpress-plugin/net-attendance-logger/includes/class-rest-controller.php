@@ -41,8 +41,9 @@ final class Rest_Controller
     public static function can_import(): bool
     {
         // WordPress Application Passwords authenticate the request as a user;
-        // the capability check below keeps imports limited to trusted operators.
-        return current_user_can('manage_options');
+        // the custom capability below keeps imports limited to trusted operators
+        // without hard-coding a site-specific role such as DETARC Member.
+        return Capabilities::can_import();
     }
 
     public static function validate_import(WP_REST_Request $request): WP_REST_Response

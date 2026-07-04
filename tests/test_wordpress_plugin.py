@@ -17,6 +17,7 @@ class PluginScaffoldTests(unittest.TestCase):
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
+        self.assertTrue((PLUGIN / "includes" / "class-capabilities.php").exists())
         self.assertTrue((PLUGIN / "public" / "css" / "net-attendance.css").exists())
         self.assertTrue((PLUGIN / "readme.txt").exists())
 
@@ -107,13 +108,25 @@ class PluginScaffoldTests(unittest.TestCase):
             "imports",
             "net-logger/sessions",
             "create_net_logger_session",
-            "current_user_can('manage_options')",
+            "Capabilities::can_import()",
+            "without hard-coding a site-specific role",
             "Application Password",
             "WP_REST_Server::CREATABLE",
             "validate_import",
             "create_import",
         ]:
             self.assertIn(token, rest)
+        capabilities = (PLUGIN / "includes" / "class-capabilities.php").read_text()
+        for token in [
+            "import_net_attendance",
+            "view_net_attendance_reports",
+            "grant_defaults",
+            "$administrator->add_cap(self::IMPORT)",
+            "set_import_roles",
+            "get_editable_roles",
+            "net_attendance_logger_import_role_slugs",
+        ]:
+            self.assertIn(token, capabilities)
 
     def test_net_logger_sample_payload_is_seeded_and_documented(self):
         sample = PLUGIN_ROOT / "docs" / "sample-data" / "net-logger-session.json"
@@ -130,6 +143,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("/wp-json/net-attendance/v1/net-logger/sessions", api)
         self.assertIn("docs/sample-data/net-logger-session.json", api)
         self.assertIn("WordPress Application Password", api)
+        self.assertIn("import_net_attendance", api)
+        self.assertIn("Net Attendance → Settings → API Import Permissions", api)
         self.assertIn("Repeated pushes are idempotent", api)
 
     def test_admin_controller_registers_menu_and_import_page(self):
@@ -154,6 +169,15 @@ class PluginScaffoldTests(unittest.TestCase):
             "render_reports_page",
             "render_reports_shortcode",
             "render_take_attendance_page",
+            "render_settings_page",
+            "handle_save_settings",
+            "SETTINGS_SLUG",
+            "nal_save_settings",
+            "API Import Permissions",
+            "Capabilities::set_import_roles",
+            "Capabilities::IMPORT",
+            "$has_capability",
+            "Save API Permissions",
             "handle_start_event",
             "handle_add_checkin",
             "handle_update_checkin",
@@ -170,7 +194,7 @@ class PluginScaffoldTests(unittest.TestCase):
             "Yes - view",
             "Use the standalone Net Logger tool",
             "current_user_can_view_reports",
-            "view_net_attendance_reports",
+            "Capabilities::can_view_reports",
             "detarc_member",
             "net_attendance_logger_report_role_slugs",
             "Reports & Charts",
@@ -215,6 +239,9 @@ class PluginScaffoldTests(unittest.TestCase):
             "https://dev.detarc.net",
             "net-attendance-logger-mvp-dev.zip",
             "Plugins → Add New Plugin → Upload Plugin",
+            "import_net_attendance",
+            "API Import Permissions",
+            "net_attendance_logger_import_role_slugs",
             "view_net_attendance_reports",
             "Members by MemberPress",
         ]:
@@ -241,6 +268,8 @@ class PluginScaffoldTests(unittest.TestCase):
             "docs/installation.md",
             "docs/usage.md",
             "[net_attendance_reports period=\"week\"]",
+            "import_net_attendance",
+            "API Import Permissions",
         ]:
             self.assertIn(token, readme_text)
 

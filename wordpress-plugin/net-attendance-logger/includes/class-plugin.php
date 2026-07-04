@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once NAL_PLUGIN_DIR . 'includes/class-capabilities.php';
 require_once NAL_PLUGIN_DIR . 'includes/class-repository.php';
 require_once NAL_PLUGIN_DIR . 'includes/class-importer.php';
 require_once NAL_PLUGIN_DIR . 'includes/class-rest-controller.php';

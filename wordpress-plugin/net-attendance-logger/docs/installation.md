@@ -92,7 +92,22 @@ Recommended workflow:
 
 Frontend reports are intended for DETARC members.
 
-The plugin allows report access for users who have one of these:
+REST imports use a separate custom capability so a non-administrator API user can push saved Net Logger sessions without receiving full site administration privileges:
+
+```text
+import_net_attendance
+```
+
+Preferred REST API setup:
+
+1. Go to `Net Attendance → Settings`.
+2. In `API Import Permissions`, check the role that should be allowed to push data, such as `DETARC Member` on dev.detarc.net.
+3. Save settings.
+4. Create the WordPress Application Password for a user in that role.
+
+Administrators are always allowed. The plugin grants the import capability to administrators on activation and stores selected import roles in `net_attendance_logger_import_role_slugs`. This avoids hard-coding DETARC-specific role names into the REST API, while still letting each WordPress instance choose its own API role.
+
+Frontend report access is separate. The plugin allows report access for users who have one of these:
 
 - WordPress `manage_options` capability;
 - custom capability `view_net_attendance_reports`;

@@ -8,9 +8,15 @@ Namespace:
 
 ## Authentication
 
-MVP REST imports require a WordPress user with `manage_options` capability.
+REST imports require a WordPress user who either has `manage_options` or the plugin's custom import capability:
 
-For Net Logger integration, use WordPress Application Passwords over HTTPS. Create an Application Password for a trusted administrator/operator user and send HTTP Basic authentication with the WordPress username and the generated application password. Do not store the password in source control or documentation.
+```text
+import_net_attendance
+```
+
+For Net Logger integration, use WordPress Application Passwords over HTTPS. Create an Application Password for a trusted operator user and send HTTP Basic authentication with the WordPress username and the generated application password. Do not store the password in source control or documentation.
+
+Best practice is to grant the capability to a role rather than hard-coding a site-specific role name into the REST permission callback. Site administrators can use `Net Attendance → Settings → API Import Permissions` to grant `import_net_attendance` to any existing role, such as DETARC Member on dev.detarc.net. Administrators remain allowed automatically.
 
 Unauthenticated requests must be rejected by WordPress before import logic writes data.
 

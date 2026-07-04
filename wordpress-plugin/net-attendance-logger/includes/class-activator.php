@@ -11,6 +11,7 @@ final class Activator
     public static function activate(): void
     {
         self::create_tables();
+        Capabilities::grant_defaults();
         update_option('net_attendance_logger_version', NAL_VERSION);
     }
 

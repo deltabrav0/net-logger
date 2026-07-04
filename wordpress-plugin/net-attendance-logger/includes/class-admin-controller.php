@@ -12,6 +12,7 @@ final class Admin_Controller
     public const IMPORT_SLUG = 'net-attendance-logger-import';
     public const REPORTS_SLUG = 'net-attendance-logger-reports';
     public const TAKE_SLUG = 'net-attendance-logger-take-attendance';
+    public const SETTINGS_SLUG = 'net-attendance-logger-settings';
 
     public static function register(): void
     {
@@ -28,6 +29,7 @@ final class Admin_Controller
         add_action('admin_post_nal_close_event', [self::class, 'handle_close_event']);
         add_action('admin_post_nal_reopen_event', [self::class, 'handle_reopen_event']);
         add_action('admin_post_nal_delete_event', [self::class, 'handle_delete_event']);
+        add_action('admin_post_nal_save_settings', [self::class, 'handle_save_settings']);
     }
 
     public static function register_menu(): void
@@ -76,6 +78,15 @@ final class Admin_Controller
             'manage_options',
             self::IMPORT_SLUG,
             [self::class, 'render_import_page']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Settings', 'net-attendance-logger'),
+            __('Settings', 'net-attendance-logger'),
+            'manage_options',
+            self::SETTINGS_SLUG,
+            [self::class, 'render_settings_page']
         );
     }
 
@@ -151,6 +162,41 @@ final class Admin_Controller
         echo '</form>';
         echo '<h2>' . esc_html__('Example payload', 'net-attendance-logger') . '</h2>';
         echo '<pre style="max-width: 960px; overflow: auto; background: #fff; border: 1px solid #ccd0d4; padding: 12px;">' . esc_html($sample ?: '') . '</pre>';
+        echo '</div>';
+    }
+
+    public static function render_settings_page(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to manage Net Attendance settings.', 'net-attendance-logger'));
+        }
+
+        $roles = get_editable_roles();
+        $selected = Capabilities::import_role_slugs();
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('Net Attendance Settings', 'net-attendance-logger') . '</h1>';
+        self::render_admin_notice();
+        echo '<h2>' . esc_html__('API Import Permissions', 'net-attendance-logger') . '</h2>';
+        echo '<p>' . esc_html__('WordPress Application Passwords authenticate as a normal user. Grant the custom import capability to whichever role should be allowed to send Net Logger sessions to the REST API. Administrators are always allowed.', 'net-attendance-logger') . '</p>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('nal_save_settings', 'nal_save_settings_nonce');
+        echo '<input type="hidden" name="action" value="nal_save_settings" />';
+        echo '<table class="widefat striped" style="max-width: 760px;"><thead><tr><th>' . esc_html__('Role', 'net-attendance-logger') . '</th><th>' . esc_html__('Allow REST imports', 'net-attendance-logger') . '</th></tr></thead><tbody>';
+        foreach ($roles as $slug => $role) {
+            $slug = sanitize_key($slug);
+            $role_name = isset($role['name']) ? translate_user_role((string) $role['name']) : $slug;
+            $is_admin = $slug === 'administrator';
+            $has_capability = !empty($role['capabilities'][Capabilities::IMPORT]);
+            $checked = $is_admin || $has_capability || in_array($slug, $selected, true);
+            echo '<tr><td><strong>' . esc_html($role_name) . '</strong><br><code>' . esc_html($slug) . '</code></td><td>';
+            echo '<label><input type="checkbox" name="import_roles[]" value="' . esc_attr($slug) . '"' . checked($checked, true, false) . ($is_admin ? ' disabled' : '') . ' /> ' . esc_html($is_admin ? __('Always allowed', 'net-attendance-logger') : __('Can push Net Logger sessions through the REST API', 'net-attendance-logger')) . '</label>';
+            echo '</td></tr>';
+        }
+        echo '</tbody></table>';
+        submit_button(__('Save API Permissions', 'net-attendance-logger'));
+        echo '</form>';
+        echo '<p><strong>' . esc_html__('Required capability:', 'net-attendance-logger') . '</strong> <code>' . esc_html(Capabilities::IMPORT) . '</code></p>';
         echo '</div>';
     }
 
@@ -266,7 +312,7 @@ final class Admin_Controller
 
     private static function current_user_can_view_reports(): bool
     {
-        if (current_user_can('manage_options') || current_user_can('view_net_attendance_reports')) {
+        if (Capabilities::can_view_reports()) {
             return true;
         }
 
@@ -696,6 +742,19 @@ final class Admin_Controller
 
         wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
         exit;
+    }
+
+    public static function handle_save_settings(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to manage Net Attendance settings.', 'net-attendance-logger'));
+        }
+
+        check_admin_referer('nal_save_settings', 'nal_save_settings_nonce');
+        $roles = isset($_POST['import_roles']) && is_array($_POST['import_roles']) ? wp_unslash($_POST['import_roles']) : [];
+        Capabilities::set_import_roles(array_map('sanitize_key', $roles));
+
+        self::redirect_with_notice(self::SETTINGS_SLUG, __('API import role permissions saved.', 'net-attendance-logger'));
     }
 
     private static function render_event_list(Repository $repository): void
