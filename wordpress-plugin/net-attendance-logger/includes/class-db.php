@@ -63,6 +63,8 @@ final class DB
                 repeater varchar(191) NULL,
                 net_control varchar(32) NULL,
                 location varchar(191) NULL,
+                summary_only tinyint(1) NOT NULL DEFAULT 0,
+                aggregate_attendance_count int(10) unsigned NULL,
                 notes longtext NULL,
                 metadata longtext NULL,
                 created_at datetime NOT NULL,

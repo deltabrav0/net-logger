@@ -39,6 +39,8 @@ final class Repository
             'repeater' => $this->nullable_text($event['repeater'] ?? null, 191),
             'net_control' => $this->normalize_callsign($event['net_control'] ?? null),
             'location' => $this->nullable_text($event['location'] ?? null, 191),
+            'summary_only' => !empty($event['summary_only']) ? 1 : 0,
+            'aggregate_attendance_count' => isset($event['aggregate_attendance_count']) ? absint($event['aggregate_attendance_count']) : null,
             'notes' => $this->nullable_longtext($event['notes'] ?? null),
             'metadata' => $this->encode_metadata($event['metadata'] ?? null),
             'updated_at' => $now,
@@ -174,7 +176,7 @@ final class Repository
         $events = DB::events_table();
         $records = DB::records_table();
         return $wpdb->get_results(
-            "SELECT e.*, COUNT(r.id) AS attendance_count,
+            "SELECT e.*, COALESCE(e.aggregate_attendance_count, COUNT(r.id)) AS attendance_count,
                     COALESCE(SUM(CASE WHEN r.traffic = 1 THEN 1 ELSE 0 END), 0) AS traffic_count
              FROM {$events} e
              LEFT JOIN {$records} r ON r.event_id = e.id
@@ -190,7 +192,8 @@ final class Repository
         $events = DB::events_table();
         $records = DB::records_table();
         return $wpdb->get_results(
-            "SELECT DATE(e.started_at) AS event_date, COUNT(r.id) AS attendance_count
+            "SELECT DATE(e.started_at) AS event_date,
+                    SUM(CASE WHEN e.summary_only = 1 THEN COALESCE(e.aggregate_attendance_count, 0) WHEN r.id IS NULL THEN 0 ELSE 1 END) AS attendance_count
              FROM {$events} e
              LEFT JOIN {$records} r ON r.event_id = e.id
              GROUP BY DATE(e.started_at)
@@ -247,10 +250,10 @@ final class Repository
 
         $sql = "SELECT e.name AS event_name,
                        {$bucket_expr} AS bucket,
-                       COUNT(r.id) AS attendance_count,
+                       SUM(CASE WHEN e.summary_only = 1 THEN COALESCE(e.aggregate_attendance_count, 0) WHEN r.id IS NULL THEN 0 ELSE 1 END) AS attendance_count,
                        COALESCE(SUM(CASE WHEN r.traffic = 1 THEN 1 ELSE 0 END), 0) AS traffic_count
-                FROM {$records} r
-                JOIN {$events} e ON e.id = r.event_id
+                FROM {$events} e
+                LEFT JOIN {$records} r ON r.event_id = e.id
                 {$where}
                 GROUP BY e.name, bucket
                 ORDER BY e.name ASC, bucket ASC";
@@ -274,7 +277,7 @@ final class Repository
         }
 
         $sql = "SELECT e.name AS event_name,
-                       COUNT(r.id) AS attendance_count,
+                       SUM(CASE WHEN e.summary_only = 1 THEN COALESCE(e.aggregate_attendance_count, 0) WHEN r.id IS NULL THEN 0 ELSE 1 END) AS attendance_count,
                        COALESCE(SUM(CASE WHEN r.traffic = 1 THEN 1 ELSE 0 END), 0) AS traffic_count
                 FROM {$events} e
                 LEFT JOIN {$records} r ON r.event_id = e.id
@@ -323,6 +326,17 @@ final class Repository
         $wpdb->delete(DB::records_table(), ['event_id' => $event_id]);
         $deleted = $wpdb->delete(DB::events_table(), ['id' => $event_id]);
         return $deleted !== false && $deleted > 0;
+    }
+
+    public function create_summary_event(array $event): int
+    {
+        $count = isset($event['aggregate_attendance_count']) ? absint($event['aggregate_attendance_count']) : 0;
+        return $this->upsert_event(array_merge($event, [
+            'source' => $event['source'] ?? 'rapid_summary',
+            'status' => 'closed',
+            'summary_only' => true,
+            'aggregate_attendance_count' => $count,
+        ]));
     }
 
     public function list_participants(array $args = []): array

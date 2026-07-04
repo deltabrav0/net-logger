@@ -11,6 +11,7 @@ final class Admin_Controller
     public const MENU_SLUG = 'net-attendance-logger';
     public const IMPORT_SLUG = 'net-attendance-logger-import';
     public const REPORTS_SLUG = 'net-attendance-logger-reports';
+    public const RAPID_ENTRY_SLUG = 'net-attendance-logger-rapid-entry';
     public const TAKE_SLUG = 'net-attendance-logger-take-attendance';
     public const SETTINGS_SLUG = 'net-attendance-logger-settings';
 
@@ -23,6 +24,7 @@ final class Admin_Controller
         add_action('admin_menu', [self::class, 'register_menu']);
         add_action('admin_post_nal_import_json', [self::class, 'handle_import_json']);
         add_action('admin_post_nal_start_event', [self::class, 'handle_start_event']);
+        add_action('admin_post_nal_rapid_entry', [self::class, 'handle_rapid_entry']);
         add_action('admin_post_nal_add_checkin', [self::class, 'handle_add_checkin']);
         add_action('admin_post_nal_update_checkin', [self::class, 'handle_update_checkin']);
         add_action('admin_post_nal_delete_checkin', [self::class, 'handle_delete_checkin']);
@@ -69,6 +71,15 @@ final class Admin_Controller
             'manage_options',
             self::TAKE_SLUG,
             [self::class, 'render_take_attendance_page']
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('Rapid Entry', 'net-attendance-logger'),
+            __('Rapid Entry', 'net-attendance-logger'),
+            'manage_options',
+            self::RAPID_ENTRY_SLUG,
+            [self::class, 'render_rapid_entry_page']
         );
 
         add_submenu_page(
@@ -162,6 +173,33 @@ final class Admin_Controller
         echo '</form>';
         echo '<h2>' . esc_html__('Example payload', 'net-attendance-logger') . '</h2>';
         echo '<pre style="max-width: 960px; overflow: auto; background: #fff; border: 1px solid #ccd0d4; padding: 12px;">' . esc_html($sample ?: '') . '</pre>';
+        echo '</div>';
+    }
+
+    public static function render_rapid_entry_page(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to add rapid summary entries.', 'net-attendance-logger'));
+        }
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('Rapid Summary Entry', 'net-attendance-logger') . '</h1>';
+        self::render_admin_notice();
+        echo '<p>' . esc_html__('Use this form for historical paper logs, meeting rosters, or off-system nets when you only know the date/time, net name, frequency, and total head count. Rapid entries are saved as summary-only events and do not create individual callsign records.', 'net-attendance-logger') . '</p>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="max-width: 760px; padding: 16px; background: #fff; border: 1px solid #ccd0d4;">';
+        wp_nonce_field('nal_rapid_entry', 'nal_rapid_entry_nonce');
+        echo '<input type="hidden" name="action" value="nal_rapid_entry" />';
+        echo '<input type="hidden" name="summary_only" value="1" />';
+        echo '<table class="form-table" role="presentation"><tbody>';
+        echo '<tr><th scope="row"><label for="nal_rapid_started_at">' . esc_html__('Date/time', 'net-attendance-logger') . '</label></th><td><input required type="datetime-local" id="nal_rapid_started_at" name="started_at" class="regular-text" /><p class="description">' . esc_html__('Use the local date and time the net or meeting started.', 'net-attendance-logger') . '</p></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_rapid_event_name">' . esc_html__('Net/Event Name', 'net-attendance-logger') . '</label></th><td><input required id="nal_rapid_event_name" name="event_name" class="regular-text" value="Weekly Net" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_rapid_event_type">' . esc_html__('Event Type', 'net-attendance-logger') . '</label></th><td><input id="nal_rapid_event_type" name="event_type" class="regular-text" value="Repeater Net" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_rapid_frequency">' . esc_html__('Frequency', 'net-attendance-logger') . '</label></th><td><input id="nal_rapid_frequency" name="frequency" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_rapid_head_count">' . esc_html__('Head Count', 'net-attendance-logger') . '</label></th><td><input required type="number" min="0" step="1" id="nal_rapid_head_count" name="head_count" class="small-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_rapid_notes">' . esc_html__('Notes', 'net-attendance-logger') . '</label></th><td><textarea id="nal_rapid_notes" name="notes" rows="4" class="large-text" placeholder="' . esc_attr__('Paper log, roster, or source notes', 'net-attendance-logger') . '"></textarea></td></tr>';
+        echo '</tbody></table>';
+        submit_button(__('Save Summary-only Event', 'net-attendance-logger'));
+        echo '</form>';
         echo '</div>';
     }
 
@@ -603,6 +641,37 @@ final class Admin_Controller
         self::redirect_with_notice(self::TAKE_SLUG, __('Attendance event started.', 'net-attendance-logger'), 'success', ['event_id' => $event_id]);
     }
 
+    public static function handle_rapid_entry(): void
+    {
+        self::require_admin_capability(__('You do not have permission to add rapid summary entries.', 'net-attendance-logger'));
+        check_admin_referer('nal_rapid_entry', 'nal_rapid_entry_nonce');
+
+        $event_name = sanitize_text_field(wp_unslash((string) ($_POST['event_name'] ?? '')));
+        $head_count = absint($_POST['head_count'] ?? 0);
+        $started_at = sanitize_text_field(wp_unslash((string) ($_POST['started_at'] ?? '')));
+        if ($event_name === '' || $started_at === '') {
+            self::redirect_with_notice(self::RAPID_ENTRY_SLUG, __('Date/time and net/event name are required.', 'net-attendance-logger'), 'error');
+        }
+
+        $repository = new Repository();
+        $event_id = $repository->create_summary_event([
+            'source' => 'rapid_summary',
+            'name' => $event_name,
+            'event_type' => sanitize_text_field(wp_unslash((string) ($_POST['event_type'] ?? 'Repeater Net'))),
+            'started_at' => $started_at,
+            'ended_at' => $started_at,
+            'frequency' => sanitize_text_field(wp_unslash((string) ($_POST['frequency'] ?? ''))),
+            'aggregate_attendance_count' => $head_count,
+            'summary_only' => !empty($_POST['summary_only']),
+            'notes' => wp_unslash((string) ($_POST['notes'] ?? '')),
+            'metadata' => [
+                'entry_method' => 'rapid_summary',
+            ],
+        ]);
+
+        self::redirect_with_notice(self::MENU_SLUG, __('Summary-only event saved.', 'net-attendance-logger'), 'success', ['event_id' => $event_id]);
+    }
+
     public static function handle_add_checkin(): void
     {
         self::require_admin_capability(__('You do not have permission to add check-ins.', 'net-attendance-logger'));
@@ -761,6 +830,7 @@ final class Admin_Controller
     {
         $events = $repository->list_events();
         echo '<p><a class="button button-primary" href="' . esc_url(admin_url('admin.php?page=' . self::TAKE_SLUG)) . '">' . esc_html__('Take Attendance', 'net-attendance-logger') . '</a> ';
+        echo '<a class="button" href="' . esc_url(admin_url('admin.php?page=' . self::RAPID_ENTRY_SLUG)) . '">' . esc_html__('Rapid Entry', 'net-attendance-logger') . '</a> ';
         echo '<a class="button" href="' . esc_url(admin_url('admin.php?page=' . self::IMPORT_SLUG)) . '">' . esc_html__('Import JSON', 'net-attendance-logger') . '</a></p>';
 
         if (!$events) {
@@ -819,6 +889,10 @@ final class Admin_Controller
         self::render_detail_row(__('Net Control', 'net-attendance-logger'), $event['net_control'] ?? '');
         self::render_detail_row(__('Frequency', 'net-attendance-logger'), $event['frequency'] ?? '');
         self::render_detail_row(__('Status', 'net-attendance-logger'), self::event_status_label($event));
+        if (!empty($event['summary_only'])) {
+            self::render_detail_row(__('Summary-only event', 'net-attendance-logger'), __('Yes', 'net-attendance-logger'));
+            self::render_detail_row(__('Head Count', 'net-attendance-logger'), (string) (int) ($event['aggregate_attendance_count'] ?? 0));
+        }
         self::render_detail_row(__('Source', 'net-attendance-logger'), $event['source'] ?? '');
         echo '</tbody></table>';
 

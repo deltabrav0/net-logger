@@ -11,6 +11,7 @@ The current MVP can:
 - delete attendance events and their attached attendance records from wp-admin;
 - show reports/charts in wp-admin;
 - embed frontend reports/charts on normal WordPress pages using a shortcode;
+- provide a rapid summary entry form for historical or paper-log nets with only date/time, name, frequency, and head count;
 - provide a simple manual attendance-taking screen for use when Net Logger is unavailable.
 
 The current MVP intentionally does not try to replicate the full standalone Net Logger interface. Operators should still use Net Logger for normal net operations and use the WordPress attendance screen only when Net Logger is unavailable.
@@ -24,6 +25,7 @@ Main pages:
 ```text
 /wp-admin/admin.php?page=net-attendance-logger
 /wp-admin/admin.php?page=net-attendance-logger-take-attendance
+/wp-admin/admin.php?page=net-attendance-logger-rapid-entry
 /wp-admin/admin.php?page=net-attendance-logger-import
 /wp-admin/admin.php?page=net-attendance-logger-reports
 ```
@@ -60,6 +62,27 @@ Manual attendance workflow:
 10. Use the normal Events and Reports pages to review the saved attendance.
 
 On the event detail page, Traffic values with details show as `Yes - view`; expand that control to read the traffic text without leaving the attendance table.
+
+### Rapid Summary Entry page
+
+Use Rapid Summary Entry when you have a historical paper log, meeting roster, or off-system net where individual callsigns were not captured but the total attendance is reliable.
+
+```text
+/wp-admin/admin.php?page=net-attendance-logger-rapid-entry
+```
+
+Rapid Summary Entry stores:
+
+- date/time;
+- net or event name;
+- event type;
+- frequency;
+- total head count;
+- optional source notes.
+
+The saved event is marked as a summary-only event. It does not create participant or check-in rows, but reports and charts include the aggregate head count so historical totals remain accurate without pretending individual attendance records exist.
+
+The rapid workflow is not a substitute for full participant-level logging when callsigns, traffic notes, or check-in sequence are available. Use Net Logger imports or the Take Attendance page for those details.
 
 The manual attendance screen does not include drag/drop, FCC lookup, advanced station management, or a full Net Logger-style board.
 
@@ -176,18 +199,16 @@ Future enhancements may add:
 
 - participant search/autocomplete from the known station list;
 - FCC lookup;
-- faster keyboard-first check-in flow;
 - optional REST endpoints for Net Logger integration;
-- **rapid summary entry** for historical or paper-log nets where the operator only knows the date, net name, frequency, and total head count;
 - a more polished board if manual attendance use becomes common.
 
-### Potential rapid summary entry enhancement
+### Rapid Summary Entry behavior
 
-A useful intermediate workflow would be a small **Rapid Summary Entry** form in the plugin. It would let an authorized WordPress user enter only:
+Rapid Summary Entry lets an authorized WordPress user enter only:
 
 - date/time;
 - net or event name;
 - frequency, when the event is an RF net;
 - total head count.
 
-That would not replace full participant-level logging, because there would be no individual callsigns, traffic notes, or check-in sequence. It would, however, let the reports and charts stay current when an older paper log, meeting roster, or off-system net only has a reliable aggregate count. The implementation should mark these as summary-only events so reports can include the head count without pretending individual attendance records exist.
+This does not replace full participant-level logging, because there are no individual callsigns, traffic notes, or check-in sequence. It does let reports and charts stay current when an older paper log, meeting roster, or off-system net only has a reliable aggregate count. The implementation marks these as summary-only events so reports can include the head count without pretending individual attendance records exist.

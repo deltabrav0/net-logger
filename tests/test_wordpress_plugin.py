@@ -14,6 +14,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Plugin Name: Net & Meeting Attendance", text)
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
+        self.assertIn("Version: 0.1.1", text)
+        self.assertIn("define('NAL_VERSION', '0.1.1')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -26,6 +28,10 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("includes/class-activator.php", main_text)
         self.assertIn("register_activation_hook", main_text)
         self.assertIn("Net_Attendance_Logger\\Activator::activate", main_text)
+        activator_text = (PLUGIN / "includes" / "class-activator.php").read_text()
+        self.assertIn("function maybe_upgrade", activator_text)
+        self.assertIn("net_attendance_logger_version", activator_text)
+        self.assertIn("Activator::maybe_upgrade", (PLUGIN / "includes" / "class-plugin.php").read_text())
         self.assertTrue((PLUGIN / "includes" / "class-activator.php").exists())
         self.assertTrue((PLUGIN / "includes" / "class-db.php").exists())
 
@@ -37,7 +43,7 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("net_attendance_participants", db_file)
         self.assertIn("net_attendance_records", db_file)
         self.assertIn("UNIQUE KEY event_participant", db_file)
-        for column in ["external_id", "event_type", "started_at", "frequency", "net_control", "callsign", "grid", "checked_in_at", "traffic_details", "metadata"]:
+        for column in ["external_id", "event_type", "started_at", "frequency", "net_control", "summary_only", "aggregate_attendance_count", "callsign", "grid", "checked_in_at", "traffic_details", "metadata"]:
             self.assertIn(column, db_file)
 
     def test_repository_layer_declares_required_upsert_and_query_methods(self):
@@ -62,6 +68,7 @@ class PluginScaffoldTests(unittest.TestCase):
             "next_attendance_sequence",
             "update_attendance_record",
             "delete_attendance_record",
+            "create_summary_event",
         ]:
             self.assertIn(f"function {method}", repo)
 
@@ -170,8 +177,18 @@ class PluginScaffoldTests(unittest.TestCase):
             "render_reports_shortcode",
             "render_take_attendance_page",
             "render_settings_page",
+            "render_rapid_entry_page",
             "handle_save_settings",
+            "handle_rapid_entry",
             "SETTINGS_SLUG",
+            "RAPID_ENTRY_SLUG",
+            "nal_rapid_entry",
+            "summary_only",
+            "aggregate_attendance_count",
+            "Rapid Entry",
+            "Head Count",
+            "Summary-only event",
+            "create_summary_event",
             "nal_save_settings",
             "API Import Permissions",
             "Capabilities::set_import_roles",
@@ -260,6 +277,10 @@ class PluginScaffoldTests(unittest.TestCase):
             "Yes - view",
             "Use the standalone Net Logger tool",
             "delete an attendance event",
+            "Rapid Summary Entry",
+            "date/time",
+            "head count",
+            "summary-only events",
         ]:
             self.assertIn(token, usage_text)
 

@@ -4,7 +4,7 @@ Tags: attendance, amateur radio, nets, meetings, reports
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 8.0
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,7 @@ Current MVP capabilities:
 * single-event and batch JSON payload support;
 * wp-admin event detail and reports pages;
 * attendance event deletion from wp-admin;
+* rapid summary entry for paper logs or historical nets with only date/time, net name, frequency, and head count;
 * simple manual attendance-taking page for use when Net Logger is unavailable;
 * frontend report embedding with the [net_attendance_reports] shortcode.
 
@@ -51,8 +52,11 @@ Admin pages:
 
 * Net Attendance -> Events
 * Net Attendance -> Take Attendance
+* Net Attendance -> Rapid Entry
 * Net Attendance -> Reports & Charts
 * Net Attendance -> Import JSON
+
+The Rapid Entry screen records summary-only events for historical paper logs, meeting rosters, or off-system nets where only the date/time, net/event name, frequency, and total head count are known. These summary-only events do not create participant records, but reports include their head count.
 
 The Take Attendance screen is a deliberately simple manual attendance-entry workflow. Use the standalone Net Logger tool for normal net-control work; use the WordPress screen when Net Logger is unavailable. It can start an event, automatically check in net control, provide a Quick Check-in row for keyboard-first callsign entry, auto-uppercase callsigns, edit traffic/notes, remove mistaken check-ins, close the event, and require Reopen Event for Editing before changing a closed event. Event details show traffic text through a Yes - view expander.
 

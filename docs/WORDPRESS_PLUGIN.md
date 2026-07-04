@@ -14,7 +14,7 @@ The plugin is named **Net & Meeting Attendance**. It is not required for normal 
 
   `POST /wp-json/net-attendance/v1/net-logger/sessions`
 
-- WordPress admin pages for import, reporting, and manual attendance-taking.
+- WordPress admin pages for import, reporting, rapid summary entry, and manual attendance-taking.
 - Public shortcode/reporting support documented in the plugin's own docs.
 
 ## How this relates to Net Logger configuration

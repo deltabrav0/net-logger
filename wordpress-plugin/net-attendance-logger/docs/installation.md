@@ -72,6 +72,7 @@ In wp-admin, verify these pages load:
 ```text
 /wp-admin/admin.php?page=net-attendance-logger
 /wp-admin/admin.php?page=net-attendance-logger-take-attendance
+/wp-admin/admin.php?page=net-attendance-logger-rapid-entry
 /wp-admin/admin.php?page=net-attendance-logger-import
 /wp-admin/admin.php?page=net-attendance-logger-reports
 /wp-admin/admin.php?page=net-attendance-logger-settings
@@ -216,8 +217,10 @@ The native Net Logger endpoint is usually easier than manual JSON imports for re
 5. Confirm the request succeeds.
 6. In WordPress, open **Net Attendance → Events** and confirm the event appears.
 7. Open **Net Attendance → Reports & Charts** and confirm the event is counted.
-8. Open the frontend reports page and confirm an authorized member/admin can view it.
-9. Confirm a logged-out browser does not see protected report data.
+8. Open **Net Attendance → Rapid Entry**, save a summary-only event with a known head count, and confirm the Events detail page shows **Summary-only event** plus **Head Count**.
+9. Reopen Reports & Charts and confirm the summary-only event's head count is included in attendance totals.
+10. Open the frontend reports page and confirm an authorized member/admin can view it.
+11. Confirm a logged-out browser does not see protected report data.
 
 ## Notes for credentials
 

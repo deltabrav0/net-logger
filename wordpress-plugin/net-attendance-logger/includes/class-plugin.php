@@ -24,6 +24,7 @@ final class Plugin
 
         self::$initialized = true;
 
+        Activator::maybe_upgrade();
         add_action('wp_enqueue_scripts', [self::class, 'register_public_assets']);
         add_shortcode('net_attendance_reports', [Admin_Controller::class, 'render_reports_shortcode']);
         Rest_Controller::register();
