@@ -32,17 +32,18 @@ https://dev.detarc.net
 
 == Installation ==
 
-Build and upload the development ZIP:
+Build and upload the plugin ZIP:
 
-1. From the project root, run the static tests and PHP lint.
-2. Build net-attendance-logger-mvp-dev.zip with the net-attendance-logger directory at the ZIP root.
+1. From the Net Logger repository root, run the tests and PHP lint.
+2. Build wordpress-plugin/net-attendance-logger.zip with the net-attendance-logger directory at the ZIP root.
 3. In WordPress, go to Plugins -> Add New Plugin -> Upload Plugin.
-4. Upload net-attendance-logger-mvp-dev.zip.
+4. Upload net-attendance-logger.zip.
 5. If replacing an existing installation, choose the WordPress option to replace/update the existing plugin.
 6. Activate the plugin.
 7. Confirm the Net Attendance admin menu appears.
+8. Go to Net Attendance -> Settings -> API Import Permissions and choose the role allowed to receive Net Logger imports.
 
-Detailed installation instructions are in docs/installation.md.
+Detailed installation and configuration instructions are in docs/installation.md.
 
 == Usage ==
 

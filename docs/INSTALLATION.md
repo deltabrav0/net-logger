@@ -1,19 +1,87 @@
 # Net Logger Installation Guide
 
-Net Logger is an installable Python web app for Windows, macOS, and Linux. It provides a `net-logger` command that starts a local Flask server for the browser UI.
+Net Logger is an installable Python web app for Windows, macOS, and Linux. It provides a `net-logger` command that starts a small local web server for the browser UI.
+
+If you want a click-by-click checklist for non-technical users, start with [Installation for Dummies](INSTALLATION_FOR_DUMMIES.md). This guide is the fuller reference.
+
+## Installation flow at a glance
+
+1. Install Net Logger on the operator computer.
+2. Start Net Logger with `net-logger serve`.
+3. Open the browser UI at `http://127.0.0.1:8088`.
+4. Optionally configure local FCC lookup data.
+5. Optionally install the WordPress plugin.
+6. Optionally connect Net Logger to WordPress from **Saved Nets / Metrics → Send to WordPress**.
+
+The WordPress plugin is optional. Net Logger works normally without WordPress.
 
 ## Requirements
 
+Required:
+
 - Python 3.11 or newer
 - A modern web browser
-- Optional: `pipx` for isolated command-line app installation
-- Optional: `uv` for developer workflows
-- Optional: local FCC flat-file data for offline callsign lookup
 
-The app runs locally by default at:
+Optional:
+
+- `pipx` for isolated command-line app installation
+- `uv` for developer workflows
+- Docker Desktop or Docker Engine for containerized use
+- Local FCC flat-file data for offline callsign lookup
+- WordPress administrator access if you want WordPress attendance imports and reports
+
+The default local address is:
 
 ```text
 http://127.0.0.1:8088
+```
+
+## Recommended normal installation
+
+For most users, install directly from GitHub with `pip`:
+
+```bash
+python -m pip install "git+https://github.com/deltabrav0/net-logger.git"
+net-logger serve
+```
+
+On Windows, if `python` is not recognized, try:
+
+```powershell
+py -m pip install "git+https://github.com/deltabrav0/net-logger.git"
+net-logger serve
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8088
+```
+
+Leave the terminal or PowerShell window open while using Net Logger. Closing it stops the server.
+
+## Alternative: install with pipx
+
+`pipx` installs Python command-line apps into isolated environments. This is a good long-term installation method for operators who already have or are comfortable installing `pipx`.
+
+Install pipx if needed:
+
+```bash
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
+
+Install Net Logger:
+
+```bash
+pipx install git+https://github.com/deltabrav0/net-logger.git
+net-logger serve
+```
+
+Upgrade later with:
+
+```bash
+pipx upgrade net-logger
 ```
 
 ## Cross-platform installer script
@@ -66,7 +134,7 @@ The wrappers delegate to `install.py` so the installation logic stays the same a
 
 ## Docker installation
 
-If Docker Desktop or Docker Engine is installed, Net Logger can run in a container with persistent SQLite data in a Docker volume.
+If Docker is installed, Net Logger can run in a container with persistent SQLite data in a Docker volume.
 
 From the repository root:
 
@@ -80,123 +148,23 @@ Open:
 http://localhost:8088
 ```
 
-The default compose file stores data in the `net-logger-data` volume, optionally reads a custom logo from `./config/app-logo.png`, and optionally reads FCC lookup files from `./fcc-data`. See [Docker guide](DOCKER.md) for full details, backup notes, and security guidance.
-
-## Recommended installation from GitHub with pipx
-
-`pipx` installs Python command-line apps into isolated environments. This is the recommended installation method for normal use.
-
-Install pipx if needed:
-
-```bash
-python -m pip install --user pipx
-python -m pipx ensurepath
-```
-
-Then install Net Logger directly from GitHub:
-
-```bash
-pipx install git+https://github.com/deltabrav0/net-logger.git
-```
-
-Run it:
-
-```bash
-net-logger serve
-```
-
-Open:
-
-```text
-http://127.0.0.1:8088
-```
-
-## Install from GitHub with pip
-
-```bash
-python -m pip install "git+https://github.com/deltabrav0/net-logger.git"
-net-logger serve
-```
-
-## Install from GitHub with uv tool
-
-```bash
-uv tool install git+https://github.com/deltabrav0/net-logger.git
-net-logger serve
-```
-
-## Developer installation from a GitHub checkout
-
-```bash
-git clone https://github.com/deltabrav0/net-logger.git
-cd net-logger
-uv sync --extra dev
-uv run net-logger serve
-```
-
-## Developer installation from an existing local checkout with uv
-
-From the project directory:
-
-```bash
-uv sync --extra dev
-uv run net-logger serve
-```
-
-Or run the Flask module directly during development:
-
-```bash
-uv run --with Flask python -m net_logger.app
-```
-
-## Developer installation with pip
-
-```bash
-cd /path/to/net-logger
-python -m venv .venv
-```
-
-Activate the virtual environment.
-
-Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-macOS/Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Install:
-
-```bash
-python -m pip install -e .
-```
-
-Run:
-
-```bash
-net-logger serve
-```
+The default compose file stores data in the `net-logger-data` volume, optionally reads a custom logo from `./config/app-logo.png`, and optionally reads FCC lookup files from `./fcc-data`. See [Docker guide](DOCKER.md) for backup, custom logo, FCC data, and security notes.
 
 ## Running the server
 
-Default:
+Default local-only server:
 
 ```bash
 net-logger serve
 ```
 
-Bind only to localhost:
+Explicit local-only address:
 
 ```bash
 net-logger serve --host 127.0.0.1 --port 8088
 ```
 
-Bind to all LAN interfaces:
+Allow other devices on the same LAN to open Net Logger:
 
 ```bash
 net-logger serve --host 0.0.0.0 --port 8088
@@ -207,6 +175,12 @@ Use a custom database file:
 ```bash
 net-logger serve --database /path/to/net_logger.sqlite3
 ```
+
+Default installed database locations:
+
+- Windows: `%APPDATA%\Net Logger\net_logger.sqlite3`
+- macOS: `~/Library/Application Support/Net Logger/net_logger.sqlite3`
+- Linux: `~/.local/share/net-logger/net_logger.sqlite3`, or `$XDG_DATA_HOME/net-logger/net_logger.sqlite3`
 
 ## Configuration file
 
@@ -253,140 +227,102 @@ application_password = paste-your-wordpress-application-password-here
 timeout = 20
 ```
 
-### WordPress configuration notes
+## WordPress export setup
 
-The easiest first-time setup is from the Net Logger web interface:
+WordPress export requires two pieces:
+
+1. The **Net & Meeting Attendance** WordPress plugin installed on the WordPress site.
+2. Net Logger configured with the WordPress endpoint, username, and Application Password.
+
+### 1. Install the WordPress plugin
+
+The plugin lives in this repository under:
+
+```text
+wordpress-plugin/net-attendance-logger
+```
+
+The uploadable ZIP is:
+
+```text
+wordpress-plugin/net-attendance-logger.zip
+```
+
+In WordPress:
+
+1. Log in as an administrator.
+2. Go to **Plugins → Add New Plugin → Upload Plugin**.
+3. Upload `net-attendance-logger.zip`.
+4. If WordPress says the destination folder already exists, choose the option to replace/update the existing plugin.
+5. Activate the plugin if it is not already active.
+6. Confirm the admin menu contains **Net Attendance**.
+
+Detailed plugin documentation is in [Optional WordPress Plugin](WORDPRESS_PLUGIN.md) and in the plugin's own docs under `wordpress-plugin/net-attendance-logger/docs/`.
+
+### 2. Allow the proper WordPress role to import
+
+REST imports use a custom WordPress capability:
+
+```text
+import_net_attendance
+```
+
+Administrators are allowed automatically. To allow a non-administrator operator role, such as DETARC Member:
+
+1. Go to **Net Attendance → Settings**.
+2. In **API Import Permissions**, check the role that should be allowed to push data.
+3. Save settings.
+4. Create the WordPress Application Password for a user in that role.
+
+This capability-based setup is preferred over hard-coding a site-specific role name into the REST API.
+
+### 3. Create a WordPress Application Password
+
+Create an Application Password for the WordPress user Net Logger will use. This is not the user's normal WordPress login password. WordPress shows the generated Application Password only once.
+
+Keep `application_password` private. Do not paste it into GitHub issues, screenshots, email, public documentation, or commits.
+
+### 4. Configure Net Logger from the web interface
+
+The easiest first-time setup is from Net Logger itself:
 
 1. Open **Saved Nets / Metrics**.
 2. Click **Send to WordPress** on a saved net.
 3. If WordPress export is not configured, Net Logger opens a setup form.
 4. Enter the endpoint, WordPress username, and Application Password.
-5. Click **Test Only** to verify without saving, or **Test and Save** to verify and write the settings to `config.ini`.
+5. Click **Test Only** to verify without saving.
+6. Click **Test and Save** to verify and write the settings to `config.ini`.
+7. Send the saved net again if needed.
 
-To use **Send to WordPress**, create a WordPress Application Password for a trusted WordPress user that can manage the Net & Meeting Attendance plugin. Paste the generated password into `application_password`. This is not your normal WordPress login password; WordPress shows it once when you create it.
-
-Keep `application_password` private. Do not paste it into GitHub issues, screenshots, email, or public documentation.
-
-The optional WordPress plugin is included in this repository under `wordpress-plugin/net-attendance-logger`. See `docs/WORDPRESS_PLUGIN.md` and the plugin's own docs for installation, API, usage, and reports documentation.
-
-### Command-line overrides
-
-You can still override the most common settings from the command line:
-
-```bash
-net-logger serve --host 0.0.0.0 --port 8088 --database /path/to/net_logger.sqlite3
-```
-
-Default installed database locations:
-
-- Windows: `%APPDATA%\Net Logger\net_logger.sqlite3`
-- macOS: `~/Library/Application Support/Net Logger/net_logger.sqlite3`
-- Linux: `~/.local/share/net-logger/net_logger.sqlite3`, or `$XDG_DATA_HOME/net-logger/net_logger.sqlite3`
-
-## Customizing the application logo
-
-Net Logger ships with a default logo at:
+The endpoint normally looks like:
 
 ```text
-src/net_logger/static/app-logo.png
+https://example.org/wp-json/net-attendance/v1/net-logger/sessions
 ```
 
-The default logo is a square PNG image sized `1024 x 1024` pixels. The browser displays it as a smaller header image, but keeping the source image square prevents distortion on high-resolution displays.
-
-There are two supported customization approaches.
-
-### Runtime logo override
-
-For an installed app, save your replacement PNG anywhere readable by the user running Net Logger. Then open `config.ini`, find the `[paths]` section, and set `logo_path` to the image file.
-
-Example:
-
-```ini
-[paths]
-logo_path = /path/to/app-logo.png
-```
-
-On Windows, the path will usually look more like:
-
-```ini
-[paths]
-logo_path = C:\path\to\app-logo.png
-```
-
-Use the same practical shape and format as the bundled logo: PNG, square, ideally `1024 x 1024` pixels. The file may be named anything when using `logo_path`, but naming it `app-logo.png` keeps deployments consistent.
-
-### Source/distribution logo replacement
-
-If you are building your own branded copy from a Git checkout, replace the bundled file with your logo while keeping the same filename:
+For the DETARC development site:
 
 ```text
-src/net_logger/static/app-logo.png
+https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions
 ```
 
-Then reinstall or rebuild the package. For best results, use a square `1024 x 1024` PNG. The package configuration includes `static/*.png`, so the replacement logo is included in wheels, source distributions, and PyInstaller builds that collect package data.
+## WordPress report page setup
 
-## Packaging and distribution
+To show reports on a normal WordPress page:
 
-### Build a wheel and source distribution
+1. Create or edit a WordPress page.
+2. Add a Shortcode block or Paragraph block.
+3. Paste:
 
-From the project directory:
+   ```text
+   [net_attendance_reports]
+   ```
 
-```bash
-uv build
-```
+4. Publish the page.
+5. Add it to the site menu if desired.
+6. Restrict the page to members if the site uses page-level member restrictions.
 
-The installable artifacts are written to:
-
-```text
-dist/
-```
-
-Install the wheel on Windows, macOS, or Linux:
-
-```bash
-python -m pip install dist/net_logger-0.1.0-py3-none-any.whl
-net-logger serve
-```
-
-The wheel is pure Python and cross-platform. It includes the web UI static files.
-
-### Install from a source archive
-
-```bash
-python -m pip install dist/net_logger-0.1.0.tar.gz
-net-logger serve
-```
-
-### Optional single-file executable packaging
-
-For a standalone executable, build on each target operating system with PyInstaller. Cross-building Windows executables from macOS/Linux is generally not supported; build each executable on the OS where it will run.
-
-Install PyInstaller in a build environment:
-
-```bash
-python -m pip install pyinstaller
-python -m pip install .
-```
-
-Build:
-
-```bash
-pyinstaller --name net-logger --onefile --collect-data net_logger -m net_logger.cli
-```
-
-Run the generated executable from `dist/`:
-
-Windows:
-
-```powershell
-.\dist\net-logger.exe serve
-```
-
-macOS/Linux:
-
-```bash
-./dist/net-logger serve
-```
+The shortcode performs its own access check. Administrators, users with `view_net_attendance_reports`, and recognized DETARC Member roles can view reports.
 
 ## FCC lookup setup
 
@@ -420,6 +356,133 @@ If FCC files are missing, lookup returns `found: false` and the app still works.
 Net Logger can also update the FCC files from the browser. The **Update FCC Database** button downloads the FCC amateur-license complete dump, extracts `EN.dat` and `HD.dat`, and rebuilds `data/EN.idx` in the configured FCC lookup directory. This requires internet access on the machine running Net Logger.
 
 Other trusted local/LAN applications can use Net Logger's FCC lookup, status, and update endpoints as a small local FCC database service. See [Local FCC Database API](FCC_DATABASE_API.md).
+
+## Customizing the application logo
+
+For an installed app, save your replacement PNG anywhere readable by the user running Net Logger. Then open `config.ini`, find the `[paths]` section, and set `logo_path` to the image file.
+
+Example:
+
+```ini
+[paths]
+logo_path = /path/to/app-logo.png
+```
+
+On Windows:
+
+```ini
+[paths]
+logo_path = C:\path\to\app-logo.png
+```
+
+Use a square PNG, ideally `1024 x 1024` pixels.
+
+If you are building your own branded copy from a Git checkout, replace the bundled source file instead:
+
+```text
+src/net_logger/static/app-logo.png
+```
+
+Then reinstall or rebuild the package.
+
+## Developer installation
+
+From a GitHub checkout:
+
+```bash
+git clone https://github.com/deltabrav0/net-logger.git
+cd net-logger
+uv sync --extra dev
+uv run net-logger serve
+```
+
+From an existing local checkout:
+
+```bash
+uv sync --extra dev
+uv run net-logger serve
+```
+
+Developer installation with pip:
+
+```bash
+cd /path/to/net-logger
+python -m venv .venv
+```
+
+Activate the virtual environment.
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+macOS/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Install and run:
+
+```bash
+python -m pip install -e .
+net-logger serve
+```
+
+## Packaging and distribution
+
+Build a wheel and source distribution:
+
+```bash
+uv build
+```
+
+The installable artifacts are written to `dist/`.
+
+Install the wheel:
+
+```bash
+python -m pip install dist/net_logger-0.1.0-py3-none-any.whl
+net-logger serve
+```
+
+Install from a source archive:
+
+```bash
+python -m pip install dist/net_logger-0.1.0.tar.gz
+net-logger serve
+```
+
+For a standalone executable, build on each target operating system with PyInstaller. Cross-building Windows executables from macOS/Linux is generally not supported; build each executable on the OS where it will run.
+
+Install PyInstaller in a build environment:
+
+```bash
+python -m pip install pyinstaller
+python -m pip install .
+```
+
+Build:
+
+```bash
+pyinstaller --name net-logger --onefile --collect-data net_logger -m net_logger.cli
+```
+
+Run the generated executable from `dist/`.
+
+Windows:
+
+```powershell
+.\dist\net-logger.exe serve
+```
+
+macOS/Linux:
+
+```bash
+./dist/net-logger serve
+```
 
 ## Running tests
 

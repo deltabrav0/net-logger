@@ -21,6 +21,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 ## Documentation
 
 - [Installation guide](docs/INSTALLATION.md)
+- [Installation for Dummies](docs/INSTALLATION_FOR_DUMMIES.md)
 - [Docker guide](docs/DOCKER.md)
 - [User guide](docs/USER_GUIDE.md)
 - [API documentation](docs/API.md)

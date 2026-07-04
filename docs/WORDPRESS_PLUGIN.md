@@ -35,20 +35,29 @@ Use a WordPress Application Password for a trusted operator/admin user. Do not c
 
 The imported plugin documentation is kept with the plugin:
 
-- `wordpress-plugin/net-attendance-logger/docs/installation.md`
-- `wordpress-plugin/net-attendance-logger/docs/usage.md`
-- `wordpress-plugin/net-attendance-logger/docs/api.md`
-- `wordpress-plugin/net-attendance-logger/docs/reports.md`
-- `wordpress-plugin/net-attendance-logger/readme.txt`
+- `wordpress-plugin/net-attendance-logger/docs/installation.md` — plugin upload, permissions, Application Passwords, Net Logger connection, and verification
+- `wordpress-plugin/net-attendance-logger/docs/usage.md` — admin pages, manual attendance, and shortcodes
+- `wordpress-plugin/net-attendance-logger/docs/api.md` — REST endpoints and payloads
+- `wordpress-plugin/net-attendance-logger/docs/reports.md` — report behavior and shortcode access
+- `wordpress-plugin/net-attendance-logger/readme.txt` — WordPress plugin readme
+
+For a non-technical end-to-end checklist covering both Net Logger and WordPress, see [Installation for Dummies](INSTALLATION_FOR_DUMMIES.md).
 
 ## Packaging note
 
-To install the plugin on a WordPress site, zip the `net-attendance-logger` directory itself, not the whole Net Logger repository.
+To install the plugin on a WordPress site, upload the prepared ZIP at:
 
-Example from the repository root:
+```text
+wordpress-plugin/net-attendance-logger.zip
+```
+
+To rebuild that ZIP from the repository root:
 
 ```bash
 cd wordpress-plugin
+rm -f net-attendance-logger.zip
 zip -r net-attendance-logger.zip net-attendance-logger \
-  -x '*/__pycache__/*' '*.pyc' '.pytest_cache/*'
+  -x '*/__pycache__/*' '*.pyc' '.pytest_cache/*' '*.DS_Store'
 ```
+
+Package the `net-attendance-logger` directory itself, not the whole Net Logger repository.

@@ -237,8 +237,9 @@ class PluginScaffoldTests(unittest.TestCase):
         installation_text = installation.read_text()
         for token in [
             "https://dev.detarc.net",
-            "net-attendance-logger-mvp-dev.zip",
+            "net-attendance-logger.zip",
             "Plugins → Add New Plugin → Upload Plugin",
+            "Net Attendance → Settings",
             "import_net_attendance",
             "API Import Permissions",
             "net_attendance_logger_import_role_slugs",

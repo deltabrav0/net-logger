@@ -129,12 +129,6 @@ Manual imports may include multiple events in one JSON file by wrapping individu
 }
 ```
 
-A local sample file with four weekly net meetings is available at:
-
-```text
-/Users/dbutler/Local/Development/net-attendance-wordpress-plugin/docs/sample-data/weekly-net-june-2026.json
-```
-
 ## Response Shape
 
 ```json
