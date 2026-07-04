@@ -294,23 +294,43 @@ async function handleStationLookup(evt) {
 }
 
 function prefillSessionFormFromLastSession(sessions) {
-  if (!sessions.length) return;
+  if (!pageHas('netName') || !pageHas('frequency')) return;
+  if (!sessions.length || $('netName').value || $('frequency').value) return;
   const latest = sessions[0];
   if (latest.name) $('netName').value = latest.name;
   if (latest.frequency) $('frequency').value = latest.frequency;
 }
 
+function renderSessionRow(s) {
+  const pushed = Boolean(s.wordpress_pushed_at);
+  const wordpressButton = pushed
+    ? `<button type="button" class="secondary" disabled>Sent to WordPress</button>`
+    : `<button type="button" class="secondary" onclick="sendSessionToWordPress(${s.id})">Send to WordPress</button>`;
+  return `<div class="session-row">
+      <div><div class="title">${esc(s.name || 'Untitled net')} #${s.id}</div>
+      <div class="details">${esc(s.status)} • ${formatDateTime(s.started_at)} • check-ins: ${s.checkin_count} • traffic: ${s.traffic_count}${pushed ? ` • WordPress: sent ${formatDateTime(s.wordpress_pushed_at)}` : ''}</div></div>
+      <div class="session-actions"><a class="button-link secondary" href="/api/export.csv?session_id=${s.id}">Export CSV</a>${wordpressButton}</div>
+    </div>`;
+}
+
 async function loadSessions() {
   if (!pageHas('sessionsList')) return;
   const sessions = await api('/api/sessions');
-  $('sessionsList').innerHTML = sessions.length ? sessions.map(s => `
-    <div class="session-row">
-      <div><div class="title">${esc(s.name || 'Untitled net')} #${s.id}</div>
-      <div class="details">${esc(s.status)} • ${formatDateTime(s.started_at)} • check-ins: ${s.checkin_count} • traffic: ${s.traffic_count}</div></div>
-      <a class="button-link secondary" href="/api/export.csv?session_id=${s.id}">Export CSV</a>
-    </div>`).join('') : '<div class="empty">No saved nets yet.</div>';
+  $('sessionsList').innerHTML = sessions.length ? sessions.map(renderSessionRow).join('') : '<div class="empty">No saved nets yet.</div>';
   prefillSessionFormFromLastSession(sessions);
   populateMetricsNetFilter(sessions);
+}
+
+async function sendSessionToWordPress(sessionIdToSend) {
+  if (!confirm('Send this saved net to WordPress? This can only be done once from Net Logger.')) return;
+  try {
+    const result = await api(`/api/sessions/${sessionIdToSend}/send-wordpress`, { method: 'POST' });
+    const eventId = result.wordpress && result.wordpress.event_id ? ` Event #${result.wordpress.event_id}.` : '';
+    setStatus(`Saved net sent to WordPress.${eventId}`);
+    await loadSessions();
+  } catch (err) {
+    setStatus(err.message);
+  }
 }
 
 function populateMetricsNetFilter(sessions) {

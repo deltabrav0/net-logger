@@ -256,6 +256,105 @@ def test_delete_all_records_supports_dry_run(client):
     assert [s["callsign"] for s in client.get("/api/stations").get_json()] == ["W5XYZ"]
 
 
+def _closed_session_with_checkin(client):
+    station = client.post("/api/stations", json={
+        "callsign": "K5SUB",
+        "name": "Danny Butler",
+        "city": "Memphis",
+        "state": "TN",
+        "grid": "EM55AA",
+        "source": "fcc",
+    }).get_json()
+    session = client.post("/api/sessions/start", json={
+        "name": "Weekly Net",
+        "frequency": "147.240 MHz",
+        "net_control": "K5SUB",
+    }).get_json()
+    client.patch("/api/checkins/1", json={"traffic": True, "traffic_details": "Announcement", "notes": "Good signal"})
+    session = client.post(f"/api/sessions/{session['id']}/stop").get_json()
+    return session, station
+
+
+def test_wordpress_export_payload_maps_saved_net_to_plugin_import_shape(client):
+    session, _station = _closed_session_with_checkin(client)
+
+    res = client.get(f"/api/sessions/{session['id']}/wordpress-payload")
+
+    assert res.status_code == 200
+    payload = res.get_json()
+    assert payload["source"] == "net_logger"
+    assert payload["external_id"] == str(session["id"])
+    assert payload["event"]["name"] == "Weekly Net"
+    assert payload["event"]["frequency"] == "147.240 MHz"
+    assert payload["event"]["net_control"] == "K5SUB"
+    assert payload["event"]["ended_at"] == session["closed_at"]
+    assert payload["attendance"][0]["role"] == "net_control"
+    assert payload["attendance"][0]["participant"]["callsign"] == "K5SUB"
+    assert payload["attendance"][0]["participant"]["external_id"]
+    assert payload["attendance"][0]["traffic"] is True
+
+
+def test_send_wordpress_requires_configuration(client):
+    session, _station = _closed_session_with_checkin(client)
+
+    res = client.post(f"/api/sessions/{session['id']}/send-wordpress")
+
+    assert res.status_code == 400
+    assert res.get_json()["error"] == "WordPress endpoint, username, and application password are required"
+
+
+def test_send_wordpress_posts_once_and_blocks_duplicate_pushes(monkeypatch, tmp_path):
+    import json
+    import net_logger.app as app_module
+
+    calls = []
+
+    class FakeResponse:
+        status = 201
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"ok":true,"event_id":123}'
+
+    def fake_urlopen(req, timeout):
+        calls.append({
+            "url": req.full_url,
+            "method": req.get_method(),
+            "authorization": req.headers.get("Authorization"),
+            "body": json.loads(req.data.decode()),
+            "timeout": timeout,
+        })
+        return FakeResponse()
+
+    monkeypatch.setattr(app_module.request_lib, "urlopen", fake_urlopen)
+    app = create_app({
+        "DATABASE": str(tmp_path / "net_logger.sqlite3"),
+        "TESTING": True,
+        "WORDPRESS_ENDPOINT": "https://dev.detarc.net/wp-json/net-attendance/v1/imports",
+        "WORDPRESS_USERNAME": "api-user",
+        "WORDPRESS_APPLICATION_PASSWORD": "app password",
+    })
+    with app.test_client() as custom_client:
+        session, _station = _closed_session_with_checkin(custom_client)
+
+        first = custom_client.post(f"/api/sessions/{session['id']}/send-wordpress")
+        second = custom_client.post(f"/api/sessions/{session['id']}/send-wordpress")
+        sessions = custom_client.get("/api/sessions").get_json()
+
+    assert first.status_code == 201
+    assert first.get_json()["wordpress"]["event_id"] == 123
+    assert second.status_code == 409
+    assert second.get_json()["error"] == "session already sent to WordPress"
+    assert len(calls) == 1
+    assert calls[0]["url"] == "https://dev.detarc.net/wp-json/net-attendance/v1/imports"
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["authorization"].startswith("Basic ")
+    assert calls[0]["body"]["external_id"] == str(session["id"])
+    assert sessions[0]["wordpress_pushed_at"]
+
+
 def test_checking_in_station_moves_it_from_known_to_checked_in(client):
     station = client.post("/api/stations", json={"callsign": "W5XYZ"}).get_json()
     session = client.post("/api/sessions/start", json={"name": "Tuesday Net"}).get_json()

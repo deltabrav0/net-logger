@@ -137,12 +137,15 @@ def test_reports_page_contains_saved_nets_metrics_and_export_controls():
     assert 'Net name' in html
     assert '<option value="">All nets</option>' in html
     assert 'href="/api/export.csv"' in html
+    assert 'Send to WordPress' in (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
+    assert 'sendSessionToWordPress' in (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
 
 
 def test_static_app_initializes_main_and_reports_pages_conditionally():
     js = (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
 
     assert "function pageHas(id)" in js
+    assert "if (!pageHas('netName') || !pageHas('frequency')) return;" in js
     assert "if (pageHas('sessionForm'))" in js
     assert "if (pageHas('sessionsList'))" in js
     assert "if (pageHas('metricsSeriesByNet'))" in js

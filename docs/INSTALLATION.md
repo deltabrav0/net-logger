@@ -217,6 +217,10 @@ Environment variables:
 - `NET_LOGGER_DEBUG`: set to `true` for Flask debug mode
 - `NET_LOGGER_FCC_LOOKUP_PATH`: local FCC flat-file lookup directory
 - `NET_LOGGER_LOGO_PATH`: optional path to a custom PNG logo file
+- `NET_LOGGER_WORDPRESS_ENDPOINT`: optional WordPress import endpoint, e.g. `https://example.org/wp-json/net-attendance/v1/net-logger/sessions`
+- `NET_LOGGER_WORDPRESS_USERNAME`: WordPress username for Application Password authentication
+- `NET_LOGGER_WORDPRESS_APPLICATION_PASSWORD`: WordPress Application Password value; keep this out of shell history, notes, and source control
+- `NET_LOGGER_WORDPRESS_TIMEOUT`: optional WordPress request timeout in seconds, default `20`
 
 Default installed database locations:
 

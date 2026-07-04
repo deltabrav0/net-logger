@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import base64
 import csv
 import io
+import json
 import os
 from pathlib import Path
 from typing import Any
+from urllib import error as urlerror
+from urllib import request as request_lib
 
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 
@@ -17,7 +21,14 @@ from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_databas
 def create_app(config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__, static_folder="static", static_url_path="")
     database = os.path.join(app.instance_path, "net_logger.sqlite3")
-    app.config.update(DATABASE=database, LOGO_PATH=os.environ.get("NET_LOGGER_LOGO_PATH"))
+    app.config.update(
+        DATABASE=database,
+        LOGO_PATH=os.environ.get("NET_LOGGER_LOGO_PATH"),
+        WORDPRESS_ENDPOINT=os.environ.get("NET_LOGGER_WORDPRESS_ENDPOINT", ""),
+        WORDPRESS_USERNAME=os.environ.get("NET_LOGGER_WORDPRESS_USERNAME", ""),
+        WORDPRESS_APPLICATION_PASSWORD=os.environ.get("NET_LOGGER_WORDPRESS_APPLICATION_PASSWORD", ""),
+        WORDPRESS_TIMEOUT=int(os.environ.get("NET_LOGGER_WORDPRESS_TIMEOUT", "20")),
+    )
     if config:
         app.config.update(config)
     Path(app.config["DATABASE"]).expanduser().parent.mkdir(parents=True, exist_ok=True)
@@ -193,9 +204,12 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
                 """
                 SELECT ns.*,
                        COUNT(ch.id) AS checkin_count,
-                       COALESCE(SUM(CASE WHEN ch.traffic = 1 THEN 1 ELSE 0 END), 0) AS traffic_count
+                       COALESCE(SUM(CASE WHEN ch.traffic = 1 THEN 1 ELSE 0 END), 0) AS traffic_count,
+                       MAX(wp.pushed_at) AS wordpress_pushed_at,
+                       MAX(wp.wordpress_event_id) AS wordpress_event_id
                 FROM net_sessions ns
                 LEFT JOIN checkins ch ON ch.session_id = ns.id
+                LEFT JOIN wordpress_pushes wp ON wp.session_id = ns.id
                 GROUP BY ns.id
                 ORDER BY ns.started_at DESC, ns.id DESC
                 """
@@ -241,6 +255,132 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             mimetype="text/csv",
             headers={"Content-Disposition": "attachment; filename=net-logger-export.csv"},
         )
+
+    def build_wordpress_payload(session_id: int):
+        with con() as c:
+            session = c.execute("SELECT * FROM net_sessions WHERE id = ?", (session_id,)).fetchone()
+            if session is None:
+                return None
+            checkins = c.execute(
+                """
+                SELECT ch.*, s.id AS station_id, s.callsign, s.name, s.city, s.state, s.grid, s.lat, s.lon, s.source
+                FROM checkins ch
+                JOIN stations s ON s.id = ch.station_id
+                WHERE ch.session_id = ?
+                ORDER BY ch.sequence
+                """,
+                (session_id,),
+            ).fetchall()
+        session_item = db.row_to_dict(session)
+        if session_item is None:
+            return None
+        attendance = []
+        for row in checkins:
+            item = db.row_to_dict(row)
+            callsign = item["callsign"]
+            attendance.append({
+                "sequence": item["sequence"],
+                "checked_in_at": item["checked_in_at"],
+                "status": "present",
+                "role": "net_control" if callsign == session_item.get("net_control") else None,
+                "traffic": bool(item["traffic"]),
+                "traffic_details": item["traffic_details"],
+                "notes": item["notes"],
+                "participant": {
+                    "external_id": str(item["station_id"]),
+                    "source": item.get("source") or "net_logger",
+                    "callsign": callsign,
+                    "name": item["name"],
+                    "city": item["city"],
+                    "state": item["state"],
+                    "grid": item["grid"],
+                    "lat": item["lat"],
+                    "lon": item["lon"],
+                },
+                "metadata": {"net_logger_checkin_id": item["id"]},
+            })
+        return {
+            "source": "net_logger",
+            "external_id": str(session_item["id"]),
+            "event": {
+                "name": session_item["name"] or "Imported Net",
+                "event_type": "Repeater Net",
+                "frequency": session_item["frequency"],
+                "net_control": session_item["net_control"],
+                "status": session_item["status"],
+                "started_at": session_item["started_at"],
+                "ended_at": session_item["closed_at"],
+                "metadata": {"net_logger_session": session_item},
+            },
+            "attendance": attendance,
+        }
+
+    @app.get("/api/sessions/<int:session_id>/wordpress-payload")
+    def wordpress_payload(session_id: int):
+        payload = build_wordpress_payload(session_id)
+        if payload is None:
+            return jsonify({"error": "session not found"}), 404
+        return jsonify(payload)
+
+    @app.post("/api/sessions/<int:session_id>/send-wordpress")
+    def send_wordpress(session_id: int):
+        endpoint = (app.config.get("WORDPRESS_ENDPOINT") or "").strip()
+        username = (app.config.get("WORDPRESS_USERNAME") or "").strip()
+        password = (app.config.get("WORDPRESS_APPLICATION_PASSWORD") or "").strip()
+        if not (endpoint and username and password):
+            return jsonify({"error": "WordPress endpoint, username, and application password are required"}), 400
+
+        payload = build_wordpress_payload(session_id)
+        if payload is None:
+            return jsonify({"error": "session not found"}), 404
+
+        with con() as c:
+            existing = c.execute(
+                "SELECT * FROM wordpress_pushes WHERE session_id = ? AND endpoint = ?",
+                (session_id, endpoint),
+            ).fetchone()
+            if existing:
+                return jsonify({"error": "session already sent to WordPress", "push": db.row_to_dict(existing)}), 409
+
+        body = json.dumps(payload).encode("utf-8")
+        token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+        req = request_lib.Request(
+            endpoint,
+            data=body,
+            method="POST",
+            headers={
+                "Authorization": f"Basic {token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        try:
+            with request_lib.urlopen(req, timeout=app.config["WORDPRESS_TIMEOUT"]) as response:
+                response_text = response.read().decode("utf-8")
+                response_data = json.loads(response_text) if response_text else {}
+                status = getattr(response, "status", 201)
+        except urlerror.HTTPError as exc:
+            error_text = exc.read().decode("utf-8", errors="replace")
+            return jsonify({"error": "WordPress import failed", "status": exc.code, "response": error_text}), 502
+        except Exception as exc:
+            return jsonify({"error": "WordPress import failed", "details": str(exc)}), 502
+
+        if status < 200 or status >= 300 or not response_data.get("ok", True):
+            return jsonify({"error": "WordPress import failed", "status": status, "response": response_data}), 502
+
+        with con() as c:
+            c.execute(
+                """
+                INSERT INTO wordpress_pushes (session_id, endpoint, wordpress_event_id, response_json)
+                VALUES (?, ?, ?, ?)
+                """,
+                (session_id, endpoint, str(response_data.get("event_id") or ""), json.dumps(response_data)),
+            )
+            push = c.execute(
+                "SELECT * FROM wordpress_pushes WHERE session_id = ? AND endpoint = ?",
+                (session_id, endpoint),
+            ).fetchone()
+        return jsonify({"ok": True, "wordpress": response_data, "push": db.row_to_dict(push)}), 201
 
     @app.get("/api/metrics")
     def metrics():

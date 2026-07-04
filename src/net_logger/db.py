@@ -45,6 +45,16 @@ CREATE TABLE IF NOT EXISTS checkins (
   notes TEXT NOT NULL DEFAULT '',
   UNIQUE(session_id, station_id)
 );
+
+CREATE TABLE IF NOT EXISTS wordpress_pushes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL REFERENCES net_sessions(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  wordpress_event_id TEXT,
+  response_json TEXT NOT NULL DEFAULT '',
+  pushed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(session_id, endpoint)
+);
 """
 
 

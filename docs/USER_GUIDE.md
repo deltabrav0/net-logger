@@ -130,6 +130,12 @@ Open **Saved Nets / Metrics** from the main page header to view metrics. The Met
 
 Use **Net name** to filter metrics to one saved net name, or leave it on **All nets** to compare every saved net.
 
+## WordPress export
+
+If the Net & Meeting Attendance WordPress plugin is configured, open **Saved Nets / Metrics** and press **Send to WordPress** on a saved net. Net Logger sends the saved session and check-ins to the configured WordPress REST endpoint using the configured WordPress username and Application Password.
+
+Net Logger records a successful push locally and disables the button for that saved net afterward. The WordPress plugin also imports by stable `source + external_id` identity, so a retry should update the same event rather than create a duplicate.
+
 ## Deleting all records
 
 Use the administrative reset API when you want a clean database.

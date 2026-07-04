@@ -283,6 +283,67 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/sessions/{session_id}/wordpress-payload:
+    get:
+      tags:
+      - Sessions
+      summary: Build the WordPress import payload for a saved session
+      operationId: getWordPressPayload
+      parameters:
+      - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Net Attendance Logger import payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordPressImportPayload'
+        '404':
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/sessions/{session_id}/send-wordpress:
+    post:
+      tags:
+      - Sessions
+      summary: Send a saved session to the configured WordPress import endpoint
+      operationId: sendSessionToWordPress
+      description: Requires NET_LOGGER_WORDPRESS_ENDPOINT, NET_LOGGER_WORDPRESS_USERNAME, and NET_LOGGER_WORDPRESS_APPLICATION_PASSWORD. A successful push is recorded locally so the same session is not sent twice to the same endpoint.
+      parameters:
+      - $ref: '#/components/parameters/SessionId'
+      responses:
+        '201':
+          description: Session sent to WordPress and recorded locally.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordPressPushResponse'
+        '400':
+          description: WordPress configuration is incomplete.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Session has already been sent to the configured WordPress endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: WordPress import failed or returned a non-success response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/sessions/{session_id}/checkins:
     post:
       tags:
@@ -682,6 +743,58 @@ components:
           traffic_count:
             type: integer
             example: 2
+          wordpress_pushed_at:
+            type: string
+            nullable: true
+            example: '2026-06-16 19:46:00'
+          wordpress_event_id:
+            type: string
+            nullable: true
+            example: '123'
+    WordPressImportPayload:
+      type: object
+      properties:
+        source:
+          type: string
+          example: net_logger
+        external_id:
+          type: string
+          example: '12'
+        event:
+          type: object
+          additionalProperties: true
+        attendance:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    WordPressPushRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        session_id:
+          type: integer
+        endpoint:
+          type: string
+        wordpress_event_id:
+          type: string
+          nullable: true
+        response_json:
+          type: string
+        pushed_at:
+          type: string
+    WordPressPushResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        wordpress:
+          type: object
+          additionalProperties: true
+        push:
+          $ref: '#/components/schemas/WordPressPushRecord'
     SessionStartRequest:
       type: object
       properties:
