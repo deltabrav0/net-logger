@@ -134,6 +134,8 @@ Use **Net name** to filter metrics to one saved net name, or leave it on **All n
 
 If the Net & Meeting Attendance WordPress plugin is configured, open **Saved Nets / Metrics** and press **Send to WordPress** on a saved net. Net Logger sends the saved session and check-ins to the configured WordPress REST endpoint using the configured WordPress username and Application Password.
 
+If the WordPress endpoint, username, or Application Password are missing, Net Logger opens a setup form automatically. Enter the settings, then choose **Test Only** to check the connection without saving, or **Test and Save** to check the connection and write the settings to `config.ini`.
+
 The WordPress settings live in Net Logger's `config.ini` file under `[wordpress]`:
 
 ```ini

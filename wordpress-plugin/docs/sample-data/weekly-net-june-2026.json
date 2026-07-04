@@ -1,0 +1,710 @@
+{
+  "format": "net-attendance-logger-batch-v1",
+  "description": "One month of weekly net sample data: four closed Weekly Net meetings modeled on local Net Logger sample stations.",
+  "events": [
+    {
+      "source": "net_logger_sample",
+      "external_id": "sample-weekly-net-2026-06-03",
+      "event": {
+        "name": "Weekly Net",
+        "event_type": "Repeater Net",
+        "frequency": "146.940 MHz",
+        "mode": "FM",
+        "repeater": "DETARC local repeater",
+        "net_control": "KK5TE",
+        "status": "closed",
+        "started_at": "2026-06-03 19:00:00",
+        "ended_at": "2026-06-03 19:30:00",
+        "location": "Deep East Texas",
+        "notes": "Synthetic one-month sample for Net Attendance Logger import testing.",
+        "metadata": {
+          "sample": true,
+          "template": "net-logger current sqlite data"
+        }
+      },
+      "attendance": [
+        {
+          "sequence": 1,
+          "checked_in_at": "2026-06-03 19:00:00",
+          "status": "present",
+          "role": "net_control",
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kk5te",
+            "callsign": "KK5TE",
+            "name": "Timothy Evans",
+            "city": "Huntington",
+            "state": "TX",
+            "grid": "EM21RG",
+            "lat": 31.2837,
+            "lon": -94.5662
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-03-1"
+          }
+        },
+        {
+          "sequence": 2,
+          "checked_in_at": "2026-06-03 19:01:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-k5sub",
+            "callsign": "K5SUB",
+            "name": "Daniel Butler",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG",
+            "lat": 31.27,
+            "lon": -94.6469
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-03-2"
+          }
+        },
+        {
+          "sequence": 3,
+          "checked_in_at": "2026-06-03 19:02:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-wd5efy",
+            "callsign": "WD5EFY",
+            "name": "Michael Miles",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21OI",
+            "lat": 31.3489,
+            "lon": -94.8327
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-03-3"
+          }
+        },
+        {
+          "sequence": 4,
+          "checked_in_at": "2026-06-03 19:03:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kd5ooq",
+            "callsign": "KD5OOQ",
+            "name": "Terry Bryant",
+            "city": "Nacogdoches",
+            "state": "TX",
+            "grid": "EM21QR",
+            "lat": 31.7195,
+            "lon": -94.6168
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-03-4"
+          }
+        },
+        {
+          "sequence": 5,
+          "checked_in_at": "2026-06-03 19:04:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-ki5tut",
+            "callsign": "KI5TUT",
+            "name": "Sample Operator",
+            "city": "Diboll",
+            "state": "TX",
+            "grid": "EM21OE"
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-03-5"
+          }
+        },
+        {
+          "sequence": 6,
+          "checked_in_at": "2026-06-03 19:05:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "Imported sample modeled on local Net Logger stations.",
+          "participant": {
+            "external_id": "station-w5xyz",
+            "callsign": "W5XYZ",
+            "name": "Example Relay Station",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG"
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-03-6"
+          }
+        }
+      ]
+    },
+    {
+      "source": "net_logger_sample",
+      "external_id": "sample-weekly-net-2026-06-10",
+      "event": {
+        "name": "Weekly Net",
+        "event_type": "Repeater Net",
+        "frequency": "146.940 MHz",
+        "mode": "FM",
+        "repeater": "DETARC local repeater",
+        "net_control": "K5SUB",
+        "status": "closed",
+        "started_at": "2026-06-10 19:00:00",
+        "ended_at": "2026-06-10 19:30:00",
+        "location": "Deep East Texas",
+        "notes": "Synthetic one-month sample for Net Attendance Logger import testing.",
+        "metadata": {
+          "sample": true,
+          "template": "net-logger current sqlite data"
+        }
+      },
+      "attendance": [
+        {
+          "sequence": 1,
+          "checked_in_at": "2026-06-10 19:00:00",
+          "status": "present",
+          "role": "net_control",
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-k5sub",
+            "callsign": "K5SUB",
+            "name": "Daniel Butler",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG",
+            "lat": 31.27,
+            "lon": -94.6469
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-1"
+          }
+        },
+        {
+          "sequence": 2,
+          "checked_in_at": "2026-06-10 19:01:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kk5te",
+            "callsign": "KK5TE",
+            "name": "Timothy Evans",
+            "city": "Huntington",
+            "state": "TX",
+            "grid": "EM21RG",
+            "lat": 31.2837,
+            "lon": -94.5662
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-2"
+          }
+        },
+        {
+          "sequence": 3,
+          "checked_in_at": "2026-06-10 19:02:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-wd5efy",
+            "callsign": "WD5EFY",
+            "name": "Michael Miles",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21OI",
+            "lat": 31.3489,
+            "lon": -94.8327
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-3"
+          }
+        },
+        {
+          "sequence": 4,
+          "checked_in_at": "2026-06-10 19:03:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-aa5hh",
+            "callsign": "AA5HH",
+            "name": "Michael Hooks",
+            "city": "Burke",
+            "state": "TX",
+            "grid": "EM21OE",
+            "lat": 31.195,
+            "lon": -94.7729
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-4"
+          }
+        },
+        {
+          "sequence": 5,
+          "checked_in_at": "2026-06-10 19:04:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-ki5tut",
+            "callsign": "KI5TUT",
+            "name": "Sample Operator",
+            "city": "Diboll",
+            "state": "TX",
+            "grid": "EM21OE"
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-5"
+          }
+        },
+        {
+          "sequence": 6,
+          "checked_in_at": "2026-06-10 19:05:00",
+          "status": "present",
+          "role": null,
+          "traffic": true,
+          "traffic_details": "Announcement: county ARES exercise this Saturday.",
+          "notes": "Imported sample modeled on local Net Logger stations.",
+          "participant": {
+            "external_id": "station-n5abc",
+            "callsign": "N5ABC",
+            "name": "Example Mobile Station",
+            "city": "Nacogdoches",
+            "state": "TX",
+            "grid": "EM21QR"
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-6"
+          }
+        },
+        {
+          "sequence": 7,
+          "checked_in_at": "2026-06-10 19:06:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kd5ooq",
+            "callsign": "KD5OOQ",
+            "name": "Terry Bryant",
+            "city": "Nacogdoches",
+            "state": "TX",
+            "grid": "EM21QR",
+            "lat": 31.7195,
+            "lon": -94.6168
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-10-7"
+          }
+        }
+      ]
+    },
+    {
+      "source": "net_logger_sample",
+      "external_id": "sample-weekly-net-2026-06-17",
+      "event": {
+        "name": "Weekly Net",
+        "event_type": "Repeater Net",
+        "frequency": "146.940 MHz",
+        "mode": "FM",
+        "repeater": "DETARC local repeater",
+        "net_control": "KK5TE",
+        "status": "closed",
+        "started_at": "2026-06-17 19:00:00",
+        "ended_at": "2026-06-17 19:30:00",
+        "location": "Deep East Texas",
+        "notes": "Synthetic one-month sample for Net Attendance Logger import testing.",
+        "metadata": {
+          "sample": true,
+          "template": "net-logger current sqlite data"
+        }
+      },
+      "attendance": [
+        {
+          "sequence": 1,
+          "checked_in_at": "2026-06-17 19:00:00",
+          "status": "present",
+          "role": "net_control",
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kk5te",
+            "callsign": "KK5TE",
+            "name": "Timothy Evans",
+            "city": "Huntington",
+            "state": "TX",
+            "grid": "EM21RG",
+            "lat": 31.2837,
+            "lon": -94.5662
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-17-1"
+          }
+        },
+        {
+          "sequence": 2,
+          "checked_in_at": "2026-06-17 19:01:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kd5ooq",
+            "callsign": "KD5OOQ",
+            "name": "Terry Bryant",
+            "city": "Nacogdoches",
+            "state": "TX",
+            "grid": "EM21QR",
+            "lat": 31.7195,
+            "lon": -94.6168
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-17-2"
+          }
+        },
+        {
+          "sequence": 3,
+          "checked_in_at": "2026-06-17 19:02:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-k5sub",
+            "callsign": "K5SUB",
+            "name": "Daniel Butler",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG",
+            "lat": 31.27,
+            "lon": -94.6469
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-17-3"
+          }
+        },
+        {
+          "sequence": 4,
+          "checked_in_at": "2026-06-17 19:03:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-wd5efy",
+            "callsign": "WD5EFY",
+            "name": "Michael Miles",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21OI",
+            "lat": 31.3489,
+            "lon": -94.8327
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-17-4"
+          }
+        },
+        {
+          "sequence": 5,
+          "checked_in_at": "2026-06-17 19:04:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-ki5tut",
+            "callsign": "KI5TUT",
+            "name": "Sample Operator",
+            "city": "Diboll",
+            "state": "TX",
+            "grid": "EM21OE"
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-17-5"
+          }
+        }
+      ]
+    },
+    {
+      "source": "net_logger_sample",
+      "external_id": "sample-weekly-net-2026-06-24",
+      "event": {
+        "name": "Weekly Net",
+        "event_type": "Repeater Net",
+        "frequency": "146.940 MHz",
+        "mode": "FM",
+        "repeater": "DETARC local repeater",
+        "net_control": "KK5TE",
+        "status": "closed",
+        "started_at": "2026-06-24 19:00:00",
+        "ended_at": "2026-06-24 19:30:00",
+        "location": "Deep East Texas",
+        "notes": "Synthetic one-month sample for Net Attendance Logger import testing.",
+        "metadata": {
+          "sample": true,
+          "template": "net-logger current sqlite data"
+        }
+      },
+      "attendance": [
+        {
+          "sequence": 1,
+          "checked_in_at": "2026-06-24 19:00:00",
+          "status": "present",
+          "role": "net_control",
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kk5te",
+            "callsign": "KK5TE",
+            "name": "Timothy Evans",
+            "city": "Huntington",
+            "state": "TX",
+            "grid": "EM21RG",
+            "lat": 31.2837,
+            "lon": -94.5662
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-1"
+          }
+        },
+        {
+          "sequence": 2,
+          "checked_in_at": "2026-06-24 19:01:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-wd5efy",
+            "callsign": "WD5EFY",
+            "name": "Michael Miles",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21OI",
+            "lat": 31.3489,
+            "lon": -94.8327
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-2"
+          }
+        },
+        {
+          "sequence": 3,
+          "checked_in_at": "2026-06-24 19:02:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-aa5hh",
+            "callsign": "AA5HH",
+            "name": "Michael Hooks",
+            "city": "Burke",
+            "state": "TX",
+            "grid": "EM21OE",
+            "lat": 31.195,
+            "lon": -94.7729
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-3"
+          }
+        },
+        {
+          "sequence": 4,
+          "checked_in_at": "2026-06-24 19:03:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-k5sub",
+            "callsign": "K5SUB",
+            "name": "Daniel Butler",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG",
+            "lat": 31.27,
+            "lon": -94.6469
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-4"
+          }
+        },
+        {
+          "sequence": 5,
+          "checked_in_at": "2026-06-24 19:04:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-ke5cje",
+            "callsign": "KE5CJE",
+            "name": "Stephen Jackson",
+            "city": "Diboll",
+            "state": "TX",
+            "grid": "EM21OE",
+            "lat": 31.195,
+            "lon": -94.7729
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-5"
+          }
+        },
+        {
+          "sequence": 6,
+          "checked_in_at": "2026-06-24 19:05:00",
+          "status": "present",
+          "role": null,
+          "traffic": true,
+          "traffic_details": "Question about generator load testing schedule.",
+          "notes": "",
+          "participant": {
+            "external_id": "station-ki5fiq",
+            "callsign": "KI5FIQ",
+            "name": "Aaron Baker",
+            "city": "Nacogdoches",
+            "state": "TX",
+            "grid": "EM21QR",
+            "lat": 31.7195,
+            "lon": -94.6168
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-6"
+          }
+        },
+        {
+          "sequence": 7,
+          "checked_in_at": "2026-06-24 19:06:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "",
+          "participant": {
+            "external_id": "station-kd5ooq",
+            "callsign": "KD5OOQ",
+            "name": "Terry Bryant",
+            "city": "Nacogdoches",
+            "state": "TX",
+            "grid": "EM21QR",
+            "lat": 31.7195,
+            "lon": -94.6168
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-7"
+          }
+        },
+        {
+          "sequence": 8,
+          "checked_in_at": "2026-06-24 19:07:00",
+          "status": "present",
+          "role": null,
+          "traffic": false,
+          "traffic_details": "",
+          "notes": "Imported sample modeled on local Net Logger stations.",
+          "participant": {
+            "external_id": "station-w5xyz",
+            "callsign": "W5XYZ",
+            "name": "Example Relay Station",
+            "city": "Lufkin",
+            "state": "TX",
+            "grid": "EM21QG"
+          },
+          "metadata": {
+            "sample": true,
+            "source_template": "net-logger sqlite sample",
+            "checkin_key": "sample-weekly-net-2026-06-24-8"
+          }
+        }
+      ]
+    }
+  ]
+}

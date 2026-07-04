@@ -59,6 +59,31 @@
         <div id="metricsSeriesByNet" class="metrics-series"></div>
       </section>
     </section>
+
+    <dialog id="wordpressConfigDialog" class="config-dialog">
+      <form id="wordpressConfigForm" method="dialog" class="config-form">
+        <h2>Set Up WordPress Export</h2>
+        <p class="muted">Enter the WordPress endpoint and Application Password. Net Logger will test the connection before saving these settings to your config.ini file.</p>
+        <label>WordPress endpoint
+          <input id="wordpressEndpoint" name="endpoint" type="url" placeholder="https://example.org/wp-json/net-attendance/v1/net-logger/sessions" required>
+        </label>
+        <label>Username
+          <input id="wordpressUsername" name="username" autocomplete="username" required>
+        </label>
+        <label>Application password
+          <input id="wordpressApplicationPassword" name="application_password" type="password" autocomplete="current-password" required>
+        </label>
+        <label>Timeout seconds
+          <input id="wordpressTimeout" name="timeout" type="number" min="1" value="20">
+        </label>
+        <p id="wordpressConfigStatus" class="status">WordPress export is optional.</p>
+        <div class="dialog-actions">
+          <button type="button" class="secondary" id="cancelWordPressConfigBtn">Cancel</button>
+          <button type="button" class="secondary" id="testWordPressConfigBtn">Test Only</button>
+          <button type="submit">Test and Save</button>
+        </div>
+      </form>
+    </dialog>
   </main>
   <script src="/app.js"></script>
 </body>

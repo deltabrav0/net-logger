@@ -15,7 +15,7 @@ from urllib import request as request_lib
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 
 from . import db
-from .config import load_app_settings
+from .config import load_app_settings, write_wordpress_settings
 from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_database
 
 
@@ -326,13 +326,133 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             return jsonify({"error": "session not found"}), 404
         return jsonify(payload)
 
+    def wordpress_settings_status():
+        endpoint = (app.config.get("WORDPRESS_ENDPOINT") or "").strip()
+        username = (app.config.get("WORDPRESS_USERNAME") or "").strip()
+        password = (app.config.get("WORDPRESS_APPLICATION_PASSWORD") or "").strip()
+        missing = []
+        if not endpoint:
+            missing.append("endpoint")
+        if not username:
+            missing.append("username")
+        if not password:
+            missing.append("application_password")
+        return {
+            "configured": not missing,
+            "missing": missing,
+            "config_path": app.config.get("CONFIG_PATH") or "",
+            "endpoint": endpoint,
+            "username": username,
+            "application_password_configured": bool(password),
+            "timeout": int(app.config.get("WORDPRESS_TIMEOUT") or 20),
+        }
+
+    def normalize_wordpress_config_payload(payload: dict[str, Any]):
+        endpoint = (payload.get("endpoint") or "").strip()
+        username = (payload.get("username") or "").strip()
+        password = (payload.get("application_password") or "").strip()
+        timeout = payload.get("timeout") or 20
+        try:
+            timeout = int(timeout)
+        except (TypeError, ValueError):
+            timeout = 20
+        missing = []
+        if not endpoint:
+            missing.append("endpoint")
+        if not username:
+            missing.append("username")
+        if not password:
+            missing.append("application_password")
+        return endpoint, username, password, timeout, missing
+
+    def wordpress_test_payload():
+        return {
+            "source": "net_logger",
+            "external_id": "configuration-test",
+            "event": {
+                "name": "Net Logger configuration test",
+                "event_type": "Configuration Test",
+                "frequency": "",
+                "net_control": "",
+                "status": "test",
+                "started_at": None,
+                "ended_at": None,
+                "metadata": {"net_logger_configuration_test": True},
+            },
+            "attendance": [],
+            "dry_run": True,
+        }
+
+    def post_wordpress_payload(endpoint: str, username: str, password: str, timeout: int, payload: dict[str, Any]):
+        body = json.dumps(payload).encode("utf-8")
+        token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+        req = request_lib.Request(
+            endpoint,
+            data=body,
+            method="POST",
+            headers={
+                "Authorization": f"Basic {token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        with request_lib.urlopen(req, timeout=timeout) as response:
+            response_text = response.read().decode("utf-8")
+            response_data = json.loads(response_text) if response_text else {}
+            status = getattr(response, "status", 200)
+        return status, response_data
+
+    @app.get("/api/wordpress/config")
+    def wordpress_config_status():
+        return jsonify(wordpress_settings_status())
+
+    @app.post("/api/wordpress/config/test")
+    def test_wordpress_config():
+        endpoint, username, password, timeout, missing = normalize_wordpress_config_payload(request.get_json(silent=True) or {})
+        if missing:
+            return jsonify({"error": "WordPress endpoint, username, and application password are required", "missing": missing}), 400
+        try:
+            status, response_data = post_wordpress_payload(endpoint, username, password, timeout, wordpress_test_payload())
+        except urlerror.HTTPError as exc:
+            error_text = exc.read().decode("utf-8", errors="replace")
+            return jsonify({"error": "WordPress connection or authentication failed", "status": exc.code, "response": error_text}), 502
+        except Exception as exc:
+            return jsonify({"error": "WordPress connection or authentication failed", "details": str(exc)}), 502
+        if status < 200 or status >= 300 or not response_data.get("ok", True):
+            return jsonify({"error": "WordPress connection or authentication failed", "status": status, "response": response_data}), 502
+        return jsonify({"ok": True, "message": "WordPress connection and authentication succeeded.", "wordpress": response_data})
+
+    @app.post("/api/wordpress/config")
+    def save_wordpress_config():
+        endpoint, username, password, timeout, missing = normalize_wordpress_config_payload(request.get_json(silent=True) or {})
+        if missing:
+            return jsonify({"error": "WordPress endpoint, username, and application password are required", "missing": missing}), 400
+        try:
+            status, response_data = post_wordpress_payload(endpoint, username, password, timeout, wordpress_test_payload())
+        except urlerror.HTTPError as exc:
+            error_text = exc.read().decode("utf-8", errors="replace")
+            return jsonify({"error": "WordPress connection or authentication failed", "status": exc.code, "response": error_text}), 502
+        except Exception as exc:
+            return jsonify({"error": "WordPress connection or authentication failed", "details": str(exc)}), 502
+        if status < 200 or status >= 300 or not response_data.get("ok", True):
+            return jsonify({"error": "WordPress connection or authentication failed", "status": status, "response": response_data}), 502
+        config_path = write_wordpress_settings(endpoint, username, password, timeout, app.config.get("CONFIG_PATH") or None)
+        app.config.update(
+            WORDPRESS_ENDPOINT=endpoint,
+            WORDPRESS_USERNAME=username,
+            WORDPRESS_APPLICATION_PASSWORD=password,
+            WORDPRESS_TIMEOUT=timeout,
+            CONFIG_PATH=str(config_path),
+        )
+        return jsonify({"ok": True, "message": "WordPress configuration saved.", "config": wordpress_settings_status(), "wordpress": response_data})
+
     @app.post("/api/sessions/<int:session_id>/send-wordpress")
     def send_wordpress(session_id: int):
         endpoint = (app.config.get("WORDPRESS_ENDPOINT") or "").strip()
         username = (app.config.get("WORDPRESS_USERNAME") or "").strip()
         password = (app.config.get("WORDPRESS_APPLICATION_PASSWORD") or "").strip()
         if not (endpoint and username and password):
-            return jsonify({"error": "WordPress endpoint, username, and application password are required"}), 400
+            return jsonify({"error": "WordPress endpoint, username, and application password are required", "setup_required": True, "config": wordpress_settings_status()}), 400
 
         payload = build_wordpress_payload(session_id)
         if payload is None:
@@ -346,23 +466,8 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             if existing:
                 return jsonify({"error": "session already sent to WordPress", "push": db.row_to_dict(existing)}), 409
 
-        body = json.dumps(payload).encode("utf-8")
-        token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
-        req = request_lib.Request(
-            endpoint,
-            data=body,
-            method="POST",
-            headers={
-                "Authorization": f"Basic {token}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        )
         try:
-            with request_lib.urlopen(req, timeout=app.config["WORDPRESS_TIMEOUT"]) as response:
-                response_text = response.read().decode("utf-8")
-                response_data = json.loads(response_text) if response_text else {}
-                status = getattr(response, "status", 201)
+            status, response_data = post_wordpress_payload(endpoint, username, password, app.config["WORDPRESS_TIMEOUT"], payload)
         except urlerror.HTTPError as exc:
             error_text = exc.read().decode("utf-8", errors="replace")
             return jsonify({"error": "WordPress import failed", "status": exc.code, "response": error_text}), 502

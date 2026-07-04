@@ -12,6 +12,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 - Traffic and notes on checked-in station cards
 - Last Heard timestamps on known station cards
 - Saved net sessions with CSV export
+- Optional WordPress export for saved nets through the bundled Net & Meeting Attendance plugin
 - Metrics by net, grouped by week/month/year
 - SQLite persistence
 - Flask JSON API plus vanilla HTML/CSS/JS UI
@@ -25,6 +26,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 - [API documentation](docs/API.md)
 - [OpenAPI specification](docs/openapi.yaml)
 - [Local FCC database API](docs/FCC_DATABASE_API.md)
+- [Optional WordPress plugin](docs/WORDPRESS_PLUGIN.md)
 - [Original MVP implementation plan](docs/plans/2026-06-16-kanban-net-logger-mvp.md)
 
 ## Quick install from GitHub

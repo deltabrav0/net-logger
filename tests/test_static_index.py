@@ -8,6 +8,7 @@ USER_GUIDE_HTML = ROOT / "src" / "net_logger" / "static" / "user-guide.html"
 LOGO = ROOT / "src" / "net_logger" / "static" / "app-logo.png"
 INSTALLATION = ROOT / "docs" / "INSTALLATION.md"
 PYPROJECT = ROOT / "pyproject.toml"
+WORDPRESS_PLUGIN = ROOT / "wordpress-plugin" / "net-attendance-logger"
 
 
 def test_packaged_openapi_spec_matches_documented_spec():
@@ -53,6 +54,18 @@ def test_installation_docs_explain_plain_language_config_file_and_wordpress_opti
     assert "username =" in text
     assert "application_password =" in text
     assert "NET_LOGGER_CONFIG" in text
+
+
+def test_optional_wordpress_plugin_is_included_with_documentation():
+    assert WORDPRESS_PLUGIN.exists()
+    assert (WORDPRESS_PLUGIN / "net-attendance-logger.php").exists()
+    assert (WORDPRESS_PLUGIN / "docs" / "installation.md").exists()
+    assert (WORDPRESS_PLUGIN / "docs" / "api.md").exists()
+    assert "Plugin Name: Net & Meeting Attendance" in (WORDPRESS_PLUGIN / "net-attendance-logger.php").read_text()
+    docs_index = (ROOT / "docs" / "WORDPRESS_PLUGIN.md").read_text()
+    assert "wordpress-plugin/net-attendance-logger" in docs_index
+    assert "optional" in docs_index.lower()
+    assert "/wp-json/net-attendance/v1/net-logger/sessions" in docs_index
 
 
 def test_session_form_uses_plain_inputs_without_extra_suggestion_controls():
@@ -141,8 +154,9 @@ def test_main_page_links_to_reports_instead_of_rendering_saved_nets_and_metrics_
     assert 'class="lower-grid"' not in html
 
 
-def test_reports_page_contains_saved_nets_metrics_and_export_controls():
+def test_reports_page_contains_saved_nets_metrics_export_and_wordpress_setup_controls():
     html = (ROOT / "src" / "net_logger" / "static" / "reports.html").read_text()
+    js = (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
 
     assert '<title>Net Logger Reports</title>' in html
     assert '<link rel="stylesheet" href="/styles.css">' in html
@@ -153,8 +167,17 @@ def test_reports_page_contains_saved_nets_metrics_and_export_controls():
     assert 'Net name' in html
     assert '<option value="">All nets</option>' in html
     assert 'href="/api/export.csv"' in html
-    assert 'Send to WordPress' in (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
-    assert 'sendSessionToWordPress' in (ROOT / "src" / "net_logger" / "static" / "app.js").read_text()
+    assert 'id="wordpressConfigDialog"' in html
+    assert 'id="wordpressConfigForm"' in html
+    assert 'id="wordpressEndpoint"' in html
+    assert 'id="wordpressUsername"' in html
+    assert 'id="wordpressApplicationPassword"' in html
+    assert 'Test and Save' in html
+    assert 'Send to WordPress' in js
+    assert 'sendSessionToWordPress' in js
+    assert 'openWordPressConfigDialog' in js
+    assert '/api/wordpress/config/test' in js
+    assert '/api/wordpress/config' in js
 
 
 def test_static_app_initializes_main_and_reports_pages_conditionally():

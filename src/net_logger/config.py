@@ -130,6 +130,37 @@ def load_config_file(path: Path | None = None) -> dict[str, Any]:
     return settings
 
 
+def write_wordpress_settings(
+    endpoint: str,
+    username: str,
+    application_password: str,
+    timeout: int = 20,
+    path: Path | str | None = None,
+) -> Path:
+    """Write WordPress connection settings to the Net Logger config file."""
+    config_path = Path(path).expanduser() if path else ensure_config_file()
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    parser = configparser.ConfigParser()
+    if config_path.exists():
+        parser.read(config_path, encoding="utf-8")
+    if not parser.has_section("server"):
+        parser["server"] = {"host": "127.0.0.1", "port": "8088", "debug": "false"}
+    if not parser.has_section("paths"):
+        parser["paths"] = {"database": "", "logo_path": "", "fcc_lookup_path": ""}
+    if not parser.has_section("wordpress"):
+        parser.add_section("wordpress")
+
+    parser.set("wordpress", "endpoint", _clean(endpoint))
+    parser.set("wordpress", "username", _clean(username))
+    parser.set("wordpress", "application_password", _clean(application_password))
+    parser.set("wordpress", "timeout", str(timeout or 20))
+
+    with config_path.open("w", encoding="utf-8") as f:
+        parser.write(f)
+    return config_path
+
+
 def env_settings() -> dict[str, Any]:
     settings: dict[str, Any] = {}
     mapping = {

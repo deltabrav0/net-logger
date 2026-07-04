@@ -255,9 +255,19 @@ timeout = 20
 
 ### WordPress configuration notes
 
+The easiest first-time setup is from the Net Logger web interface:
+
+1. Open **Saved Nets / Metrics**.
+2. Click **Send to WordPress** on a saved net.
+3. If WordPress export is not configured, Net Logger opens a setup form.
+4. Enter the endpoint, WordPress username, and Application Password.
+5. Click **Test Only** to verify without saving, or **Test and Save** to verify and write the settings to `config.ini`.
+
 To use **Send to WordPress**, create a WordPress Application Password for a trusted WordPress user that can manage the Net & Meeting Attendance plugin. Paste the generated password into `application_password`. This is not your normal WordPress login password; WordPress shows it once when you create it.
 
 Keep `application_password` private. Do not paste it into GitHub issues, screenshots, email, or public documentation.
+
+The optional WordPress plugin is included in this repository under `wordpress-plugin/net-attendance-logger`. See `docs/WORDPRESS_PLUGIN.md` and the plugin's own docs for installation, API, usage, and reports documentation.
 
 ### Command-line overrides
 

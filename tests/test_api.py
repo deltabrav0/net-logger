@@ -294,13 +294,124 @@ def test_wordpress_export_payload_maps_saved_net_to_plugin_import_shape(client):
     assert payload["attendance"][0]["traffic"] is True
 
 
-def test_send_wordpress_requires_configuration(client):
+def test_send_wordpress_reports_configuration_required_for_first_time_setup(client):
     session, _station = _closed_session_with_checkin(client)
 
     res = client.post(f"/api/sessions/{session['id']}/send-wordpress")
 
     assert res.status_code == 400
-    assert res.get_json()["error"] == "WordPress endpoint, username, and application password are required"
+    data = res.get_json()
+    assert data["error"] == "WordPress endpoint, username, and application password are required"
+    assert data["setup_required"] is True
+
+
+def test_wordpress_config_status_masks_password_and_reports_missing_values(tmp_path):
+    config_path = tmp_path / "config.ini"
+    app = create_app({
+        "DATABASE": str(tmp_path / "net_logger.sqlite3"),
+        "TESTING": True,
+        "CONFIG_PATH": str(config_path),
+        "WORDPRESS_ENDPOINT": "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions",
+        "WORDPRESS_USERNAME": "api-user",
+        "WORDPRESS_APPLICATION_PASSWORD": "secret app password",
+        "WORDPRESS_TIMEOUT": 15,
+    })
+
+    with app.test_client() as custom_client:
+        res = custom_client.get("/api/wordpress/config")
+
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["configured"] is True
+    assert data["missing"] == []
+    assert data["config_path"] == str(config_path)
+    assert data["endpoint"] == "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions"
+    assert data["username"] == "api-user"
+    assert data["application_password_configured"] is True
+    assert "secret" not in str(data)
+
+
+def test_wordpress_config_test_validates_credentials_without_saving(monkeypatch, tmp_path):
+    import json
+    import net_logger.app as app_module
+
+    calls = []
+
+    class FakeResponse:
+        status = 200
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"ok":true,"event_id":456}'
+
+    def fake_urlopen(req, timeout):
+        calls.append({"url": req.full_url, "method": req.get_method(), "authorization": req.headers.get("Authorization"), "body": json.loads(req.data.decode()), "timeout": timeout})
+        return FakeResponse()
+
+    monkeypatch.setattr(app_module.request_lib, "urlopen", fake_urlopen)
+    config_path = tmp_path / "config.ini"
+    app = create_app({"DATABASE": str(tmp_path / "net_logger.sqlite3"), "TESTING": True, "CONFIG_PATH": str(config_path)})
+
+    with app.test_client() as custom_client:
+        res = custom_client.post("/api/wordpress/config/test", json={
+            "endpoint": "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions",
+            "username": "api-user",
+            "application_password": "app password",
+            "timeout": 7,
+        })
+
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["ok"] is True
+    assert data["message"] == "WordPress connection and authentication succeeded."
+    assert calls[0]["url"] == "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions"
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["authorization"].startswith("Basic ")
+    assert calls[0]["body"]["event"]["name"] == "Net Logger configuration test"
+    assert not config_path.exists()
+
+
+def test_wordpress_config_save_tests_then_writes_config_file(monkeypatch, tmp_path):
+    import net_logger.app as app_module
+    from net_logger.config import CONFIG_TEMPLATE
+
+    class FakeResponse:
+        status = 200
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"ok":true,"event_id":789}'
+
+    monkeypatch.setattr(app_module.request_lib, "urlopen", lambda req, timeout: FakeResponse())
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(CONFIG_TEMPLATE, encoding="utf-8")
+    app = create_app({"DATABASE": str(tmp_path / "net_logger.sqlite3"), "TESTING": True, "CONFIG_PATH": str(config_path)})
+
+    with app.test_client() as custom_client:
+        res = custom_client.post("/api/wordpress/config", json={
+            "endpoint": "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions",
+            "username": "api-user",
+            "application_password": "app password",
+            "timeout": 9,
+        })
+        status = custom_client.get("/api/wordpress/config").get_json()
+
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["ok"] is True
+    assert data["message"] == "WordPress configuration saved."
+    written = config_path.read_text(encoding="utf-8")
+    assert "[wordpress]" in written
+    assert "endpoint = https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions" in written
+    assert "username = api-user" in written
+    assert "application_password = app password" in written
+    assert "timeout = 9" in written
+    assert status["configured"] is True
+    assert status["application_password_configured"] is True
 
 
 def test_send_wordpress_posts_once_and_blocks_duplicate_pushes(monkeypatch, tmp_path):

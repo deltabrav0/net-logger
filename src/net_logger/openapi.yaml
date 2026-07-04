@@ -304,6 +304,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/wordpress/config:
+    get:
+      tags:
+      - WordPress
+      summary: Return WordPress export configuration status without exposing the password
+      operationId: getWordPressConfig
+      responses:
+        '200':
+          description: WordPress export configuration status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordPressConfigStatus'
+    post:
+      tags:
+      - WordPress
+      summary: Test and save WordPress export configuration
+      operationId: saveWordPressConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WordPressConfigRequest'
+      responses:
+        '200':
+          description: Connection succeeded and settings were saved to config.ini.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordPressConfigSaveResponse'
+        '400':
+          description: Required WordPress configuration values are missing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: WordPress connection or authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/wordpress/config/test:
+    post:
+      tags:
+      - WordPress
+      summary: Test WordPress export settings without saving them
+      operationId: testWordPressConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WordPressConfigRequest'
+      responses:
+        '200':
+          description: Connection and authentication succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordPressConfigTestResponse'
+        '400':
+          description: Required WordPress configuration values are missing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: WordPress connection or authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/sessions/{session_id}/send-wordpress:
     post:
       tags:
@@ -768,6 +842,77 @@ components:
           items:
             type: object
             additionalProperties: true
+    WordPressConfigRequest:
+      type: object
+      required:
+      - endpoint
+      - username
+      - application_password
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          example: https://example.org/wp-json/net-attendance/v1/net-logger/sessions
+        username:
+          type: string
+          example: netlogger-api
+        application_password:
+          type: string
+          format: password
+          example: xxxx xxxx xxxx xxxx xxxx xxxx
+        timeout:
+          type: integer
+          default: 20
+          example: 20
+    WordPressConfigStatus:
+      type: object
+      properties:
+        configured:
+          type: boolean
+          example: true
+        missing:
+          type: array
+          items:
+            type: string
+          example: []
+        config_path:
+          type: string
+        endpoint:
+          type: string
+        username:
+          type: string
+        application_password_configured:
+          type: boolean
+          description: True when a password is configured; the password value is never returned.
+        timeout:
+          type: integer
+          example: 20
+    WordPressConfigTestResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: WordPress connection and authentication succeeded.
+        wordpress:
+          type: object
+          additionalProperties: true
+    WordPressConfigSaveResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: WordPress configuration saved.
+        config:
+          $ref: '#/components/schemas/WordPressConfigStatus'
+        wordpress:
+          type: object
+          additionalProperties: true
     WordPressPushRecord:
       type: object
       properties:

@@ -13,7 +13,12 @@ async function api(path, options = {}) {
   });
   if (res.status === 204) return null;
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || res.statusText);
+  if (!res.ok) {
+    const err = new Error(data.error || res.statusText);
+    err.data = data;
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -321,6 +326,70 @@ async function loadSessions() {
   populateMetricsNetFilter(sessions);
 }
 
+async function getWordPressConfig() {
+  return api('/api/wordpress/config');
+}
+
+function wordPressConfigPayload() {
+  return {
+    endpoint: $('wordpressEndpoint').value.trim(),
+    username: $('wordpressUsername').value.trim(),
+    application_password: $('wordpressApplicationPassword').value.trim(),
+    timeout: Number($('wordpressTimeout').value || 20),
+  };
+}
+
+async function openWordPressConfigDialog(message = '') {
+  const dialog = $('wordpressConfigDialog');
+  if (!dialog) return false;
+  const status = $('wordpressConfigStatus');
+  try {
+    const config = await getWordPressConfig();
+    $('wordpressEndpoint').value = config.endpoint || '';
+    $('wordpressUsername').value = config.username || '';
+    $('wordpressApplicationPassword').value = '';
+    $('wordpressTimeout').value = config.timeout || 20;
+    status.textContent = message || (config.configured ? 'WordPress export is configured. Enter a new Application Password only if you want to replace it.' : 'WordPress export is not configured yet. Fill in the required settings.');
+  } catch (err) {
+    status.textContent = err.message;
+  }
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', 'open');
+  return true;
+}
+
+function closeWordPressConfigDialog() {
+  const dialog = $('wordpressConfigDialog');
+  if (!dialog) return;
+  if (typeof dialog.close === 'function') dialog.close();
+  else dialog.removeAttribute('open');
+}
+
+async function testWordPressConfigOnly() {
+  const status = $('wordpressConfigStatus');
+  status.textContent = 'Testing WordPress connection…';
+  try {
+    const result = await api('/api/wordpress/config/test', { method: 'POST', body: JSON.stringify(wordPressConfigPayload()) });
+    status.textContent = result.message || 'WordPress connection and authentication succeeded.';
+  } catch (err) {
+    status.textContent = err.message;
+  }
+}
+
+async function saveWordPressConfig(evt) {
+  evt.preventDefault();
+  const status = $('wordpressConfigStatus');
+  status.textContent = 'Testing and saving WordPress settings…';
+  try {
+    const result = await api('/api/wordpress/config', { method: 'POST', body: JSON.stringify(wordPressConfigPayload()) });
+    status.textContent = result.message || 'WordPress configuration saved.';
+    setStatus('WordPress configuration saved. You can now send saved nets to WordPress.');
+    closeWordPressConfigDialog();
+  } catch (err) {
+    status.textContent = err.message;
+  }
+}
+
 async function sendSessionToWordPress(sessionIdToSend) {
   if (!confirm('Send this saved net to WordPress? This can only be done once from Net Logger.')) return;
   try {
@@ -329,6 +398,10 @@ async function sendSessionToWordPress(sessionIdToSend) {
     setStatus(`Saved net sent to WordPress.${eventId}`);
     await loadSessions();
   } catch (err) {
+    if (err.data && err.data.setup_required) {
+      await openWordPressConfigDialog('WordPress export is not configured yet. Enter the endpoint, username, and Application Password, then test and save.');
+      return;
+    }
     setStatus(err.message);
   }
 }
@@ -410,6 +483,9 @@ if (pageHas('refreshMetricsBtn')) $('refreshMetricsBtn').addEventListener('click
 if (pageHas('metricsPeriod')) $('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
 if (pageHas('metricsNetName')) $('metricsNetName').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
 if (pageHas('stationLookup')) $('stationLookup').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
+if (pageHas('wordpressConfigForm')) $('wordpressConfigForm').addEventListener('submit', saveWordPressConfig);
+if (pageHas('testWordPressConfigBtn')) $('testWordPressConfigBtn').addEventListener('click', () => testWordPressConfigOnly().catch(err => $('wordpressConfigStatus').textContent = err.message));
+if (pageHas('cancelWordPressConfigBtn')) $('cancelWordPressConfigBtn').addEventListener('click', closeWordPressConfigDialog);
 
 const checkedDrop = $('checkedInDropZone');
 if (checkedDrop) {

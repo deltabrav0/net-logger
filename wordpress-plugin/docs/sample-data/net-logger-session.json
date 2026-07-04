@@ -1,0 +1,49 @@
+{
+  "session": {
+    "id": 12,
+    "name": "Weekly Net",
+    "frequency": "147.240 MHz",
+    "net_control": "K5SUB",
+    "status": "closed",
+    "started_at": "2026-06-16 19:00:00",
+    "closed_at": "2026-06-16 19:45:00"
+  },
+  "checkins": [
+    {
+      "id": 101,
+      "sequence": 1,
+      "checked_in_at": "2026-06-16 19:01:00",
+      "traffic": false,
+      "traffic_details": "",
+      "notes": "Net control station",
+      "station": {
+        "id": 1,
+        "callsign": "K5SUB",
+        "name": "Danny Butler",
+        "city": "Memphis",
+        "state": "TN",
+        "grid": "EM55AA",
+        "lat": 35.1495,
+        "lon": -90.049
+      }
+    },
+    {
+      "id": 102,
+      "sequence": 2,
+      "checked_in_at": "2026-06-16 19:04:00",
+      "traffic": true,
+      "traffic_details": "Club announcement",
+      "notes": "Good signal",
+      "station": {
+        "id": 2,
+        "callsign": "WD5EFY",
+        "name": "Example Operator",
+        "city": "Lufkin",
+        "state": "TX",
+        "grid": "EM21QG",
+        "lat": 31.27,
+        "lon": -94.64
+      }
+    }
+  ]
+}
