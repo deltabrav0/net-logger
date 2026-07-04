@@ -39,24 +39,41 @@ python install.py
 net-logger serve
 ```
 
-Recommended with pipx:
+Recommended with pipx, without requiring Git:
 
 ```bash
-pipx install git+https://github.com/deltabrav0/net-logger.git
+python -m pip install --user pipx
+python -m pipx ensurepath
+python -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
 net-logger serve
 ```
 
-With pip:
+On Windows, use `py` if `python` is not recognized:
 
-```bash
-python -m pip install "git+https://github.com/deltabrav0/net-logger.git"
+```powershell
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
 net-logger serve
 ```
 
-With uv tool:
+If Windows has not reloaded PATH yet:
+
+```powershell
+& "$env:USERPROFILE\.local\bin\net-logger.exe" serve
+```
+
+With direct pip, also without requiring Git:
 
 ```bash
-uv tool install git+https://github.com/deltabrav0/net-logger.git
+python -m pip install --user --upgrade https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
+python -m net_logger.cli serve
+```
+
+With uv tool, without requiring Git:
+
+```bash
+uv tool install https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
 net-logger serve
 ```
 

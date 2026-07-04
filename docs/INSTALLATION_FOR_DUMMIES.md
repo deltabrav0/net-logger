@@ -15,10 +15,13 @@ You can use Net Logger by itself. Install the WordPress plugin only if you want 
 
 You need:
 
-- A computer with Python 3.11 or newer installed.
+- A Windows, macOS, or Linux computer with Python 3.11 or newer installed.
 - A web browser such as Chrome, Edge, Firefox, or Safari.
+- On Windows: PowerShell.
 - If using WordPress export: administrator access to the WordPress site.
 - If using WordPress export: the plugin ZIP file named `net-attendance-logger.zip`.
+
+You do **not** need Git for the normal instructions below. Git is only needed if you choose the developer-style `git clone` workflow in the fuller installation guide.
 
 Important password note:
 
@@ -44,19 +47,37 @@ On macOS:
 
 ### Step 2 — Install Net Logger
 
-Copy and paste this command, then press Enter:
+These commands install Net Logger from GitHub's ZIP archive, so Git is not required.
 
-```bash
-python -m pip install "git+https://github.com/deltabrav0/net-logger.git"
-```
-
-On some Windows computers, use this instead:
+On Windows PowerShell, copy and paste these commands one at a time:
 
 ```powershell
-py -m pip install "git+https://github.com/deltabrav0/net-logger.git"
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
 ```
 
-Wait until the command finishes.
+Then close PowerShell and open a new PowerShell window. This lets Windows reload the updated PATH.
+
+On macOS or Linux Terminal, copy and paste these commands one at a time:
+
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+python3 -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
+```
+
+Then close Terminal and open a new Terminal window.
+
+Where Windows puts it:
+
+- The Net Logger command is normally exposed from `%USERPROFILE%\.local\bin\net-logger.exe`.
+- The isolated Python app files are normally under `%USERPROFILE%\.local\pipx\venvs\net-logger`.
+- Net Logger's database and config are stored separately under `%APPDATA%\Net Logger`.
+
+This is the normal per-user Python command-line app layout. It does not install into `Program Files` unless we later build a native Windows installer/MSI.
+
+Wait until each command finishes before running the next one.
 
 ### Step 3 — Start Net Logger
 
@@ -66,7 +87,13 @@ Copy and paste this command, then press Enter:
 net-logger serve
 ```
 
-If Windows says it cannot find `net-logger`, try closing PowerShell, opening it again, and running the command one more time.
+If Windows says it cannot find `net-logger`, run it by its full path:
+
+```powershell
+& "$env:USERPROFILE\.local\bin\net-logger.exe" serve
+```
+
+If that works, the installation is good and Windows has not reloaded PATH yet. Close PowerShell, open a new PowerShell window, and try `net-logger serve` again.
 
 Leave this command window open while you use Net Logger. Closing it stops Net Logger.
 
@@ -244,11 +271,27 @@ http://127.0.0.1:8088
 
 ### `net-logger` command is not found
 
-Close and reopen the command window. If that does not work, reinstall with:
+On Windows, first try the full pipx command path:
 
-```bash
-python -m pip install --upgrade "git+https://github.com/deltabrav0/net-logger.git"
+```powershell
+& "$env:USERPROFILE\.local\bin\net-logger.exe" serve
 ```
+
+If that starts Net Logger, close PowerShell, open a new PowerShell window, and try the shorter command again:
+
+```powershell
+net-logger serve
+```
+
+If the full path does not exist, reinstall with:
+
+```powershell
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
+```
+
+Older instructions used `python -m pip install git+https://...`, which requires Git and can place `net-logger.exe` under a Python-specific `Scripts` folder such as `AppData\Local\Python\pythoncore-...\Scripts`. The current beginner instructions avoid that route.
 
 ### WordPress says the import is not authorized
 

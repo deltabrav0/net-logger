@@ -13,13 +13,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_REPO_URL = "https://github.com/deltabrav0/net-logger.git"
+DEFAULT_PACKAGE_URL = "https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip"
 MIN_PYTHON = (3, 11)
 
 
-def build_install_command(*, source: str, method: str, repo_url: str, upgrade: bool = False) -> list[str]:
+def build_install_command(*, source: str, method: str, package_url: str, upgrade: bool = False) -> list[str]:
     """Return the install command for the requested source and method."""
-    target = "." if source == "local" else f"git+{repo_url}"
+    target = "." if source == "local" else package_url
 
     if method == "pipx":
         command = ["pipx", "install"]
@@ -76,7 +76,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Install Net Logger on Windows, macOS, or Linux.")
     parser.add_argument("--source", choices=["github", "local"], default="github", help="Install from GitHub or the current checkout.")
     parser.add_argument("--method", choices=["pipx", "pip", "uv"], default="pipx", help="Installer backend to use.")
-    parser.add_argument("--repo-url", default=DEFAULT_REPO_URL, help="Git repository URL used when --source=github.")
+    parser.add_argument("--package-url", default=DEFAULT_PACKAGE_URL, help="Package URL used when --source=github. Defaults to GitHub's zip archive so Git is not required.")
+    parser.add_argument("--repo-url", dest="package_url", help=argparse.SUPPRESS)
     parser.add_argument("--upgrade", action="store_true", help="Force/reinstall or upgrade an existing installation.")
     parser.add_argument("--dry-run", action="store_true", help="Print commands without running them.")
     return parser
@@ -91,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("--source local must be run from the Net Logger checkout directory.")
 
     _ensure_method_available(args.method, dry_run=args.dry_run)
-    command = build_install_command(source=args.source, method=args.method, repo_url=args.repo_url, upgrade=args.upgrade)
+    command = build_install_command(source=args.source, method=args.method, package_url=args.package_url, upgrade=args.upgrade)
 
     print("Net Logger installer")
     print(f"Install command: {_format_command(command)}")

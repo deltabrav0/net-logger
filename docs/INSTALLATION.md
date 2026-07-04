@@ -22,8 +22,13 @@ Required:
 - Python 3.11 or newer
 - A modern web browser
 
+Not required for normal installs:
+
+- Git. The recommended commands below install from GitHub's ZIP archive and do not need `git.exe` on PATH.
+
 Optional:
 
+- Git, only for developer checkout workflows such as `git clone` or `pip install git+https://...`. On Windows, choose the Git installer option that adds Git to PATH if you use those workflows.
 - `pipx` for isolated command-line app installation
 - `uv` for developer workflows
 - Docker Desktop or Docker Engine for containerized use
@@ -38,19 +43,33 @@ http://127.0.0.1:8088
 
 ## Recommended normal installation
 
-For most users, install directly from GitHub with `pip`:
+For most users, install with `pipx` from GitHub's ZIP archive. This avoids a Git requirement and keeps Net Logger in an isolated per-user Python app environment instead of a Python-version-specific `Scripts` folder.
 
-```bash
-python -m pip install "git+https://github.com/deltabrav0/net-logger.git"
-net-logger serve
-```
-
-On Windows, if `python` is not recognized, try:
+Windows PowerShell:
 
 ```powershell
-py -m pip install "git+https://github.com/deltabrav0/net-logger.git"
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
 net-logger serve
 ```
+
+If PowerShell says `net-logger` is not recognized immediately after install, close PowerShell, open a new PowerShell window, and try again. You can also run the installed command by full path:
+
+```powershell
+& "$env:USERPROFILE\.local\bin\net-logger.exe" serve
+```
+
+macOS/Linux:
+
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+python3 -m pipx install --force https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
+net-logger serve
+```
+
+On Windows, the pipx command shim normally lives at `%USERPROFILE%\.local\bin\net-logger.exe`, the isolated app environment normally lives under `%USERPROFILE%\.local\pipx\venvs\net-logger`, and runtime data/config live under `%APPDATA%\Net Logger`. This is a normal per-user Python CLI layout. Installing under `Program Files` would require a separate native Windows installer/MSI.
 
 Then open:
 
@@ -60,29 +79,23 @@ http://127.0.0.1:8088
 
 Leave the terminal or PowerShell window open while using Net Logger. Closing it stops the server.
 
-## Alternative: install with pipx
+## Alternative: direct pip install
 
-`pipx` installs Python command-line apps into isolated environments. This is a good long-term installation method for operators who already have or are comfortable installing `pipx`.
-
-Install pipx if needed:
+If you do not want pipx, `pip` can also install Net Logger from the same GitHub ZIP archive without requiring Git. This may put the `net-logger.exe` launcher in a Python-version-specific `Scripts` directory on Windows, so pipx is preferred for normal operators.
 
 ```bash
-python -m pip install --user pipx
-python -m pipx ensurepath
+python -m pip install --user --upgrade https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
+python -m net_logger.cli serve
 ```
 
-Install Net Logger:
+On Windows, if `python` is not recognized, use:
 
-```bash
-pipx install git+https://github.com/deltabrav0/net-logger.git
-net-logger serve
+```powershell
+py -m pip install --user --upgrade https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
+py -m net_logger.cli serve
 ```
 
-Upgrade later with:
-
-```bash
-pipx upgrade net-logger
-```
+The `py -m net_logger.cli serve` fallback bypasses PATH entirely, which is useful if Windows cannot find `net-logger.exe`.
 
 ## Cross-platform installer script
 
@@ -100,7 +113,7 @@ On Windows, you can also use:
 py install.py
 ```
 
-The installer defaults to `pipx` and installs from GitHub:
+The installer defaults to `pipx` and installs from GitHub's ZIP archive, so Git is not required:
 
 ```bash
 python install.py --source github --method pipx
@@ -112,6 +125,7 @@ Useful options:
 python install.py --source local --method pipx
 python install.py --source github --method pip
 python install.py --source github --method uv
+python install.py --package-url https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip
 python install.py --upgrade
 python install.py --dry-run
 ```

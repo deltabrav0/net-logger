@@ -12,12 +12,12 @@ def _load_install_module():
     return module
 
 
-def test_cross_platform_installer_builds_default_github_pipx_command():
+def test_cross_platform_installer_builds_default_github_pipx_command_without_git_requirement():
     installer = _load_install_module()
 
-    command = installer.build_install_command(source="github", method="pipx", repo_url="https://github.com/deltabrav0/net-logger.git")
+    command = installer.build_install_command(source="github", method="pipx", package_url="https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip")
 
-    assert command == ["pipx", "install", "git+https://github.com/deltabrav0/net-logger.git"]
+    assert command == ["pipx", "install", "https://github.com/deltabrav0/net-logger/archive/refs/heads/main.zip"]
 
 
 def test_cross_platform_installer_supports_local_checkout_upgrade_and_dry_run(capsys):
@@ -107,6 +107,10 @@ def test_installation_docs_reference_installer_and_docker_options():
 
     assert "## Cross-platform installer script" in text
     assert "python install.py" in text
+    assert "archive/refs/heads/main.zip" in text
+    assert "Git. The recommended commands below install from GitHub's ZIP archive" in text
+    assert "$env:USERPROFILE\\.local\\bin\\net-logger.exe" in text
+    assert "py -m net_logger.cli serve" in text
     assert "install.sh" in text
     assert "install.ps1" in text
     assert "## Docker installation" in text
