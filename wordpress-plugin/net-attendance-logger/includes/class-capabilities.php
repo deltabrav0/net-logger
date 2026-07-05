@@ -11,6 +11,7 @@ final class Capabilities
     public const IMPORT = 'import_net_attendance';
     public const VIEW_REPORTS = 'view_net_attendance_reports';
     public const TAKE_ATTENDANCE = 'take_net_attendance';
+    public const VIEW_EVENTS = 'view_net_attendance_events';
 
     public static function can_import(): bool
     {
@@ -27,6 +28,11 @@ final class Capabilities
         return current_user_can('manage_options') || current_user_can(self::TAKE_ATTENDANCE);
     }
 
+    public static function can_view_events(): bool
+    {
+        return current_user_can('manage_options') || current_user_can(self::VIEW_EVENTS);
+    }
+
     public static function grant_defaults(): void
     {
         $administrator = get_role('administrator');
@@ -34,6 +40,7 @@ final class Capabilities
             $administrator->add_cap(self::IMPORT);
             $administrator->add_cap(self::VIEW_REPORTS);
             $administrator->add_cap(self::TAKE_ATTENDANCE);
+            $administrator->add_cap(self::VIEW_EVENTS);
         }
 
         self::grant_detarc_member_defaults();
@@ -45,6 +52,7 @@ final class Capabilities
         if ($detarc_member) {
             $detarc_member->add_cap(self::IMPORT);
             $detarc_member->add_cap(self::TAKE_ATTENDANCE);
+            $detarc_member->add_cap(self::VIEW_EVENTS);
         }
     }
 

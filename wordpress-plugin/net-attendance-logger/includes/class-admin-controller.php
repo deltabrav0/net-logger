@@ -23,7 +23,7 @@ final class Admin_Controller
 
         add_action('admin_menu', [self::class, 'register_menu']);
         // Keep the Members by MemberPress DETARC Member role (detarc_member) able to use operator screens.
-        // Custom capability: take_net_attendance.
+        // Custom capabilities: take_net_attendance, view_net_attendance_events.
         add_action('admin_init', [Capabilities::class, 'grant_detarc_member_defaults']);
         add_action('admin_post_nal_import_json', [self::class, 'handle_import_json']);
         add_action('admin_post_nal_start_event', [self::class, 'handle_start_event']);
@@ -53,7 +53,7 @@ final class Admin_Controller
             self::MENU_SLUG,
             __('Events', 'net-attendance-logger'),
             __('Events', 'net-attendance-logger'),
-            'manage_options',
+            Capabilities::VIEW_EVENTS,
             self::MENU_SLUG,
             [self::class, 'render_events_page']
         );
@@ -106,7 +106,7 @@ final class Admin_Controller
 
     public static function render_events_page(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Capabilities::can_view_events()) {
             wp_die(esc_html__('You do not have permission to access this page.', 'net-attendance-logger'));
         }
 

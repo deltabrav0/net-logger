@@ -109,9 +109,10 @@ For DETARC sites that use the Members by MemberPress `detarc_member` role, the p
 ```text
 import_net_attendance
 take_net_attendance
+view_net_attendance_events
 ```
 
-Users in the **DETARC Member** role should see **Net Attendance → Take Attendance**, **Net Attendance → Rapid Entry**, and **Net Attendance → Import JSON** in the wp-admin left menu without needing full administrator privileges.
+Users in the **DETARC Member** role should see **Net Attendance → Events**, **Net Attendance → Take Attendance**, **Net Attendance → Rapid Entry**, and **Net Attendance → Import JSON** in the wp-admin left menu without needing full administrator privileges. The Events screen is the `?page=net-attendance-logger` resource.
 
 ## Create the WordPress Application Password
 
