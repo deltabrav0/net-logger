@@ -1,6 +1,7 @@
 let sessionId = null;
 let currentSession = null;
 let board = { known_stations: [], checkins: [] };
+let expandedCheckinId = null;
 
 const $ = (id) => document.getElementById(id);
 function pageHas(id) { return $(id) !== null; }
@@ -29,6 +30,17 @@ function stationMeta(station) {
   return [station.name || '—', place(station), station.grid].filter(Boolean).join(' • ');
 }
 function sessionOpen() { return sessionId && (!currentSession || currentSession.status !== 'closed'); }
+function closeExpandedCheckin() {
+  expandedCheckinId = null;
+  if (!document.querySelectorAll) return;
+  document.querySelectorAll('[data-checkin-id] details[open]').forEach(details => { details.open = false; });
+}
+function handleDocumentClick(evt) {
+  if (!expandedCheckinId) return;
+  if (evt.target && evt.target.closest && evt.target.closest('[data-checkin-id]')) return;
+  closeExpandedCheckin();
+}
+if (document.addEventListener) document.addEventListener('click', handleDocumentClick);
 function formatDateTime(value) {
   if (!value) return '';
   const iso = value.includes('T') ? value : value.replace(' ', 'T') + 'Z';
@@ -145,6 +157,14 @@ function renderBoard() {
   document.querySelectorAll('[data-checkin-id]').forEach(el => {
     el.addEventListener('dragstart', e => { e.dataTransfer.setData('application/x-checkin-id', el.dataset.checkinId); el.classList.add('dragging'); });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    const details = el.querySelector ? el.querySelector('details') : null;
+    if (details) {
+      details.addEventListener('toggle', () => {
+        const id = Number(el.dataset.checkinId);
+        if (details.open) expandedCheckinId = id;
+        else if (expandedCheckinId === id) expandedCheckinId = null;
+      });
+    }
   });
 }
 
@@ -158,8 +178,9 @@ function renderKnownCard(s) {
 
 function renderCheckinCard(c) {
   const s = c.station;
+  const open = expandedCheckinId === c.id ? ' open' : '';
   return `<article class="card checkin-card compact" draggable="true" data-checkin-id="${c.id}">
-    <details>
+    <details${open}>
       <summary class="compact-summary" title="Click to expand check-in details">
         <span class="compact-main"><span class="call">${esc(s.callsign)}</span><span class="meta time">${formatDateTime(c.checked_in_at)}</span></span>
         <span class="expand-hint">Details</span>

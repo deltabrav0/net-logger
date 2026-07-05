@@ -21,6 +21,15 @@ def test_header_includes_customizable_app_logo():
     assert '<img class="app-logo" src="/app-logo.png" alt="Net Logger logo" width="96" height="96">' in html
 
 
+def test_main_heading_shows_project_version_as_small_subscript():
+    html = INDEX.read_text()
+    pyproject = PYPROJECT.read_text()
+    version = pyproject.split('version = "', 1)[1].split('"', 1)[0]
+
+    assert f'<h1>Net Logger <small class="app-version">v{version}</small></h1>' in html
+    assert ".app-version" in (ROOT / "src" / "net_logger" / "static" / "styles.css").read_text()
+
+
 def test_default_logo_asset_is_packaged_square_png():
     assert LOGO.exists()
     assert LOGO.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")

@@ -108,6 +108,84 @@ def test_checkin_details_show_grid_square_after_location():
     assert "#2 Danny • Memphis, TN • EM55AA" in html
 
 
+def test_expanded_checkin_card_stays_open_when_board_rerenders():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const makeElement = () => ({
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement());
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+const checkin = {
+  id: 10,
+  sequence: 2,
+  checked_in_at: '2026-06-16 12:00:00',
+  traffic: true,
+  traffic_details: 'Can relay',
+  notes: 'Good signal',
+  station: { id: 1, callsign: 'K5SUB', name: 'Danny', city: 'Memphis', state: 'TN', grid: 'EM55AA' },
+};
+vm.runInContext('expandedCheckinId = 10', context);
+console.log(context.renderCheckinCard(checkin));
+"""
+    html = subprocess.check_output(["node", "-e", script], text=True)
+
+    assert '<details open>' in html
+
+
+def test_clicking_away_from_checkin_card_collapses_expanded_card():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+let documentClickHandler = null;
+const openDetails = { open: true };
+const context = {
+  console,
+  fetch: async () => ({ status: 204 }),
+  document: {
+    getElementById: () => null,
+    querySelectorAll: (selector) => selector === '[data-checkin-id] details[open]' ? [openDetails] : [],
+    addEventListener: (event, handler) => {
+      if (event === 'click') documentClickHandler = handler;
+    },
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext('expandedCheckinId = 10', context);
+documentClickHandler({ target: { closest: () => null } });
+console.log(JSON.stringify({
+  expandedCheckinId: vm.runInContext('expandedCheckinId', context),
+  open: openDetails.open,
+}));
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert result == {"expandedCheckinId": None, "open": False}
+
+
 def test_known_station_card_includes_fcc_update_and_delete_buttons():
     html = _render_known_card({
         "id": 1,
