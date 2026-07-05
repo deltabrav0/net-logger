@@ -244,7 +244,7 @@ Important: WordPress shows this password only once. If you lose it, delete it an
 8. Enter the WordPress username.
 9. Paste the WordPress Application Password.
 10. Click **Test Only** first.
-11. If the test succeeds, click **Test and Save**.
+11. If the test succeeds, click **Save Settings**.
 12. Click **Send to WordPress** again if needed.
 
 ## Part 7 — Create the WordPress reports page

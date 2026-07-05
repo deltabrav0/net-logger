@@ -31,7 +31,10 @@
       <section class="panel">
         <div class="panel-title">
           <h2>Saved Nets</h2>
-          <a class="button-link" href="/api/export.csv">Export all nets CSV</a>
+          <div class="actions-row">
+            <button type="button" class="secondary" id="openWordPressConfigBtn">View/edit WordPress settings</button>
+            <a class="button-link" href="/api/export.csv">Export all nets CSV</a>
+          </div>
         </div>
         <div id="sessionsList" class="sessions-list"></div>
       </section>
@@ -62,8 +65,8 @@
 
     <dialog id="wordpressConfigDialog" class="config-dialog">
       <form id="wordpressConfigForm" method="dialog" class="config-form">
-        <h2>Set Up WordPress Export</h2>
-        <p class="muted">Enter the WordPress endpoint and Application Password. Net Logger will test the connection before saving these settings to your config.ini file.</p>
+        <h2>WordPress Export Settings</h2>
+        <p class="muted">View or edit the WordPress endpoint and username. Leave the Application Password blank to keep the saved password, or enter a new one to replace it. Net Logger will test the connection before saving these settings to your config.ini file.</p>
         <label>WordPress endpoint
           <input id="wordpressEndpoint" name="endpoint" type="url" placeholder="https://example.org/wp-json/net-attendance/v1/net-logger/sessions" required>
         </label>
@@ -71,7 +74,7 @@
           <input id="wordpressUsername" name="username" autocomplete="username" required>
         </label>
         <label>Application password
-          <input id="wordpressApplicationPassword" name="application_password" type="password" autocomplete="current-password" required>
+          <input id="wordpressApplicationPassword" name="application_password" type="password" autocomplete="current-password" placeholder="Leave blank to keep saved password">
         </label>
         <label>Timeout seconds
           <input id="wordpressTimeout" name="timeout" type="number" min="1" value="20">
@@ -80,7 +83,7 @@
         <div class="dialog-actions">
           <button type="button" class="secondary" id="cancelWordPressConfigBtn">Cancel</button>
           <button type="button" class="secondary" id="testWordPressConfigBtn">Test Only</button>
-          <button type="submit">Test and Save</button>
+          <button type="submit">Save Settings</button>
         </div>
       </form>
     </dialog>

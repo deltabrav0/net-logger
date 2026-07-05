@@ -504,6 +504,7 @@ if (pageHas('refreshMetricsBtn')) $('refreshMetricsBtn').addEventListener('click
 if (pageHas('metricsPeriod')) $('metricsPeriod').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
 if (pageHas('metricsNetName')) $('metricsNetName').addEventListener('change', () => loadMetrics().catch(err => setStatus(err.message)));
 if (pageHas('stationLookup')) $('stationLookup').addEventListener('input', () => loadBoard().catch(err => setStatus(err.message)));
+if (pageHas('openWordPressConfigBtn')) $('openWordPressConfigBtn').addEventListener('click', () => openWordPressConfigDialog('View or edit the WordPress export settings. Leave Application Password blank to keep the saved password.').catch(err => setStatus(err.message)));
 if (pageHas('wordpressConfigForm')) $('wordpressConfigForm').addEventListener('submit', saveWordPressConfig);
 if (pageHas('testWordPressConfigBtn')) $('testWordPressConfigBtn').addEventListener('click', () => testWordPressConfigOnly().catch(err => $('wordpressConfigStatus').textContent = err.message));
 if (pageHas('cancelWordPressConfigBtn')) $('cancelWordPressConfigBtn').addEventListener('click', closeWordPressConfigDialog);

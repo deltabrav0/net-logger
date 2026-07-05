@@ -14,8 +14,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Plugin Name: Net & Meeting Attendance", text)
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
-        self.assertIn("Version: 0.1.1", text)
-        self.assertIn("define('NAL_VERSION', '0.1.1')", text)
+        self.assertIn("Version: 0.1.2", text)
+        self.assertIn("define('NAL_VERSION', '0.1.2')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -220,6 +220,14 @@ class PluginScaffoldTests(unittest.TestCase):
             "get_event_attendance",
             "checked_in_at",
             "manage_options",
+            "TAKE_ATTENDANCE",
+            "can_take_attendance",
+            "grant_detarc_member_defaults",
+            "detarc_member",
+            "DETARC Member",
+            "take_net_attendance",
+            "Capabilities::can_take_attendance()",
+            "Capabilities::can_import()",
         ]:
             self.assertIn(token, admin)
 

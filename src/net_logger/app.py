@@ -347,10 +347,12 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             "timeout": int(app.config.get("WORDPRESS_TIMEOUT") or 20),
         }
 
-    def normalize_wordpress_config_payload(payload: dict[str, Any]):
+    def normalize_wordpress_config_payload(payload: dict[str, Any], allow_existing_password: bool = False):
         endpoint = (payload.get("endpoint") or "").strip()
         username = (payload.get("username") or "").strip()
         password = (payload.get("application_password") or "").strip()
+        if not password and allow_existing_password:
+            password = (app.config.get("WORDPRESS_APPLICATION_PASSWORD") or "").strip()
         timeout = payload.get("timeout") or 20
         try:
             timeout = int(timeout)
@@ -408,7 +410,7 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
 
     @app.post("/api/wordpress/config/test")
     def test_wordpress_config():
-        endpoint, username, password, timeout, missing = normalize_wordpress_config_payload(request.get_json(silent=True) or {})
+        endpoint, username, password, timeout, missing = normalize_wordpress_config_payload(request.get_json(silent=True) or {}, allow_existing_password=True)
         if missing:
             return jsonify({"error": "WordPress endpoint, username, and application password are required", "missing": missing}), 400
         try:
@@ -424,7 +426,7 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
 
     @app.post("/api/wordpress/config")
     def save_wordpress_config():
-        endpoint, username, password, timeout, missing = normalize_wordpress_config_payload(request.get_json(silent=True) or {})
+        endpoint, username, password, timeout, missing = normalize_wordpress_config_payload(request.get_json(silent=True) or {}, allow_existing_password=True)
         if missing:
             return jsonify({"error": "WordPress endpoint, username, and application password are required", "missing": missing}), 400
         try:

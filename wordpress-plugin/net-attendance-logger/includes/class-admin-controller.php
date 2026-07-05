@@ -22,6 +22,9 @@ final class Admin_Controller
         }
 
         add_action('admin_menu', [self::class, 'register_menu']);
+        // Keep the Members by MemberPress DETARC Member role (detarc_member) able to use operator screens.
+        // Custom capability: take_net_attendance.
+        add_action('admin_init', [Capabilities::class, 'grant_detarc_member_defaults']);
         add_action('admin_post_nal_import_json', [self::class, 'handle_import_json']);
         add_action('admin_post_nal_start_event', [self::class, 'handle_start_event']);
         add_action('admin_post_nal_rapid_entry', [self::class, 'handle_rapid_entry']);
@@ -39,9 +42,9 @@ final class Admin_Controller
         add_menu_page(
             __('Net Attendance', 'net-attendance-logger'),
             __('Net Attendance', 'net-attendance-logger'),
-            'manage_options',
+            Capabilities::TAKE_ATTENDANCE,
             self::MENU_SLUG,
-            [self::class, 'render_events_page'],
+            [self::class, 'render_take_attendance_page'],
             'dashicons-groups',
             26
         );
@@ -68,7 +71,7 @@ final class Admin_Controller
             self::MENU_SLUG,
             __('Take Attendance', 'net-attendance-logger'),
             __('Take Attendance', 'net-attendance-logger'),
-            'manage_options',
+            Capabilities::TAKE_ATTENDANCE,
             self::TAKE_SLUG,
             [self::class, 'render_take_attendance_page']
         );
@@ -77,7 +80,7 @@ final class Admin_Controller
             self::MENU_SLUG,
             __('Rapid Entry', 'net-attendance-logger'),
             __('Rapid Entry', 'net-attendance-logger'),
-            'manage_options',
+            Capabilities::TAKE_ATTENDANCE,
             self::RAPID_ENTRY_SLUG,
             [self::class, 'render_rapid_entry_page']
         );
@@ -86,7 +89,7 @@ final class Admin_Controller
             self::MENU_SLUG,
             __('Import JSON', 'net-attendance-logger'),
             __('Import JSON', 'net-attendance-logger'),
-            'manage_options',
+            Capabilities::IMPORT,
             self::IMPORT_SLUG,
             [self::class, 'render_import_page']
         );
@@ -126,7 +129,7 @@ final class Admin_Controller
 
     public static function render_import_page(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Capabilities::can_import()) {
             wp_die(esc_html__('You do not have permission to access this page.', 'net-attendance-logger'));
         }
 
@@ -178,7 +181,7 @@ final class Admin_Controller
 
     public static function render_rapid_entry_page(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Capabilities::can_take_attendance()) {
             wp_die(esc_html__('You do not have permission to add rapid summary entries.', 'net-attendance-logger'));
         }
 
@@ -240,7 +243,7 @@ final class Admin_Controller
 
     public static function render_take_attendance_page(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Capabilities::can_take_attendance()) {
             wp_die(esc_html__('You do not have permission to take attendance.', 'net-attendance-logger'));
         }
 
@@ -767,7 +770,7 @@ final class Admin_Controller
 
     public static function handle_import_json(): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Capabilities::can_import()) {
             wp_die(esc_html__('You do not have permission to import attendance.', 'net-attendance-logger'));
         }
 
@@ -988,7 +991,7 @@ final class Admin_Controller
 
     private static function require_admin_capability(string $message): void
     {
-        if (!current_user_can('manage_options')) {
+        if (!Capabilities::can_take_attendance()) {
             wp_die(esc_html($message));
         }
     }

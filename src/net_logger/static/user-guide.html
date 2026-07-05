@@ -74,7 +74,7 @@
 
       <h2>WordPress export</h2>
       <p>If the Net &amp; Meeting Attendance WordPress plugin is configured, open <strong>Saved Nets / Metrics</strong> and press <strong>Send to WordPress</strong> on a saved net.</p>
-      <p>If the WordPress endpoint, username, or Application Password are missing, Net Logger opens a setup form automatically. Enter the settings, then choose <strong>Test Only</strong> to check the connection without saving, or <strong>Test and Save</strong> to check the connection and write the settings to <code>config.ini</code>.</p>
+      <p>On <strong>Saved Nets / Metrics</strong>, choose <strong>View/edit WordPress settings</strong> to review or update the endpoint, username, timeout, or Application Password. Leave the Application Password blank to keep the saved password. If required settings are missing, Net Logger opens this form automatically when you try to send a net. Choose <strong>Test Only</strong> to check the connection without saving, or <strong>Save Settings</strong> to test the connection and write the settings to <code>config.ini</code>.</p>
       <p>The WordPress settings live in Net Logger's <code>config.ini</code> file under <code>[wordpress]</code>. A configuration file is just a small text file. You can still edit it by hand, save it, and restart Net Logger.</p>
       <pre><code>[wordpress]
 endpoint = https://example.org/wp-json/net-attendance/v1/net-logger/sessions

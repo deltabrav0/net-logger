@@ -12,7 +12,13 @@ def client():
     db_fd, db_path = tempfile.mkstemp(prefix="net_logger_test_", suffix=".sqlite3")
     os.close(db_fd)
     try:
-        app = create_app({"DATABASE": db_path, "TESTING": True})
+        app = create_app({
+            "DATABASE": db_path,
+            "TESTING": True,
+            "WORDPRESS_ENDPOINT": "",
+            "WORDPRESS_USERNAME": "",
+            "WORDPRESS_APPLICATION_PASSWORD": "",
+        })
         with app.test_client() as client:
             yield client
     finally:
@@ -412,6 +418,56 @@ def test_wordpress_config_save_tests_then_writes_config_file(monkeypatch, tmp_pa
     assert "timeout = 9" in written
     assert status["configured"] is True
     assert status["application_password_configured"] is True
+
+
+def test_wordpress_config_save_can_reuse_existing_application_password(monkeypatch, tmp_path):
+    import base64
+    import net_logger.app as app_module
+    from net_logger.config import CONFIG_TEMPLATE
+
+    calls = []
+
+    class FakeResponse:
+        status = 200
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"ok":true}'
+
+    def fake_urlopen(req, timeout):
+        calls.append({"authorization": req.headers.get("Authorization"), "timeout": timeout})
+        return FakeResponse()
+
+    monkeypatch.setattr(app_module.request_lib, "urlopen", fake_urlopen)
+    config_path = tmp_path / "config.ini"
+    config_path.write_text(CONFIG_TEMPLATE, encoding="utf-8")
+    app = create_app({
+        "DATABASE": str(tmp_path / "net_logger.sqlite3"),
+        "TESTING": True,
+        "CONFIG_PATH": str(config_path),
+        "WORDPRESS_ENDPOINT": "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions",
+        "WORDPRESS_USERNAME": "api-user",
+        "WORDPRESS_APPLICATION_PASSWORD": "existing app password",
+        "WORDPRESS_TIMEOUT": 15,
+    })
+
+    with app.test_client() as custom_client:
+        res = custom_client.post("/api/wordpress/config", json={
+            "endpoint": "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions",
+            "username": "api-user",
+            "application_password": "",
+            "timeout": 11,
+        })
+
+    assert res.status_code == 200
+    expected_token = base64.b64encode(b"api-user:existing app password").decode("ascii")
+    assert calls[0]["authorization"] == f"Basic {expected_token}"
+    assert calls[0]["timeout"] == 11
+    written = config_path.read_text(encoding="utf-8")
+    assert "application_password = existing app password" in written
+    assert "timeout = 11" in written
 
 
 def test_send_wordpress_posts_once_and_blocks_duplicate_pushes(monkeypatch, tmp_path):

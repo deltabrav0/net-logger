@@ -83,7 +83,7 @@ Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.
 
 == Access Control ==
 
-REST API imports use the custom capability import_net_attendance. Administrators are always allowed, and site admins can grant API import access to any existing role from Net Attendance → Settings → API Import Permissions. This is the preferred way to allow a role such as DETARC Member to push Net Logger sessions without making the API user an administrator.
+REST API imports use the custom capability import_net_attendance. Administrators are always allowed, and site admins can grant API import access to any existing role from Net Attendance → Settings → API Import Permissions. DETARC sites using the Members by MemberPress detarc_member role receive import_net_attendance and take_net_attendance automatically, so DETARC Member users can access Net Attendance → Take Attendance, Rapid Entry, and Import JSON from the wp-admin left menu without becoming administrators.
 
 Frontend report visibility depends on the DETARC Member role managed by Members by MemberPress, or the custom capability view_net_attendance_reports.
 

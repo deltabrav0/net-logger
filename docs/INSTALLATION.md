@@ -305,7 +305,7 @@ The easiest first-time setup is from Net Logger itself:
 3. If WordPress export is not configured, Net Logger opens a setup form.
 4. Enter the endpoint, WordPress username, and Application Password.
 5. Click **Test Only** to verify without saving.
-6. Click **Test and Save** to verify and write the settings to `config.ini`.
+6. Click **Save Settings** to verify and write the settings to `config.ini`.
 7. Send the saved net again if needed.
 
 The endpoint normally looks like:

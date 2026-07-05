@@ -178,10 +178,12 @@ def test_reports_page_contains_saved_nets_metrics_export_and_wordpress_setup_con
     assert 'href="/api/export.csv"' in html
     assert 'id="wordpressConfigDialog"' in html
     assert 'id="wordpressConfigForm"' in html
+    assert 'id="openWordPressConfigBtn"' in html
+    assert 'View/edit WordPress settings' in html
     assert 'id="wordpressEndpoint"' in html
     assert 'id="wordpressUsername"' in html
     assert 'id="wordpressApplicationPassword"' in html
-    assert 'Test and Save' in html
+    assert 'Save Settings' in html
     assert 'Send to WordPress' in js
     assert 'sendSessionToWordPress' in js
     assert 'openWordPressConfigDialog' in js

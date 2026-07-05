@@ -10,6 +10,7 @@ final class Capabilities
 {
     public const IMPORT = 'import_net_attendance';
     public const VIEW_REPORTS = 'view_net_attendance_reports';
+    public const TAKE_ATTENDANCE = 'take_net_attendance';
 
     public static function can_import(): bool
     {
@@ -21,12 +22,29 @@ final class Capabilities
         return current_user_can('manage_options') || current_user_can(self::VIEW_REPORTS);
     }
 
+    public static function can_take_attendance(): bool
+    {
+        return current_user_can('manage_options') || current_user_can(self::TAKE_ATTENDANCE);
+    }
+
     public static function grant_defaults(): void
     {
         $administrator = get_role('administrator');
         if ($administrator) {
             $administrator->add_cap(self::IMPORT);
             $administrator->add_cap(self::VIEW_REPORTS);
+            $administrator->add_cap(self::TAKE_ATTENDANCE);
+        }
+
+        self::grant_detarc_member_defaults();
+    }
+
+    public static function grant_detarc_member_defaults(): void
+    {
+        $detarc_member = get_role('detarc_member');
+        if ($detarc_member) {
+            $detarc_member->add_cap(self::IMPORT);
+            $detarc_member->add_cap(self::TAKE_ATTENDANCE);
         }
     }
 

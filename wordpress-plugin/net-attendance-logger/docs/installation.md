@@ -104,6 +104,15 @@ Preferred REST API setup:
 
 Administrators are always allowed. The plugin grants the import capability to administrators on activation and stores selected import roles in `net_attendance_logger_import_role_slugs`. This avoids hard-coding DETARC-specific role names into the REST API, while still letting each WordPress instance choose its own API role.
 
+For DETARC sites that use the Members by MemberPress `detarc_member` role, the plugin also grants these operator capabilities automatically on activation/upgrade and during admin initialization:
+
+```text
+import_net_attendance
+take_net_attendance
+```
+
+Users in the **DETARC Member** role should see **Net Attendance → Take Attendance**, **Net Attendance → Rapid Entry**, and **Net Attendance → Import JSON** in the wp-admin left menu without needing full administrator privileges.
+
 ## Create the WordPress Application Password
 
 For the WordPress user that Net Logger will use:
@@ -126,7 +135,7 @@ In Net Logger:
 3. If WordPress export is not configured, Net Logger opens a setup form.
 4. Enter the endpoint, WordPress username, and Application Password.
 5. Click **Test Only** first.
-6. If the test succeeds, click **Test and Save**.
+6. If the test succeeds, click **Save Settings**.
 
 Endpoint format:
 
