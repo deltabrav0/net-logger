@@ -19,6 +19,16 @@ from .config import load_app_settings, write_wordpress_settings
 from .fcc_lookup import fcc_database_status, lookup_callsign, update_fcc_database
 
 
+WORDPRESS_AUTHORIZATION_ERROR = (
+    "WordPress connection, authentication, or authorization failed. Confirm the WordPress username, "
+    "Application Password, and that the user has the Net Control role."
+)
+WORDPRESS_IMPORT_AUTHORIZATION_ERROR = (
+    "WordPress import failed. Confirm the WordPress username, Application Password, and that the user "
+    "has the Net Control role."
+)
+
+
 def create_app(config: dict[str, Any] | None = None) -> Flask:
     app = Flask(__name__, static_folder="static", static_url_path="")
     settings = load_app_settings()
@@ -417,11 +427,11 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             status, response_data = post_wordpress_payload(endpoint, username, password, timeout, wordpress_test_payload())
         except urlerror.HTTPError as exc:
             error_text = exc.read().decode("utf-8", errors="replace")
-            return jsonify({"error": "WordPress connection or authentication failed", "status": exc.code, "response": error_text}), 502
+            return jsonify({"error": WORDPRESS_AUTHORIZATION_ERROR, "status": exc.code, "response": error_text}), 502
         except Exception as exc:
-            return jsonify({"error": "WordPress connection or authentication failed", "details": str(exc)}), 502
+            return jsonify({"error": WORDPRESS_AUTHORIZATION_ERROR, "details": str(exc)}), 502
         if status < 200 or status >= 300 or not response_data.get("ok", True):
-            return jsonify({"error": "WordPress connection or authentication failed", "status": status, "response": response_data}), 502
+            return jsonify({"error": WORDPRESS_AUTHORIZATION_ERROR, "status": status, "response": response_data}), 502
         return jsonify({"ok": True, "message": "WordPress connection and authentication succeeded.", "wordpress": response_data})
 
     @app.post("/api/wordpress/config")
@@ -433,11 +443,11 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             status, response_data = post_wordpress_payload(endpoint, username, password, timeout, wordpress_test_payload())
         except urlerror.HTTPError as exc:
             error_text = exc.read().decode("utf-8", errors="replace")
-            return jsonify({"error": "WordPress connection or authentication failed", "status": exc.code, "response": error_text}), 502
+            return jsonify({"error": WORDPRESS_AUTHORIZATION_ERROR, "status": exc.code, "response": error_text}), 502
         except Exception as exc:
-            return jsonify({"error": "WordPress connection or authentication failed", "details": str(exc)}), 502
+            return jsonify({"error": WORDPRESS_AUTHORIZATION_ERROR, "details": str(exc)}), 502
         if status < 200 or status >= 300 or not response_data.get("ok", True):
-            return jsonify({"error": "WordPress connection or authentication failed", "status": status, "response": response_data}), 502
+            return jsonify({"error": WORDPRESS_AUTHORIZATION_ERROR, "status": status, "response": response_data}), 502
         config_path = write_wordpress_settings(endpoint, username, password, timeout, app.config.get("CONFIG_PATH") or None)
         app.config.update(
             WORDPRESS_ENDPOINT=endpoint,
@@ -472,12 +482,12 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             status, response_data = post_wordpress_payload(endpoint, username, password, app.config["WORDPRESS_TIMEOUT"], payload)
         except urlerror.HTTPError as exc:
             error_text = exc.read().decode("utf-8", errors="replace")
-            return jsonify({"error": "WordPress import failed", "status": exc.code, "response": error_text}), 502
+            return jsonify({"error": WORDPRESS_IMPORT_AUTHORIZATION_ERROR, "status": exc.code, "response": error_text}), 502
         except Exception as exc:
-            return jsonify({"error": "WordPress import failed", "details": str(exc)}), 502
+            return jsonify({"error": WORDPRESS_IMPORT_AUTHORIZATION_ERROR, "details": str(exc)}), 502
 
         if status < 200 or status >= 300 or not response_data.get("ok", True):
-            return jsonify({"error": "WordPress import failed", "status": status, "response": response_data}), 502
+            return jsonify({"error": WORDPRESS_IMPORT_AUTHORIZATION_ERROR, "status": status, "response": response_data}), 502
 
         with con() as c:
             c.execute(

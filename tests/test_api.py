@@ -379,6 +379,34 @@ def test_wordpress_config_test_validates_credentials_without_saving(monkeypatch,
     assert not config_path.exists()
 
 
+def test_wordpress_config_test_error_mentions_net_control_role(monkeypatch, tmp_path):
+    import net_logger.app as app_module
+
+    class FakeResponse:
+        status = 403
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"code":"rest_forbidden","message":"Sorry, you are not allowed to do that."}'
+
+    monkeypatch.setattr(app_module.request_lib, "urlopen", lambda req, timeout: FakeResponse())
+    app = create_app({"DATABASE": str(tmp_path / "net_logger.sqlite3"), "TESTING": True, "CONFIG_PATH": str(tmp_path / "config.ini")})
+
+    with app.test_client() as custom_client:
+        res = custom_client.post("/api/wordpress/config/test", json={
+            "endpoint": "https://dev.detarc.net/wp-json/net-attendance/v1/net-logger/sessions",
+            "username": "member-user",
+            "application_password": "app password",
+        })
+
+    assert res.status_code == 502
+    data = res.get_json()
+    assert data["error"] == "WordPress connection, authentication, or authorization failed. Confirm the WordPress username, Application Password, and that the user has the Net Control role."
+    assert "Net Control role" in data["error"]
+
+
 def test_wordpress_config_save_tests_then_writes_config_file(monkeypatch, tmp_path):
     import net_logger.app as app_module
     from net_logger.config import CONFIG_TEMPLATE

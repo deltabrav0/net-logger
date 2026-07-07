@@ -6,6 +6,8 @@ Net Logger includes the optional WordPress plugin under:
 
 The plugin is named **Net & Meeting Attendance**. It is not required for normal Net Logger use. Install it only when you want Net Logger to send saved net sessions into WordPress for public attendance pages, reports, or manual attendance workflows.
 
+For DETARC-style role separation, the WordPress site also needs the **Members plugin by MemberPress**. Net & Meeting Attendance relies on that plugin-created role structure so **Net Control** users can send/take attendance while **DETARC Member** users remain view-only for Events and Reports.
+
 ## What the plugin provides
 
 - A WordPress custom-table attendance store for events, participants, and attendance records.

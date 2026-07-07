@@ -119,6 +119,8 @@ def test_installation_docs_reference_installer_and_docker_options():
     assert "pipx uninstall net-logger" in text
     assert "%APPDATA%\\Net Logger" in text
     assert "Application Password" in text
+    assert "Members plugin by MemberPress" in text
+    assert "Net Control role" in text
 
 
 def test_dummies_guide_separates_operator_and_wordpress_admin_tasks():
@@ -134,6 +136,8 @@ def test_dummies_guide_separates_operator_and_wordpress_admin_tasks():
     assert "Usually a WordPress administrator or website manager task" in text
     assert "Option B — User creates their own Application Password" in text
     assert "Users → Profile" in text
+    assert "Members plugin by MemberPress" in text
+    assert "Net Control role" in text
     assert "## Part 9 — Uninstall Net Logger" in text
     assert "py -m pipx uninstall net-logger" in text
     assert "Remove-Item -Recurse -Force" in text

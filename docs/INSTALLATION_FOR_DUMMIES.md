@@ -124,6 +124,8 @@ You should see the Net Logger page.
 
 **WordPress administrator only.** Skip this part if you do not want WordPress reports. A normal net-control operator does not need to do this unless they also administer the WordPress site.
 
+Prerequisite: install and activate the **Members plugin by MemberPress** first. Net & Meeting Attendance uses it so the website can have separate **Net Control** users, who may send/take attendance, and **DETARC Member** users, who may view Events and Reports.
+
 ### Step 1 — Log in to WordPress
 
 Open your WordPress admin page. For the DETARC development site:
@@ -161,14 +163,15 @@ If you see that menu, the plugin is installed.
 
 ## Part 4 — Allow the right WordPress users to receive Net Logger imports
 
-**WordPress administrator only.** This step lets a non-administrator WordPress user send saved nets from Net Logger after the administrator grants the proper import permission.
+**WordPress administrator only.** This step lets a non-administrator WordPress user send saved nets from Net Logger after the administrator assigns the proper role.
 
-1. In WordPress, go to **Net Attendance → Settings**.
-2. Find **API Import Permissions**.
-3. Check the role that should be allowed to send saved nets, such as **DETARC Member**.
-4. Click **Save Changes**.
+1. In the Members plugin by MemberPress, confirm there is a **Net Control** role with the slug `net_control`.
+2. Assign the WordPress user who will send saved nets to the **Net Control** role.
+3. In WordPress, go to **Net Attendance → Settings**.
+4. Find **API Import Permissions** and confirm Net Control is the role allowed to send saved nets.
+5. Click **Save Changes** if needed.
 
-Administrators can always import. This step is mainly for allowing trusted non-administrator operators.
+Administrators can always import. DETARC Member users are view-only; they can view Events and Reports, but they cannot send saved nets from Net Logger.
 
 ## Part 5 — Create a WordPress Application Password
 
@@ -192,7 +195,7 @@ There are two common ways to create it.
 
 ### Option B — User creates their own Application Password
 
-If the WordPress administrator has already given the user permission to import Net Logger reports, the user can usually create their own Application Password this way:
+If the WordPress administrator has already given the user the **Net Control** role, the user can usually create their own Application Password this way:
 
 1. Log in to WordPress.
 2. In the top-right corner, click the user's name, or go to **Users → Profile**.
@@ -326,8 +329,9 @@ Check these items:
 
 1. The WordPress username is correct.
 2. You used an Application Password, not the normal login password.
-3. The user is an administrator, or the user's role is checked under **Net Attendance → Settings → API Import Permissions**.
-4. The Application Password was copied correctly.
+3. The user is an administrator or has the **Net Control** role in WordPress.
+4. The Members plugin by MemberPress is installed and the Net Control role exists with the slug `net_control`.
+5. The Application Password was copied correctly.
 
 ### WordPress export endpoint is wrong
 

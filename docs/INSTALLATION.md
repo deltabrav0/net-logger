@@ -34,6 +34,7 @@ Optional:
 - Docker Desktop or Docker Engine for containerized use
 - Local FCC flat-file data for offline callsign lookup
 - WordPress administrator access if you want WordPress attendance imports and reports
+- The Members plugin by MemberPress on WordPress if you want the club-specific Net Control role and DETARC Member roles for WordPress imports/reports
 
 The default local address is:
 
@@ -243,10 +244,11 @@ timeout = 20
 
 ## WordPress export setup
 
-WordPress export requires two pieces:
+WordPress export requires three pieces:
 
-1. The **Net & Meeting Attendance** WordPress plugin installed on the WordPress site.
-2. Net Logger configured with the WordPress endpoint, username, and Application Password.
+1. The **Members plugin by MemberPress** installed on the WordPress site so the **Net Control** and **DETARC Member** roles can be created.
+2. The **Net & Meeting Attendance** WordPress plugin installed on the WordPress site.
+3. Net Logger configured with the WordPress endpoint, username, and Application Password for a user with the **Net Control** role.
 
 ### 1. Install the WordPress plugin
 
@@ -281,14 +283,14 @@ REST imports use a custom WordPress capability:
 import_net_attendance
 ```
 
-Administrators are allowed automatically. To allow a non-administrator operator role, such as DETARC Member:
+Administrators are allowed automatically. Non-administrator API users must have the **Net Control** role created through the Members plugin by MemberPress:
 
-1. Go to **Net Attendance → Settings**.
-2. In **API Import Permissions**, check the role that should be allowed to push data.
-3. Save settings.
-4. Create the WordPress Application Password for a user in that role.
+1. Confirm the **Net Control** role exists with the slug `net_control`.
+2. Assign the WordPress API user to the **Net Control** role.
+3. Go to **Net Attendance → Settings** and confirm **API Import Permissions** shows Net Control as allowed.
+4. Create the WordPress Application Password for that Net Control user.
 
-This capability-based setup is preferred over hard-coding a site-specific role name into the REST API.
+DETARC Member users are view-only for Events and Reports & Charts; they cannot push Net Logger sessions through the API.
 
 ### 3. Create a WordPress Application Password
 
@@ -307,6 +309,8 @@ The easiest first-time setup is from Net Logger itself:
 5. Click **Test Only** to verify without saving.
 6. Click **Save Settings** to verify and write the settings to `config.ini`.
 7. Send the saved net again if needed.
+
+If Net Logger reports that the WordPress connection, authentication, or authorization failed, confirm the endpoint, username, Application Password, and that the WordPress user has the **Net Control** role.
 
 The endpoint normally looks like:
 

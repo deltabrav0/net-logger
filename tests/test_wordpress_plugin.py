@@ -308,6 +308,8 @@ class PluginScaffoldTests(unittest.TestCase):
             "net_attendance_logger_import_role_slugs",
             "view_net_attendance_reports",
             "Members by MemberPress",
+            "Members plugin by MemberPress",
+            "Net Control role",
         ]:
             self.assertIn(token, installation_text)
 
@@ -338,6 +340,7 @@ class PluginScaffoldTests(unittest.TestCase):
             "[net_attendance_reports period=\"week\"]",
             "import_net_attendance",
             "API Import Permissions",
+            "Members plugin by MemberPress",
         ]:
             self.assertIn(token, readme_text)
 

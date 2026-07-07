@@ -35,6 +35,8 @@ https://dev.detarc.net
 
 Build and upload the plugin ZIP:
 
+Prerequisite: install and activate the Members plugin by MemberPress so the Net Control and DETARC Member roles can be created and assigned.
+
 1. From the Net Logger repository root, run the tests and PHP lint.
 2. Build wordpress-plugin/net-attendance-logger.zip with the net-attendance-logger directory at the ZIP root.
 3. In WordPress, go to Plugins -> Add New Plugin -> Upload Plugin.
@@ -83,7 +85,7 @@ Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.
 
 == Access Control ==
 
-REST API imports use the custom capability import_net_attendance. Administrators are always allowed. The Net Attendance -> Settings -> API Import Permissions screen documents the import capability, but DETARC sites using Members by MemberPress should use the Net Control role (slug net_control) for operators who may take attendance, use Rapid Entry, import JSON, and push Net Logger sessions through the REST API. Net Control users receive import_net_attendance, take_net_attendance, view_net_attendance_events, and view_net_attendance_reports automatically.
+REST API imports use the custom capability import_net_attendance. Administrators are always allowed. The Net Attendance -> Settings -> API Import Permissions screen documents the import capability, but DETARC sites using the Members plugin by MemberPress should use the Net Control role (slug net_control) for operators who may take attendance, use Rapid Entry, import JSON, and push Net Logger sessions through the REST API. Net Control users receive import_net_attendance, take_net_attendance, view_net_attendance_events, and view_net_attendance_reports automatically.
 
 DETARC Member users receive only view_net_attendance_events and view_net_attendance_reports automatically, so DETARC Members can view Net Attendance -> Events and Net Attendance -> Reports & Charts without being able to take attendance, use Rapid Entry, import JSON, or push Net Logger sessions through the API.
 

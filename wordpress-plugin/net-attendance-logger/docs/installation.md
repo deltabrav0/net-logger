@@ -16,6 +16,8 @@ Use this environment for plugin upload, activation, shortcode/page testing, and 
 
 ## Installation flow
 
+Prerequisite: install and activate the **Members plugin by MemberPress** (also called **Members by MemberPress**) before configuring this plugin's non-admin access. The WordPress plugin relies on Members by MemberPress so the **Net Control** and **DETARC Member** roles can be created and assigned.
+
 1. Build or locate the plugin ZIP.
 2. Upload and activate the ZIP in WordPress.
 3. Confirm the **Net Attendance** admin menu appears.
@@ -98,7 +100,7 @@ import_net_attendance
 
 Preferred REST API setup:
 
-1. Ensure Members by MemberPress has a **Net Control** role with the slug `net_control`.
+1. Ensure the **Members plugin by MemberPress** is installed and has a **Net Control** role with the slug `net_control`.
 2. Assign the WordPress user who will push Net Logger sessions to the **Net Control** role.
 3. Create the WordPress Application Password for that Net Control user.
 4. Use that username and Application Password in Net Logger's WordPress export configuration.
