@@ -19,8 +19,8 @@ Use this environment for plugin upload, activation, shortcode/page testing, and 
 1. Build or locate the plugin ZIP.
 2. Upload and activate the ZIP in WordPress.
 3. Confirm the **Net Attendance** admin menu appears.
-4. Configure API import permissions under **Net Attendance → Settings**.
-5. Create a WordPress Application Password for the Net Logger API user.
+4. Confirm the Net Logger API user has the **Net Control** role.
+5. Create a WordPress Application Password for the Net Control API user.
 6. Configure Net Logger's WordPress export settings from **Saved Nets / Metrics → Send to WordPress**.
 7. Create a WordPress reports page with `[net_attendance_reports]` if frontend reports are desired.
 8. Test the full Net Logger → WordPress import flow.
@@ -88,6 +88,8 @@ The reports page can also be tested with filters:
 
 ![Net Attendance settings page showing API Import Permissions](images/settings.png)
 
+The **Net Attendance → Settings** screen still shows **API Import Permissions** for visibility, but DETARC API push access is intentionally constrained to the Net Control role. Legacy settings may still exist in `net_attendance_logger_import_role_slugs`, but they are filtered down to `net_control` when saved.
+
 REST imports use a separate custom capability so a non-administrator API user can push saved Net Logger sessions without receiving full site administration privileges:
 
 ```text
@@ -96,27 +98,36 @@ import_net_attendance
 
 Preferred REST API setup:
 
-1. Go to **Net Attendance → Settings**.
-2. In **API Import Permissions**, check the role that should be allowed to push data, such as **DETARC Member** on dev.detarc.net.
-3. Save settings.
-4. Create the WordPress Application Password for a user in that role.
-5. Use that username and Application Password in Net Logger's WordPress export configuration.
+1. Ensure Members by MemberPress has a **Net Control** role with the slug `net_control`.
+2. Assign the WordPress user who will push Net Logger sessions to the **Net Control** role.
+3. Create the WordPress Application Password for that Net Control user.
+4. Use that username and Application Password in Net Logger's WordPress export configuration.
 
-Administrators are always allowed. The plugin grants the import capability to administrators on activation and stores selected import roles in `net_attendance_logger_import_role_slugs`. This avoids hard-coding DETARC-specific role names into the REST API, while still letting each WordPress instance choose its own API role.
+Administrators are always allowed. The plugin grants the import capability to administrators on activation. For club operators, API pushes are intentionally limited to the Net Control role; DETARC Member users should not be able to push Net Logger sessions through the REST API.
 
-For DETARC sites that use the Members by MemberPress `detarc_member` role, the plugin also grants these operator capabilities automatically on activation/upgrade and during admin initialization:
+For DETARC sites that use the Members by MemberPress `net_control` role, the plugin grants these operator capabilities automatically on activation/upgrade and during admin initialization:
 
 ```text
 import_net_attendance
 take_net_attendance
 view_net_attendance_events
+view_net_attendance_reports
 ```
 
-Users in the **DETARC Member** role should see **Net Attendance → Events**, **Net Attendance → Take Attendance**, **Net Attendance → Rapid Entry**, and **Net Attendance → Import JSON** in the wp-admin left menu without needing full administrator privileges. The Events screen is the `?page=net-attendance-logger` resource.
+Users in the **Net Control** role should see **Net Attendance → Events**, **Net Attendance → Reports & Charts**, **Net Attendance → Take Attendance**, **Net Attendance → Rapid Entry**, and **Net Attendance → Import JSON** in the wp-admin left menu without needing full administrator privileges.
+
+For DETARC sites that use the Members by MemberPress `detarc_member` role, the plugin grants only these viewing capabilities automatically and removes any previously granted import/attendance-taking capabilities during admin initialization:
+
+```text
+view_net_attendance_events
+view_net_attendance_reports
+```
+
+Users in the **DETARC Member** role should see **Net Attendance → Events** and **Net Attendance → Reports & Charts**. They should not see or access **Take Attendance**, **Rapid Entry**, **Import JSON**, or the Net Logger API push workflow. The Events screen is the `?page=net-attendance-logger` resource.
 
 ## Create the WordPress Application Password
 
-For the WordPress user that Net Logger will use:
+For the WordPress Net Control user that Net Logger will use:
 
 1. Go to **Users** in wp-admin.
 2. Open the user profile.
@@ -154,7 +165,7 @@ Net Logger saves these settings in its local `config.ini` file under `[wordpress
 
 ## Configure frontend report access
 
-Frontend report access is separate from REST import access. The plugin allows report access for users who have one of these:
+Frontend report access is separate from REST import and attendance-taking access. The plugin allows report access for users who have one of these:
 
 - WordPress `manage_options` capability;
 - custom capability `view_net_attendance_reports`;

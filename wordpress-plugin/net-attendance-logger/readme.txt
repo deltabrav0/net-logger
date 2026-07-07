@@ -4,7 +4,7 @@ Tags: attendance, amateur radio, nets, meetings, reports
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 8.0
-Stable tag: 0.1.1
+Stable tag: 0.1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,7 +42,7 @@ Build and upload the plugin ZIP:
 5. If replacing an existing installation, choose the WordPress option to replace/update the existing plugin.
 6. Activate the plugin.
 7. Confirm the Net Attendance admin menu appears.
-8. Go to Net Attendance -> Settings -> API Import Permissions and choose the role allowed to receive Net Logger imports.
+8. Ensure Net Logger API users have the Net Control role. DETARC Member users receive view-only Events and Reports access.
 
 Detailed installation and configuration instructions are in docs/installation.md.
 
@@ -83,7 +83,9 @@ Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.
 
 == Access Control ==
 
-REST API imports use the custom capability import_net_attendance. Administrators are always allowed, and site admins can grant API import access to any existing role from Net Attendance → Settings → API Import Permissions. DETARC sites using the Members by MemberPress detarc_member role receive import_net_attendance, take_net_attendance, and view_net_attendance_events automatically, so DETARC Member users can access Net Attendance → Events, Take Attendance, Rapid Entry, and Import JSON from the wp-admin left menu without becoming administrators.
+REST API imports use the custom capability import_net_attendance. Administrators are always allowed. The Net Attendance -> Settings -> API Import Permissions screen documents the import capability, but DETARC sites using Members by MemberPress should use the Net Control role (slug net_control) for operators who may take attendance, use Rapid Entry, import JSON, and push Net Logger sessions through the REST API. Net Control users receive import_net_attendance, take_net_attendance, view_net_attendance_events, and view_net_attendance_reports automatically.
+
+DETARC Member users receive only view_net_attendance_events and view_net_attendance_reports automatically, so DETARC Members can view Net Attendance -> Events and Net Attendance -> Reports & Charts without being able to take attendance, use Rapid Entry, import JSON, or push Net Logger sessions through the API.
 
 Frontend report visibility depends on the DETARC Member role managed by Members by MemberPress, or the custom capability view_net_attendance_reports.
 

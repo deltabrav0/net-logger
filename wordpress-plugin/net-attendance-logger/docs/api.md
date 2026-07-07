@@ -14,9 +14,9 @@ REST imports require a WordPress user who either has `manage_options` or the plu
 import_net_attendance
 ```
 
-For Net Logger integration, use WordPress Application Passwords over HTTPS. Create an Application Password for a trusted operator user and send HTTP Basic authentication with the WordPress username and the generated application password. Do not store the password in source control or documentation.
+For Net Logger integration, use WordPress Application Passwords over HTTPS. Create an Application Password for a trusted Net Control user and send HTTP Basic authentication with the WordPress username and the generated application password. Do not store the password in source control or documentation.
 
-Best practice is to grant the capability to a role rather than hard-coding a site-specific role name into the REST permission callback. Site administrators can use `Net Attendance → Settings → API Import Permissions` to grant `import_net_attendance` to any existing role, such as DETARC Member on dev.detarc.net. Administrators remain allowed automatically.
+On DETARC sites, only the Net Control role (`net_control`) should receive `import_net_attendance` for API pushes. The Net Attendance → Settings → API Import Permissions screen documents the import capability, but DETARC Member users retain view-only access to Events and Reports & Charts and should not be able to push Net Logger sessions. Administrators remain allowed automatically.
 
 Unauthenticated requests must be rejected by WordPress before import logic writes data.
 

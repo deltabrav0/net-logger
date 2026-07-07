@@ -14,8 +14,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Plugin Name: Net & Meeting Attendance", text)
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
-        self.assertIn("Version: 0.1.3", text)
-        self.assertIn("define('NAL_VERSION', '0.1.3')", text)
+        self.assertIn("Version: 0.1.4", text)
+        self.assertIn("define('NAL_VERSION', '0.1.4')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -127,6 +127,12 @@ class PluginScaffoldTests(unittest.TestCase):
         for token in [
             "import_net_attendance",
             "view_net_attendance_reports",
+            "view_net_attendance_events",
+            "NET_CONTROL_ROLE_SLUG",
+            "DETARC_MEMBER_ROLE_SLUG",
+            "grant_net_control_defaults",
+            "remove_cap(self::IMPORT)",
+            "remove_cap(self::TAKE_ATTENDANCE)",
             "grant_defaults",
             "$administrator->add_cap(self::IMPORT)",
             "set_import_roles",
@@ -222,18 +228,46 @@ class PluginScaffoldTests(unittest.TestCase):
             "manage_options",
             "TAKE_ATTENDANCE",
             "VIEW_EVENTS",
+            "VIEW_REPORTS",
             "can_take_attendance",
             "can_view_events",
+            "can_view_reports",
             "grant_detarc_member_defaults",
+            "grant_net_control_defaults",
             "detarc_member",
+            "net_control",
             "DETARC Member",
-            "take_net_attendance",
-            "view_net_attendance_events",
+            "Net Control",
             "Capabilities::can_take_attendance()",
             "Capabilities::can_view_events()",
+            "Capabilities::VIEW_REPORTS",
             "Capabilities::can_import()",
         ]:
             self.assertIn(token, admin)
+
+    def test_detarc_members_can_only_view_while_net_control_can_operate(self):
+        capabilities = (PLUGIN / "includes" / "class-capabilities.php").read_text()
+        admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
+
+        for token in [
+            "public const NET_CONTROL_ROLE_SLUG = 'net_control'",
+            "public const DETARC_MEMBER_ROLE_SLUG = 'detarc_member'",
+            "$net_control->add_cap(self::IMPORT)",
+            "$net_control->add_cap(self::TAKE_ATTENDANCE)",
+            "$detarc_member->add_cap(self::VIEW_EVENTS)",
+            "$detarc_member->add_cap(self::VIEW_REPORTS)",
+            "$detarc_member->remove_cap(self::IMPORT)",
+            "$detarc_member->remove_cap(self::TAKE_ATTENDANCE)",
+            "function grant_net_control_defaults",
+            "function grant_detarc_member_defaults",
+        ]:
+            self.assertIn(token, capabilities)
+
+        self.assertIn("Capabilities::VIEW_EVENTS", admin)
+        self.assertIn("Capabilities::VIEW_REPORTS", admin)
+        self.assertIn("Capabilities::TAKE_ATTENDANCE", admin)
+        self.assertIn("Capabilities::can_take_attendance()", admin)
+        self.assertIn("Capabilities::can_import()", admin)
 
     def test_reports_shortcode_avoids_admin_only_frontend_helpers(self):
         admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()

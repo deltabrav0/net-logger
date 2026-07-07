@@ -22,9 +22,10 @@ final class Admin_Controller
         }
 
         add_action('admin_menu', [self::class, 'register_menu']);
-        // Keep the Members by MemberPress DETARC Member role (detarc_member) able to use operator screens.
-        // Custom capabilities: take_net_attendance, view_net_attendance_events.
+        // Keep role capabilities reconciled for existing installs:
+        // Net Control (net_control) can operate/import; DETARC Member can view Events and Reports.
         add_action('admin_init', [Capabilities::class, 'grant_detarc_member_defaults']);
+        add_action('admin_init', [Capabilities::class, 'grant_net_control_defaults']);
         add_action('admin_post_nal_import_json', [self::class, 'handle_import_json']);
         add_action('admin_post_nal_start_event', [self::class, 'handle_start_event']);
         add_action('admin_post_nal_rapid_entry', [self::class, 'handle_rapid_entry']);
@@ -42,9 +43,9 @@ final class Admin_Controller
         add_menu_page(
             __('Net Attendance', 'net-attendance-logger'),
             __('Net Attendance', 'net-attendance-logger'),
-            Capabilities::TAKE_ATTENDANCE,
+            Capabilities::VIEW_EVENTS,
             self::MENU_SLUG,
-            [self::class, 'render_take_attendance_page'],
+            [self::class, 'render_events_page'],
             'dashicons-groups',
             26
         );
@@ -62,7 +63,7 @@ final class Admin_Controller
             self::MENU_SLUG,
             __('Reports & Charts', 'net-attendance-logger'),
             __('Reports & Charts', 'net-attendance-logger'),
-            'manage_options',
+            Capabilities::VIEW_REPORTS,
             self::REPORTS_SLUG,
             [self::class, 'render_reports_page']
         );
@@ -219,7 +220,7 @@ final class Admin_Controller
         echo '<h1>' . esc_html__('Net Attendance Settings', 'net-attendance-logger') . '</h1>';
         self::render_admin_notice();
         echo '<h2>' . esc_html__('API Import Permissions', 'net-attendance-logger') . '</h2>';
-        echo '<p>' . esc_html__('WordPress Application Passwords authenticate as a normal user. Grant the custom import capability to whichever role should be allowed to send Net Logger sessions to the REST API. Administrators are always allowed.', 'net-attendance-logger') . '</p>';
+        echo '<p>' . esc_html__('WordPress Application Passwords authenticate as a normal user. Only users with the Net Control role can send Net Logger sessions to the REST API. Administrators are always allowed.', 'net-attendance-logger') . '</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         wp_nonce_field('nal_save_settings', 'nal_save_settings_nonce');
         echo '<input type="hidden" name="action" value="nal_save_settings" />';
@@ -228,10 +229,11 @@ final class Admin_Controller
             $slug = sanitize_key($slug);
             $role_name = isset($role['name']) ? translate_user_role((string) $role['name']) : $slug;
             $is_admin = $slug === 'administrator';
+            $is_net_control = $slug === Capabilities::NET_CONTROL_ROLE_SLUG;
             $has_capability = !empty($role['capabilities'][Capabilities::IMPORT]);
-            $checked = $is_admin || $has_capability || in_array($slug, $selected, true);
+            $checked = $is_admin || $is_net_control || $has_capability || in_array($slug, $selected, true);
             echo '<tr><td><strong>' . esc_html($role_name) . '</strong><br><code>' . esc_html($slug) . '</code></td><td>';
-            echo '<label><input type="checkbox" name="import_roles[]" value="' . esc_attr($slug) . '"' . checked($checked, true, false) . ($is_admin ? ' disabled' : '') . ' /> ' . esc_html($is_admin ? __('Always allowed', 'net-attendance-logger') : __('Can push Net Logger sessions through the REST API', 'net-attendance-logger')) . '</label>';
+            echo '<label><input type="checkbox" name="import_roles[]" value="' . esc_attr($slug) . '"' . checked($checked, true, false) . (!$is_net_control ? ' disabled' : '') . ' /> ' . esc_html($is_admin ? __('Always allowed', 'net-attendance-logger') : ($is_net_control ? __('Net Control can push Net Logger sessions through the REST API', 'net-attendance-logger') : __('Not allowed for Net Logger API push', 'net-attendance-logger'))) . '</label>';
             echo '</td></tr>';
         }
         echo '</tbody></table>';
@@ -832,9 +834,17 @@ final class Admin_Controller
     private static function render_event_list(Repository $repository): void
     {
         $events = $repository->list_events();
-        echo '<p><a class="button button-primary" href="' . esc_url(admin_url('admin.php?page=' . self::TAKE_SLUG)) . '">' . esc_html__('Take Attendance', 'net-attendance-logger') . '</a> ';
-        echo '<a class="button" href="' . esc_url(admin_url('admin.php?page=' . self::RAPID_ENTRY_SLUG)) . '">' . esc_html__('Rapid Entry', 'net-attendance-logger') . '</a> ';
-        echo '<a class="button" href="' . esc_url(admin_url('admin.php?page=' . self::IMPORT_SLUG)) . '">' . esc_html__('Import JSON', 'net-attendance-logger') . '</a></p>';
+        if (Capabilities::can_take_attendance() || Capabilities::can_import()) {
+            echo '<p>';
+            if (Capabilities::can_take_attendance()) {
+                echo '<a class="button button-primary" href="' . esc_url(admin_url('admin.php?page=' . self::TAKE_SLUG)) . '">' . esc_html__('Take Attendance', 'net-attendance-logger') . '</a> ';
+                echo '<a class="button" href="' . esc_url(admin_url('admin.php?page=' . self::RAPID_ENTRY_SLUG)) . '">' . esc_html__('Rapid Entry', 'net-attendance-logger') . '</a> ';
+            }
+            if (Capabilities::can_import()) {
+                echo '<a class="button" href="' . esc_url(admin_url('admin.php?page=' . self::IMPORT_SLUG)) . '">' . esc_html__('Import JSON', 'net-attendance-logger') . '</a>';
+            }
+            echo '</p>';
+        }
 
         if (!$events) {
             echo '<div class="notice notice-info inline"><p>' . esc_html__('No attendance events have been imported yet.', 'net-attendance-logger') . '</p></div>';
@@ -864,8 +874,12 @@ final class Admin_Controller
             echo '<td>' . esc_html((string) (int) ($event['traffic_count'] ?? 0)) . '</td>';
             echo '<td>' . esc_html($event['source'] ?? '') . '</td>';
             echo '<td>';
-            echo '<a class="button button-small" href="' . esc_url(add_query_arg(['page' => self::TAKE_SLUG, 'event_id' => absint($event['id'])], admin_url('admin.php'))) . '">' . esc_html__('Edit Attendance', 'net-attendance-logger') . '</a> ';
-            self::render_delete_event_form(absint($event['id']), true);
+            if (Capabilities::can_take_attendance()) {
+                echo '<a class="button button-small" href="' . esc_url(add_query_arg(['page' => self::TAKE_SLUG, 'event_id' => absint($event['id'])], admin_url('admin.php'))) . '">' . esc_html__('Edit Attendance', 'net-attendance-logger') . '</a> ';
+                self::render_delete_event_form(absint($event['id']), true);
+            } else {
+                echo '<a class="button button-small" href="' . esc_url($url) . '">' . esc_html__('View', 'net-attendance-logger') . '</a>';
+            }
             echo '</td>';
             echo '</tr>';
         }
@@ -885,7 +899,9 @@ final class Admin_Controller
         $attendance = $repository->get_event_attendance($event_id);
         echo '<p><a href="' . esc_url(admin_url('admin.php?page=' . self::MENU_SLUG)) . '">&larr; ' . esc_html__('Back to events', 'net-attendance-logger') . '</a></p>';
         echo '<h2>' . esc_html($event['name'] ?? __('Untitled Event', 'net-attendance-logger')) . '</h2>';
-        self::render_delete_event_form($event_id, false);
+        if (Capabilities::can_take_attendance()) {
+            self::render_delete_event_form($event_id, false);
+        }
         echo '<table class="form-table" role="presentation"><tbody>';
         self::render_detail_row(__('Date', 'net-attendance-logger'), self::format_datetime($event['started_at'] ?? null));
         self::render_detail_row(__('Type', 'net-attendance-logger'), $event['event_type'] ?? '');
