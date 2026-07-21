@@ -2,15 +2,18 @@
 # Build from the repository root on Windows:
 #   pyinstaller packaging/windows/net-logger.spec --noconfirm --clean
 
+from pathlib import Path
+
 from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
+project_root = Path(SPECPATH).parents[1]
 
 net_logger_datas = collect_data_files('net_logger')
 
 a = Analysis(
-    ['packaging/windows/net_logger_launcher.py'],
-    pathex=[],
+    [str(project_root / 'packaging' / 'windows' / 'net_logger_launcher.py')],
+    pathex=[str(project_root / 'src')],
     binaries=[],
     datas=net_logger_datas,
     hiddenimports=[],
