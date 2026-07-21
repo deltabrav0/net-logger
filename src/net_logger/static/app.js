@@ -2,6 +2,9 @@ let sessionId = null;
 let currentSession = null;
 let board = { known_stations: [], checkins: [] };
 let expandedCheckinId = null;
+let fccPreview = { callsign: '', status: 'idle', result: null, error: '' };
+let fccPreviewTimer = null;
+let fccPreviewSeq = 0;
 
 const $ = (id) => document.getElementById(id);
 function pageHas(id) { return $(id) !== null; }
@@ -254,12 +257,77 @@ function renderStationSuggestions(stations) {
   return stations.map(s => `<option value="${esc(s.callsign)}" label="${esc(stationMeta(s))}"></option>`).join('');
 }
 
+function looksLikeCallsign(value) {
+  return /^[A-Z0-9/]{3,}$/.test(value) && /\d/.test(value);
+}
+
+function resetFccPreview() {
+  if (fccPreviewTimer && typeof clearTimeout === 'function') clearTimeout(fccPreviewTimer);
+  fccPreviewTimer = null;
+  fccPreviewSeq += 1;
+  fccPreview = { callsign: '', status: 'idle', result: null, error: '' };
+}
+
+function renderNewStationPreview(result, q) {
+  const station = result || { callsign: q };
+  return `New station: <strong>${esc(station.callsign || q)}</strong> — ${esc(stationMeta(station))}. ${sessionOpen() ? 'Press Enter to add/check in this station.' : 'Press Enter to add this station.'}`;
+}
+
+function renderUnknownStationPreview(q, unavailable = false) {
+  const reason = unavailable ? ' FCC database unavailable;' : '';
+  return `Unknown station: <strong>${esc(q)}</strong>.${reason} ${sessionOpen() ? 'Press Enter to add as callsign-only/check in.' : 'Press Enter to add as callsign-only.'}`;
+}
+
+function scheduleFccPreview(q) {
+  if (!q || findKnownStation(q) || !looksLikeCallsign(q)) {
+    resetFccPreview();
+    return;
+  }
+  if (fccPreview.callsign === q && ['loading', 'found', 'unknown', 'error'].includes(fccPreview.status)) return;
+
+  if (fccPreviewTimer && typeof clearTimeout === 'function') clearTimeout(fccPreviewTimer);
+  const seq = ++fccPreviewSeq;
+  fccPreview = { callsign: q, status: 'loading', result: null, error: '' };
+
+  const runLookup = async () => {
+    try {
+      const result = await api('/api/lookup?callsign=' + encodeURIComponent(q));
+      if (seq !== fccPreviewSeq || normalizedLookupValue() !== q) return;
+      if (result.found && result.result) {
+        fccPreview = { callsign: q, status: 'found', result: result.result, error: '' };
+      } else {
+        fccPreview = { callsign: result.callsign || q, status: 'unknown', result: null, error: '' };
+      }
+    } catch (err) {
+      if (seq !== fccPreviewSeq || normalizedLookupValue() !== q) return;
+      fccPreview = { callsign: q, status: 'error', result: null, error: err.message || 'FCC lookup failed' };
+    }
+    const hint = pageHas('stationLookupHint') ? $('stationLookupHint') : null;
+    if (hint) hint.innerHTML = renderStationLookupHint($('stationLookup').value);
+  };
+
+  if (typeof setTimeout === 'function') fccPreviewTimer = setTimeout(runLookup, 350);
+  else runLookup();
+}
+
 function renderStationLookupHint(query) {
   const q = query.trim().toUpperCase();
   if (!q) return 'Known station details appear here as you type.';
   const exact = findKnownStation(q);
   if (exact) {
     return `Known station: <strong>${esc(exact.callsign)}</strong> — ${esc(stationMeta(exact))}. ${sessionOpen() ? 'Press Enter to check in this station.' : 'Press Enter to select this station.'}`;
+  }
+  if (fccPreview.callsign === q && fccPreview.status === 'loading') {
+    return `No known station match for ${esc(q)}. Searching local FCC database…`;
+  }
+  if (fccPreview.callsign === q && fccPreview.status === 'found') {
+    return renderNewStationPreview(fccPreview.result, q);
+  }
+  if (fccPreview.callsign === q && fccPreview.status === 'unknown') {
+    return renderUnknownStationPreview(q);
+  }
+  if (fccPreview.callsign === q && fccPreview.status === 'error') {
+    return renderUnknownStationPreview(q, true);
   }
   const matches = stationCandidates().filter(s => (s.callsign || '').toUpperCase().includes(q) || (s.name || '').toUpperCase().includes(q));
   if (matches.length) return `${matches.length} known station match${matches.length === 1 ? '' : 'es'} available. Choose a suggestion or press Enter to add/search FCC.`;
@@ -270,8 +338,11 @@ function updateStationLookupAssist() {
   if (!pageHas('stationLookup')) return;
   const suggestions = $('stationSuggestions');
   const hint = $('stationLookupHint');
+  const query = $('stationLookup').value;
+  const q = query.trim().toUpperCase();
   if (suggestions) suggestions.innerHTML = renderStationSuggestions(stationCandidates());
-  if (hint) hint.innerHTML = renderStationLookupHint($('stationLookup').value);
+  scheduleFccPreview(q);
+  if (hint) hint.innerHTML = renderStationLookupHint(query);
 }
 
 function payloadFromFccResult(result, fallbackCallsign) {

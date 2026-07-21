@@ -636,6 +636,8 @@ const makeElement = (id) => ({
 const context = {
   console,
   fetch: async () => ({ status: 204 }),
+  setTimeout,
+  clearTimeout,
   document: {
     getElementById: (id) => {
       if (!elements.has(id)) elements.set(id, makeElement(id));
@@ -662,3 +664,83 @@ console.log(JSON.stringify({ hint: elements.get('stationLookupHint').innerHTML }
     assert "Known station: <strong>K5SUB</strong>" in result["hint"]
     assert "Danny • Memphis, TN • EM55AA" in result["hint"]
     assert "Press Enter to check in this station." in result["hint"]
+
+
+def _run_station_lookup_preview(query, lookup_response):
+    script = f"""
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const calls = [];
+const makeElement = (id) => ({{
+  textContent: '',
+  innerHTML: '',
+  value: id === 'stationLookup' ? {json.dumps(query)} : '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {{}},
+  classList: {{ add: () => {{}}, remove: () => {{}} }},
+}});
+const context = {{
+  console,
+  calls,
+  setTimeout,
+  clearTimeout,
+  document: {{
+    getElementById: (id) => {{
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    }},
+    querySelectorAll: () => [],
+  }},
+  fetch: async () => ({{ status: 204 }}),
+}};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`
+  sessionId = 12;
+  currentSession = {{ status: 'open' }};
+  board = {{ known_stations: [], checkins: [] }};
+  api = async (path, options = {{}}) => {{
+    calls.push([path, options.method || 'GET', options.body || '']);
+    if (path.startsWith('/api/lookup')) return {json.dumps(lookup_response)};
+    return {{}};
+  }};
+  updateStationLookupAssist();
+`, context);
+setTimeout(() => {{
+  console.log(JSON.stringify({{ calls, hint: elements.get('stationLookupHint').innerHTML }}));
+}}, 450);
+"""
+    return json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+
+def test_station_lookup_hint_previews_new_station_from_fcc_before_submit():
+    result = _run_station_lookup_preview(
+        "k5fcc",
+        {
+            "ok": True,
+            "found": True,
+            "result": {
+                "callsign": "K5FCC",
+                "name": "FCC OP",
+                "city": "Lufkin",
+                "state": "TX",
+                "grid": "EM21AA",
+            },
+        },
+    )
+
+    assert result["calls"] == [["/api/lookup?callsign=K5FCC", "GET", ""]]
+    assert "New station: <strong>K5FCC</strong>" in result["hint"]
+    assert "FCC OP • Lufkin, TX • EM21AA" in result["hint"]
+    assert "Press Enter to add/check in this station." in result["hint"]
+
+
+def test_station_lookup_hint_previews_unknown_station_when_fcc_misses():
+    result = _run_station_lookup_preview("k5zzz", {"ok": True, "found": False, "callsign": "K5ZZZ"})
+
+    assert result["calls"] == [["/api/lookup?callsign=K5ZZZ", "GET", ""]]
+    assert "Unknown station: <strong>K5ZZZ</strong>" in result["hint"]
+    assert "Press Enter to add as callsign-only/check in." in result["hint"]
