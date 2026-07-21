@@ -18,4 +18,4 @@ The PyInstaller step creates `dist\Net Logger.exe`. The Inno Setup step creates:
 dist\installer\NetLoggerSetup-0.1.1.exe
 ```
 
-The workflow can be automated with GitHub Actions later once the pushing token has permission to create or update workflow files.
+The GitHub Actions workflow at `.github/workflows/windows-installer.yml` builds this installer on Windows, uploads it as a workflow artifact, and attaches it to GitHub Releases when a release is published.
