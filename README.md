@@ -28,6 +28,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 - [OpenAPI specification](docs/openapi.yaml)
 - [Local FCC database API](docs/FCC_DATABASE_API.md)
 - [Optional WordPress plugin](docs/WORDPRESS_PLUGIN.md)
+- [Release notes](RELEASE_NOTES.md)
 - [Original MVP implementation plan](docs/plans/2026-06-16-kanban-net-logger-mvp.md)
 
 ## Quick install from GitHub
@@ -122,7 +123,7 @@ Or build a wheel:
 
 ```bash
 uv build
-python -m pip install dist/net_logger-0.1.0-py3-none-any.whl
+python -m pip install dist/net_logger-0.1.1-py3-none-any.whl
 net-logger serve
 ```
 

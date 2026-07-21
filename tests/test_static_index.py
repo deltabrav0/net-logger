@@ -30,6 +30,15 @@ def test_main_heading_shows_project_version_as_small_subscript():
     assert ".app-version" in (ROOT / "src" / "net_logger" / "static" / "styles.css").read_text()
 
 
+def test_release_notes_document_current_project_version():
+    pyproject = PYPROJECT.read_text()
+    version = pyproject.split('version = "', 1)[1].split('"', 1)[0]
+    release_notes = (ROOT / "RELEASE_NOTES.md").read_text()
+
+    assert f"## v{version}" in release_notes
+    assert "FCC lookup preview" in release_notes
+
+
 def test_default_logo_asset_is_packaged_square_png():
     assert LOGO.exists()
     assert LOGO.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")

@@ -462,14 +462,14 @@ The installable artifacts are written to `dist/`.
 Install the wheel:
 
 ```bash
-python -m pip install dist/net_logger-0.1.0-py3-none-any.whl
+python -m pip install dist/net_logger-0.1.1-py3-none-any.whl
 net-logger serve
 ```
 
 Install from a source archive:
 
 ```bash
-python -m pip install dist/net_logger-0.1.0.tar.gz
+python -m pip install dist/net_logger-0.1.1.tar.gz
 net-logger serve
 ```
 
