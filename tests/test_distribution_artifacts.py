@@ -123,6 +123,60 @@ def test_installation_docs_reference_installer_and_docker_options():
     assert "Net Control role" in text
 
 
+def test_windows_launcher_command_and_module_are_present():
+    cli = (ROOT / "src" / "net_logger" / "cli.py").read_text()
+    launcher = (ROOT / "src" / "net_logger" / "windows_launcher.py").read_text()
+    launcher_entry = (ROOT / "packaging" / "windows" / "net_logger_launcher.py").read_text()
+
+    assert 'launch = subcommands.add_parser("launch"' in cli
+    assert "Start Net Logger and open the browser" in cli
+    assert "def main(" in launcher
+    assert "webbrowser.open" in launcher
+    assert "127.0.0.1" in launcher
+    assert "create_app" in launcher
+    assert "tkinter" in launcher
+    assert "windows_launcher.main" in launcher_entry
+
+
+def test_windows_native_packaging_files_define_pyinstaller_inno_and_ci_build():
+    spec = (ROOT / "packaging" / "windows" / "net-logger.spec").read_text()
+    inno = (ROOT / "packaging" / "windows" / "net-logger.iss").read_text()
+    manifest = (ROOT / "MANIFEST.in").read_text()
+
+    assert "PyInstaller" in spec
+    assert "Net Logger" in spec
+    assert "collect_data_files('net_logger')" in spec
+    assert "net_logger_launcher.py" in spec
+    assert "AppName=Net Logger" in inno
+    assert "AppVersion=0.1.1" in inno
+    assert "OutputBaseFilename=NetLoggerSetup-0.1.1" in inno
+    assert "Net Logger Data Folder" in inno
+    assert "{userappdata}\\Net Logger" in inno
+    assert "recursive-include packaging *.py *.spec *.iss *.md" in manifest
+
+
+def test_installation_docs_put_windows_installer_first_and_explain_smartscreen():
+    install = (ROOT / "docs" / "INSTALLATION.md").read_text()
+    dummies = (ROOT / "docs" / "INSTALLATION_FOR_DUMMIES.md").read_text()
+
+    assert "## Recommended Windows installation: native installer" in install
+    assert "NetLoggerSetup-0.1.1.exe" in install
+    assert "Windows protected your PC" in install
+    assert "More info" in install
+    assert "Run anyway" in install
+    assert "SmartScreen" in install
+    assert "Start Menu" in install
+    assert "Program Files" in install
+    assert "PowerShell" in install
+
+    assert "Recommended for Windows: use the normal installer" in dummies
+    assert "NetLoggerSetup-0.1.1.exe" in dummies
+    assert "Windows protected your PC" in dummies
+    assert "More info" in dummies
+    assert "Run anyway" in dummies
+    assert "Start Net Logger from the Start menu" in dummies
+
+
 def test_dummies_guide_separates_operator_and_wordpress_admin_tasks():
     text = (ROOT / "docs" / "INSTALLATION_FOR_DUMMIES.md").read_text()
 

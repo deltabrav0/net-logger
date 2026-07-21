@@ -17,9 +17,10 @@ For most users, **Part 1** and **Part 2** are the only parts needed to run a net
 
 You need:
 
-- A Windows, macOS, or Linux computer with Python 3.11 or newer installed.
+- A Windows, macOS, or Linux computer.
 - A web browser such as Chrome, Edge, Firefox, or Safari.
-- On Windows: PowerShell.
+- On Windows, the recommended download is the normal installer named `NetLoggerSetup-0.1.1.exe`.
+- On macOS/Linux, or for advanced Windows troubleshooting, Python 3.11 or newer is still needed for the command-line installation.
 - If using WordPress export: administrator access to the WordPress site.
 - If using WordPress export: the plugin ZIP file named `net-attendance-logger.zip`.
 
@@ -32,6 +33,45 @@ Important password note:
 - WordPress shows that Application Password only once. Copy it when it is created and keep it private.
 
 ## Part 1 — Install Net Logger on the operator computer
+
+### Recommended for Windows: use the normal installer
+
+Most Windows operators should use the normal installer instead of PowerShell commands.
+
+1. Download this file from the official Net Logger GitHub Releases page:
+
+   ```text
+   NetLoggerSetup-0.1.1.exe
+   ```
+
+2. Double-click the downloaded file.
+3. Follow the setup prompts.
+4. When setup finishes, Start Net Logger from the Start menu.
+5. Net Logger should open your browser automatically. If it does not, click **Open Net Logger** in the small launcher window.
+
+If Windows shows a warning that says:
+
+```text
+Windows protected your PC
+```
+
+that is Microsoft Defender SmartScreen warning you that this is a new, unsigned, low-reputation installer. If you downloaded it from the official `deltabrav0/net-logger` GitHub release and the filename is `NetLoggerSetup-0.1.1.exe`, you may continue this way:
+
+1. Click **More info**.
+2. Confirm the app name is Net Logger or NetLoggerSetup.
+3. Click **Run anyway**.
+
+Do not do this for an installer from an email attachment, chat message, unknown website, or unofficial download link. Delete unknown copies and download again from the official release page.
+
+The Windows installer stores your saved nets and settings here:
+
+```text
+%APPDATA%\Net Logger
+```
+
+### Command-line fallback for macOS, Linux, or advanced Windows users
+
+Use this section only if you are not using the Windows installer.
 
 ### Step 1 — Open a command window
 
@@ -357,7 +397,9 @@ Use this section only if you want to remove Net Logger from a computer or remove
 
 ### Stop Net Logger first
 
-If Net Logger is running, go to the command window where `net-logger serve` is running and press:
+If you are using the Windows installer launcher, click **Quit** in the Net Logger launcher window.
+
+If Net Logger is running from the command line, go to the command window where `net-logger serve` is running and press:
 
 ```text
 Ctrl+C
@@ -367,7 +409,9 @@ Then close that command window.
 
 ### Uninstall Net Logger from the operator computer
 
-If you installed Net Logger with the recommended `pipx` commands, uninstall it with:
+If you installed Net Logger with the Windows installer, open Windows **Settings → Apps → Installed apps**, choose **Net Logger**, and click **Uninstall**.
+
+If you installed Net Logger with the command-line `pipx` commands, uninstall it with:
 
 On Windows PowerShell:
 

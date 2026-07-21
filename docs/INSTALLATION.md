@@ -42,9 +42,52 @@ The default local address is:
 http://127.0.0.1:8088
 ```
 
-## Recommended normal installation
+## Recommended Windows installation: native installer
 
-For most users, install with `pipx` from GitHub's ZIP archive. This avoids a Git requirement and keeps Net Logger in an isolated per-user Python app environment instead of a Python-version-specific `Scripts` folder.
+For ordinary Windows operators, the preferred installation is the native Windows installer from the GitHub Releases page:
+
+```text
+NetLoggerSetup-0.1.1.exe
+```
+
+This installer is intended for users who are used to double-clicking a setup program instead of using PowerShell. It installs the Net Logger desktop launcher, creates Start Menu shortcuts, and can optionally create a Desktop shortcut. The launcher starts the local Net Logger server and opens the browser automatically, so the operator does not need to type `net-logger serve`.
+
+Typical Windows steps:
+
+1. Download `NetLoggerSetup-0.1.1.exe` from the Net Logger release.
+2. Double-click the downloaded installer.
+3. Follow the installer prompts.
+4. Start Net Logger from the Start Menu.
+5. If the browser does not open automatically, use the launcher window's **Open Net Logger** button.
+
+The installer stores the application under the normal Windows app location selected by the installer, commonly `Program Files` for all-user installs or the user's local programs folder for per-user installs. Runtime data remains outside the application folder:
+
+```text
+%APPDATA%\Net Logger
+```
+
+That data folder contains the SQLite database and `config.ini`. Uninstalling the application should not delete saved net data unless you deliberately remove this data folder.
+
+### Windows security warning / SmartScreen
+
+Until Net Logger has a code-signing certificate and enough download reputation, Windows may show a warning such as:
+
+```text
+Windows protected your PC
+Microsoft Defender SmartScreen prevented an unrecognized app from starting.
+```
+
+If you downloaded the installer from the official GitHub Releases page for `deltabrav0/net-logger` and the filename is the expected `NetLoggerSetup-0.1.1.exe`, this warning means Windows does not yet recognize the publisher. To continue:
+
+1. Click **More info**.
+2. Confirm the app name is Net Logger or NetLoggerSetup.
+3. Click **Run anyway**.
+
+Do not click **Run anyway** for a copy received from an unknown email, chat attachment, file-sharing site, or unofficial download page. When in doubt, delete the file and download it again from the official GitHub release.
+
+## Recommended Python command-line installation
+
+For macOS, Linux, advanced Windows users, or troubleshooting, install with `pipx` from GitHub's ZIP archive. This avoids a Git requirement and keeps Net Logger in an isolated per-user Python app environment instead of a Python-version-specific `Scripts` folder.
 
 Windows PowerShell:
 
@@ -473,34 +516,25 @@ python -m pip install dist/net_logger-0.1.1.tar.gz
 net-logger serve
 ```
 
-For a standalone executable, build on each target operating system with PyInstaller. Cross-building Windows executables from macOS/Linux is generally not supported; build each executable on the OS where it will run.
+For the native Windows installer, build on Windows.
 
-Install PyInstaller in a build environment:
-
-```bash
-python -m pip install pyinstaller
-python -m pip install .
-```
-
-Build:
-
-```bash
-pyinstaller --name net-logger --onefile --collect-data net_logger -m net_logger.cli
-```
-
-Run the generated executable from `dist/`.
-
-Windows:
+Manual Windows build:
 
 ```powershell
-.\dist\net-logger.exe serve
+python -m pip install --upgrade pip
+python -m pip install . pyinstaller
+choco install innosetup -y
+pyinstaller packaging/windows/net-logger.spec --noconfirm --clean
+iscc packaging\windows\net-logger.iss
 ```
 
-macOS/Linux:
+The PyInstaller spec builds the windowed desktop launcher from `packaging/windows/net_logger_launcher.py`. The Inno Setup script writes the installer to:
 
-```bash
-./dist/net-logger serve
+```text
+dist/installer/NetLoggerSetup-0.1.1.exe
 ```
+
+Cross-building Windows executables from macOS/Linux is generally not supported; build the Windows executable and installer on Windows. A future GitHub Actions workflow can automate this after the repository token used for pushes has permission to create or update workflow files.
 
 ## Running tests
 
@@ -510,7 +544,9 @@ uv run --extra dev pytest -q
 
 ## Uninstalling Net Logger
 
-Stop the running server first with `Ctrl+C` in the terminal or PowerShell window where `net-logger serve` is running.
+If using the Windows native installer, first quit the Net Logger launcher window. Then open Windows **Settings → Apps → Installed apps**, choose **Net Logger**, and select **Uninstall**. You can also use the Start Menu's normal uninstall entry if Windows shows one.
+
+If using the Python command-line installation, stop the running server first with `Ctrl+C` in the terminal or PowerShell window where `net-logger serve` is running.
 
 If installed with pipx, remove the application environment:
 

@@ -23,6 +23,11 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--port", type=int, default=settings["PORT"], help="Bind port")
     serve.add_argument("--database", default=str(default_database_path()), help="SQLite database path")
     serve.add_argument("--debug", action="store_true", default=settings["DEBUG"], help="Enable Flask debug mode")
+
+    launch = subcommands.add_parser("launch", help="Start Net Logger and open the browser")
+    launch.add_argument("--host", default=settings["HOST"], help="Bind host/interface")
+    launch.add_argument("--port", type=int, default=settings["PORT"], help="Bind port")
+    launch.add_argument("--database", default=str(default_database_path()), help="SQLite database path")
     return parser
 
 
@@ -43,6 +48,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Net Logger database: {database}", file=sys.stderr)
         app.run(host=args.host, port=args.port, debug=args.debug)
         return 0
+    if args.command == "launch":
+        from .windows_launcher import main as launch_main
+
+        return launch_main(host=args.host, port=args.port, database=args.database)
     parser.error(f"unknown command: {args.command}")
     return 2
 

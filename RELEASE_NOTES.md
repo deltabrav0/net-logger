@@ -6,6 +6,7 @@ Release date: 2026-07-21
 
 ### Added
 
+- Added Windows native-installer packaging scaffolding: a desktop launcher command, PyInstaller spec, Inno Setup script, and installer-first Windows documentation.
 - Added FCC lookup preview text to the station lookup hint. When an entered callsign is not already in Known Stations, Net Logger now previews either `New station: ...` from the local FCC database or `Unknown station: ...` before the operator presses Enter or clicks Find / Check in.
 
 ### Changed

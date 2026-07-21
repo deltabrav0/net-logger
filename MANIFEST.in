@@ -6,5 +6,6 @@ include Dockerfile
 include docker-compose.yml
 include .dockerignore
 recursive-include docs *.md *.yaml
+recursive-include packaging *.py *.spec *.iss *.md
 recursive-include src/net_logger/static *.html *.css *.js *.png
 include src/net_logger/openapi.yaml
