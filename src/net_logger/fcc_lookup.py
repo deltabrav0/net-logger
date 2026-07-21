@@ -1,9 +1,9 @@
 """FCC lookup adapter for local/off-grid flat-file FCC data.
 
-Set NET_LOGGER_FCC_LOOKUP_PATH to the directory containing Danny's copied
-`fcc_database_web_app` files. By default, the adapter checks the known sample
-location under Downloads. If FCC data files are absent, lookup safely returns
-`found: false` so QRZ or internet access is not required for the app to run.
+Set NET_LOGGER_FCC_LOOKUP_PATH to override the directory containing local FCC
+lookup files. By default, the adapter uses Net Logger's writable per-user data
+directory. If FCC data files are absent, lookup safely returns `found: false` so
+QRZ or internet access is not required for the app to run.
 """
 
 from __future__ import annotations
@@ -18,9 +18,10 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import config
 from .db import normalize_callsign
 
-DEFAULT_FCC_PATH = Path("/Users/dbutler/Downloads/Offgrid Tools/fcc_database_web_app")
+DEFAULT_FCC_DIR_NAME = "fcc_lookup"
 FCC_DOWNLOAD_URL = "https://data.fcc.gov/download/pub/uls/complete/l_amat.zip"
 
 REQUIRED_FILES = ("EN.dat", "EN.idx", "zipcodes.csv")
@@ -35,7 +36,10 @@ COL_ZIP = 18
 
 
 def _base_path() -> Path:
-    return Path(os.environ.get("NET_LOGGER_FCC_LOOKUP_PATH") or DEFAULT_FCC_PATH)
+    override = os.environ.get("NET_LOGGER_FCC_LOOKUP_PATH")
+    if override:
+        return Path(override).expanduser()
+    return config.default_data_dir() / DEFAULT_FCC_DIR_NAME
 
 
 def _data_path(base: Path | None = None) -> Path:

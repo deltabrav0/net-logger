@@ -36,7 +36,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 For ordinary Windows users, download the native installer from GitHub Releases:
 
 ```text
-NetLoggerSetup-0.1.1.exe
+NetLoggerSetup-0.1.2.exe
 ```
 
 Run the installer, then start Net Logger from the Start Menu. If Windows SmartScreen says **Windows protected your PC**, use **More info → Run anyway** only when the installer came from the official `deltabrav0/net-logger` GitHub release.
@@ -131,7 +131,7 @@ Or build a wheel:
 
 ```bash
 uv build
-python -m pip install dist/net_logger-0.1.1-py3-none-any.whl
+python -m pip install dist/net_logger-0.1.2-py3-none-any.whl
 net-logger serve
 ```
 
@@ -191,7 +191,15 @@ The app uses a local/off-grid FCC flat-file lookup adapter at:
 src/net_logger/fcc_lookup.py
 ```
 
-Set:
+By default, Net Logger stores downloaded FCC lookup files in the normal per-user Net Logger data directory:
+
+```text
+Windows: %APPDATA%\Net Logger\fcc_lookup
+macOS: ~/Library/Application Support/Net Logger/fcc_lookup
+Linux: ~/.local/share/net-logger/fcc_lookup
+```
+
+To override that location, set:
 
 ```bash
 export NET_LOGGER_FCC_LOOKUP_PATH="/path/to/fcc_database_web_app"

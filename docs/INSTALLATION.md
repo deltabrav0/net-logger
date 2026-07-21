@@ -47,14 +47,14 @@ http://127.0.0.1:8088
 For ordinary Windows operators, the preferred installation is the native Windows installer from the GitHub Releases page:
 
 ```text
-NetLoggerSetup-0.1.1.exe
+NetLoggerSetup-0.1.2.exe
 ```
 
 This installer is intended for users who are used to double-clicking a setup program instead of using PowerShell. It installs the Net Logger desktop launcher, creates Start Menu shortcuts, and can optionally create a Desktop shortcut. The launcher starts the local Net Logger server and opens the browser automatically, so the operator does not need to type `net-logger serve`.
 
 Typical Windows steps:
 
-1. Download `NetLoggerSetup-0.1.1.exe` from the Net Logger release.
+1. Download `NetLoggerSetup-0.1.2.exe` from the Net Logger release.
 2. Double-click the downloaded installer.
 3. Follow the installer prompts.
 4. Start Net Logger from the Start Menu.
@@ -77,7 +77,7 @@ Windows protected your PC
 Microsoft Defender SmartScreen prevented an unrecognized app from starting.
 ```
 
-If you downloaded the installer from the official GitHub Releases page for `deltabrav0/net-logger` and the filename is the expected `NetLoggerSetup-0.1.1.exe`, this warning means Windows does not yet recognize the publisher. To continue:
+If you downloaded the installer from the official GitHub Releases page for `deltabrav0/net-logger` and the filename is the expected `NetLoggerSetup-0.1.2.exe`, this warning means Windows does not yet recognize the publisher. To continue:
 
 1. Click **More info**.
 2. Confirm the app name is Net Logger or NetLoggerSetup.
@@ -505,14 +505,14 @@ The installable artifacts are written to `dist/`.
 Install the wheel:
 
 ```bash
-python -m pip install dist/net_logger-0.1.1-py3-none-any.whl
+python -m pip install dist/net_logger-0.1.2-py3-none-any.whl
 net-logger serve
 ```
 
 Install from a source archive:
 
 ```bash
-python -m pip install dist/net_logger-0.1.1.tar.gz
+python -m pip install dist/net_logger-0.1.2.tar.gz
 net-logger serve
 ```
 
@@ -531,7 +531,7 @@ iscc packaging\windows\net-logger.iss
 The PyInstaller spec builds the windowed desktop launcher from `packaging/windows/net_logger_launcher.py`. The Inno Setup script writes the installer to:
 
 ```text
-dist/installer/NetLoggerSetup-0.1.1.exe
+dist/installer/NetLoggerSetup-0.1.2.exe
 ```
 
 Cross-building Windows executables from macOS/Linux is generally not supported; build the Windows executable and installer on Windows. A future GitHub Actions workflow can automate this after the repository token used for pushes has permission to create or update workflow files.

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from net_logger import config as nl_config
+from net_logger import fcc_lookup
 from net_logger.app import create_app
 
 
@@ -16,6 +17,13 @@ def test_default_config_path_is_cross_platform(monkeypatch):
     monkeypatch.setattr(nl_config, "default_data_dir", lambda: Path("/tmp/Net Logger"))
 
     assert nl_config.default_config_path() == Path("/tmp/Net Logger") / "config.ini"
+
+
+def test_default_fcc_lookup_path_uses_writable_per_user_data_dir(monkeypatch):
+    monkeypatch.delenv("NET_LOGGER_FCC_LOOKUP_PATH", raising=False)
+    monkeypatch.setattr(nl_config, "default_data_dir", lambda: Path("/tmp/Net Logger"))
+
+    assert fcc_lookup._base_path() == Path("/tmp/Net Logger") / "fcc_lookup"
 
 
 def test_ensure_config_file_writes_plain_language_template(tmp_path):

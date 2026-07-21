@@ -3,20 +3,20 @@
 ;   iscc packaging\windows\net-logger.iss
 
 #define AppName "Net Logger"
-#define AppVersion "0.1.1"
+#define AppVersion "0.1.2"
 #define AppPublisher "deltabrav0"
 #define AppExeName "Net Logger.exe"
 
 [Setup]
 AppId={{F5D81CB1-4E7F-49D6-91A9-BD4E5A78B52F}
 AppName=Net Logger
-AppVersion=0.1.1
+AppVersion=0.1.2
 AppPublisher={#AppPublisher}
 DefaultDirName={autopf}\Net Logger
 DefaultGroupName=Net Logger
 DisableProgramGroupPage=yes
 OutputDir=..\..\dist\installer
-OutputBaseFilename=NetLoggerSetup-0.1.1
+OutputBaseFilename=NetLoggerSetup-0.1.2
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

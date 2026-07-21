@@ -1,5 +1,13 @@
 # Net Logger Release Notes
 
+## v0.1.2
+
+Release date: 2026-07-21
+
+### Fixed
+
+- Fixed Windows FCC database updates so downloaded FCC files are written under the current user's Net Logger data directory instead of a developer-specific `/Users/dbutler/...` path.
+
 ## v0.1.1
 
 Release date: 2026-07-21

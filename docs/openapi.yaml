@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Net Logger API
-  version: 0.1.1
+  version: 0.1.2
   description: 'Local JSON/CSV API for the Net Logger amateur-radio net logging application.
 
 

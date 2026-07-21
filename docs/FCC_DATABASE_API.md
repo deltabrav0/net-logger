@@ -24,16 +24,18 @@ http://192.168.1.70:8088
 
 ## Local data path
 
-The FCC lookup data directory is configured with:
+The FCC lookup data directory can be overridden with:
 
 ```bash
 NET_LOGGER_FCC_LOOKUP_PATH=/path/to/fcc_database_web_app
 ```
 
-If that environment variable is not set, Net Logger currently checks:
+If that environment variable is not set, Net Logger uses the normal writable per-user application data directory:
 
 ```text
-/Users/dbutler/Downloads/Offgrid Tools/fcc_database_web_app
+Windows: %APPDATA%\Net Logger\fcc_lookup
+macOS: ~/Library/Application Support/Net Logger/fcc_lookup
+Linux: ~/.local/share/net-logger/fcc_lookup
 ```
 
 Expected files:

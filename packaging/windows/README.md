@@ -15,7 +15,7 @@ iscc packaging\windows\net-logger.iss
 The PyInstaller step creates `dist\Net Logger.exe`. The Inno Setup step creates:
 
 ```text
-dist\installer\NetLoggerSetup-0.1.1.exe
+dist\installer\NetLoggerSetup-0.1.2.exe
 ```
 
 The GitHub Actions workflow at `.github/workflows/windows-installer.yml` builds this installer on Windows, uploads it as a workflow artifact, and attaches it to GitHub Releases when a release is published.
