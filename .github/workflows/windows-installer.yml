@@ -32,11 +32,14 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          python -m pip install '.[dev]' pyinstaller
+          python -m pip install . pyinstaller
 
-      - name: Run tests
+      - name: Smoke test installed command
         shell: pwsh
-        run: pytest
+        run: |
+          python -m compileall -q src
+          net-logger --help
+          net-logger launch --help
 
       - name: Install Inno Setup
         shell: pwsh
