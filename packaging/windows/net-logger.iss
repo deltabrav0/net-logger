@@ -33,7 +33,7 @@ Source: "..\..\dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Net Logger"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
-Name: "{group}\Net Logger Data Folder"; Filename: "{userappdata}\Net Logger"; Flags: foldershortcut
+Name: "{group}\Net Logger Data Folder"; Filename: "{userappdata}\Net Logger"
 Name: "{autodesktop}\Net Logger"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Tasks]
