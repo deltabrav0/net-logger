@@ -24,8 +24,8 @@ WORDPRESS_AUTHORIZATION_ERROR = (
     "Application Password, and that the user has the Net Control role."
 )
 WORDPRESS_IMPORT_AUTHORIZATION_ERROR = (
-    "WordPress import failed. Confirm the WordPress username, Application Password, and that the user "
-    "has the Net Control role."
+    "WordPress import failed. Confirm the WordPress endpoint URL, username, Application Password, "
+    "and that the user has the Net Control role."
 )
 
 

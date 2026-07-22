@@ -59,9 +59,13 @@ class PluginScaffoldTests(unittest.TestCase):
             "list_events",
             "report_attendance_over_time",
             "report_top_participants",
+            "report_participation_snapshot",
+            "report_new_participants",
+            "report_participation_milestones",
             "list_event_names",
             "report_attendance_series",
             "report_attendance_totals_by_event_name",
+            "update_event",
             "close_event",
             "reopen_event",
             "delete_event",
@@ -276,6 +280,52 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("nal-report-filter-submit", admin)
         self.assertNotIn("submit_button(__('Apply Filters'", admin)
 
+    def test_reports_include_participation_snapshot_leaderboard_newcomers_and_milestones(self):
+        admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
+        repo = (PLUGIN / "includes" / "class-repository.php").read_text()
+        for token in [
+            "Participation Snapshot",
+            "Top Participants",
+            "New Participants",
+            "Participation Milestones",
+            "render_participation_snapshot",
+            "render_top_participants_chart",
+            "render_new_participants",
+            "render_participation_milestones",
+            "show_leaderboard",
+            "show_new_participants",
+            "show_milestones",
+        ]:
+            self.assertIn(token, admin)
+        for token in [
+            "COUNT(DISTINCT p.id) AS distinct_participants",
+            "MIN(r.checked_in_at) AS first_checkin_at",
+            "MAX(r.checked_in_at) AS last_checkin_at",
+            "HAVING attendance_count >= 5",
+            "milestone_count",
+        ]:
+            self.assertIn(token, repo)
+
+    def test_event_detail_supports_editing_event_metadata_without_reopening_attendance(self):
+        admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
+        repo = (PLUGIN / "includes" / "class-repository.php").read_text()
+        for token in [
+            "admin_post_nal_update_event",
+            "handle_update_event",
+            "render_edit_event_form",
+            "nal_update_event_nonce",
+            "name=\"event_name\"",
+            "name=\"started_at\"",
+            "name=\"frequency\"",
+            "Event details updated.",
+            "Update Event Details",
+        ]:
+            self.assertIn(token, admin)
+        self.assertIn("function update_event", repo)
+        self.assertIn("'name' =>", repo)
+        self.assertIn("'started_at' =>", repo)
+        self.assertIn("'frequency' =>", repo)
+
     def test_reports_documentation_covers_shortcode_and_memberpress_dependency(self):
         reports = PLUGIN / "docs" / "reports.md"
         self.assertTrue(reports.exists())
@@ -287,6 +337,13 @@ class PluginScaffoldTests(unittest.TestCase):
             "view_net_attendance_reports",
             "net_attendance_logger_report_role_slugs",
             "Appearance → Menus",
+            "Participation Snapshot",
+            "Top Participants",
+            "New Participants",
+            "Participation Milestones",
+            "show_leaderboard=\"yes|no\"",
+            "show_new_participants=\"yes|no\"",
+            "show_milestones=\"yes|no\"",
         ]:
             self.assertIn(token, text)
 

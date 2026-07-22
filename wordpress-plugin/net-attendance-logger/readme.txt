@@ -22,10 +22,10 @@ Current MVP capabilities:
 * wp-admin JSON import with validation/dry-run support;
 * single-event and batch JSON payload support;
 * wp-admin event detail and reports pages;
-* attendance event deletion from wp-admin;
+* attendance event metadata editing and event deletion from wp-admin;
 * rapid summary entry for paper logs or historical nets with only date/time, net name, frequency, and head count;
 * simple manual attendance-taking page for use when Net Logger is unavailable;
-* frontend report embedding with the [net_attendance_reports] shortcode.
+* frontend report embedding with the [net_attendance_reports] shortcode, including participation snapshot cards, top participants, new participants, participation milestones, and attendance trend charts.
 
 Current development environment:
 
@@ -62,6 +62,8 @@ The Rapid Entry screen records summary-only events for historical paper logs, me
 
 The Take Attendance screen is a deliberately simple manual attendance-entry workflow. Use the standalone Net Logger tool for normal net-control work; use the WordPress screen when Net Logger is unavailable. It can start an event, automatically check in net control, provide a Quick Check-in row for keyboard-first callsign entry, auto-uppercase callsigns, edit traffic/notes, remove mistaken check-ins, close the event, and require Reopen Event for Editing before changing a closed event. Event details show traffic text through a Yes - view expander.
 
+Event detail pages include an Edit Event Details form for correcting event metadata such as net/event name, start time, frequency, net control, and notes. This does not reopen the event or alter attendance records.
+
 Events can be deleted from the wp-admin Events list or event detail screen. Deleting an event deletes the attached attendance records but leaves participant/station records available for reuse.
 
 Reports can be embedded in a WordPress page with:
@@ -73,6 +75,9 @@ Optional shortcode examples:
 [net_attendance_reports period="week"]
 [net_attendance_reports period="month" event_name="Weekly Net"]
 [net_attendance_reports period="year" show_filters="no"]
+[net_attendance_reports show_leaderboard="no"]
+[net_attendance_reports show_new_participants="no"]
+[net_attendance_reports show_milestones="no"]
 
 Supported period values:
 

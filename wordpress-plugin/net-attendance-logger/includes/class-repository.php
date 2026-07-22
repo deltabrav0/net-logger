@@ -205,17 +205,101 @@ final class Repository
     public function report_top_participants(array $args = []): array
     {
         global $wpdb;
+        $events = DB::events_table();
         $records = DB::records_table();
         $participants = DB::participants_table();
-        return $wpdb->get_results(
-            "SELECT p.id, p.callsign, p.name, COUNT(r.id) AS attendance_count
-             FROM {$participants} p
-             JOIN {$records} r ON r.participant_id = p.id
-             GROUP BY p.id
-             ORDER BY attendance_count DESC, p.callsign, p.name
-             LIMIT 25",
-            ARRAY_A
-        ) ?: [];
+        [$where, $params] = $this->event_filter_where($args, 'e');
+        $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 25;
+        $sql = "SELECT p.id, p.callsign, p.name, COUNT(r.id) AS attendance_count,
+                        MIN(r.checked_in_at) AS first_checkin_at,
+                        MAX(r.checked_in_at) AS last_checkin_at
+                 FROM {$participants} p
+                 JOIN {$records} r ON r.participant_id = p.id
+                 JOIN {$events} e ON e.id = r.event_id
+                 {$where}
+                 GROUP BY p.id
+                 ORDER BY attendance_count DESC, last_checkin_at DESC, p.callsign, p.name
+                 LIMIT %d";
+        $params[] = $limit;
+        return $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A) ?: [];
+    }
+
+    public function report_participation_snapshot(array $args = []): array
+    {
+        global $wpdb;
+        $events = DB::events_table();
+        $records = DB::records_table();
+        $participants = DB::participants_table();
+        [$where, $params] = $this->event_filter_where($args, 'e');
+        $sql = "SELECT COUNT(DISTINCT e.id) AS event_count,
+                       SUM(CASE WHEN e.summary_only = 1 THEN COALESCE(e.aggregate_attendance_count, 0) WHEN r.id IS NULL THEN 0 ELSE 1 END) AS attendance_count,
+                       COUNT(DISTINCT p.id) AS distinct_participants,
+                       COALESCE(SUM(CASE WHEN r.traffic = 1 THEN 1 ELSE 0 END), 0) AS traffic_count
+                FROM {$events} e
+                LEFT JOIN {$records} r ON r.event_id = e.id
+                LEFT JOIN {$participants} p ON p.id = r.participant_id
+                {$where}";
+        if ($params) {
+            $sql = $wpdb->prepare($sql, ...$params);
+        }
+        $row = $wpdb->get_row($sql, ARRAY_A) ?: [];
+        $event_count = max(0, (int) ($row['event_count'] ?? 0));
+        $attendance_count = max(0, (int) ($row['attendance_count'] ?? 0));
+        $row['average_attendance'] = $event_count > 0 ? round($attendance_count / $event_count, 1) : 0;
+        return $row;
+    }
+
+    public function report_new_participants(array $args = []): array
+    {
+        global $wpdb;
+        $events = DB::events_table();
+        $records = DB::records_table();
+        $participants = DB::participants_table();
+        [$where, $params] = $this->event_filter_where($args, 'e');
+        $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 10;
+        $sql = "SELECT p.id, p.callsign, p.name, p.city, p.state,
+                        MIN(r.checked_in_at) AS first_checkin_at,
+                        MAX(r.checked_in_at) AS last_checkin_at,
+                        COUNT(r.id) AS attendance_count
+                 FROM {$participants} p
+                 JOIN {$records} r ON r.participant_id = p.id
+                 JOIN {$events} e ON e.id = r.event_id
+                 {$where}
+                 GROUP BY p.id
+                 ORDER BY first_checkin_at DESC, p.callsign, p.name
+                 LIMIT %d";
+        $params[] = $limit;
+        return $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A) ?: [];
+    }
+
+    public function report_participation_milestones(array $args = []): array
+    {
+        global $wpdb;
+        $events = DB::events_table();
+        $records = DB::records_table();
+        $participants = DB::participants_table();
+        [$where, $params] = $this->event_filter_where($args, 'e');
+        $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 25;
+        $sql = "SELECT p.id, p.callsign, p.name, COUNT(r.id) AS attendance_count,
+                        CASE
+                            WHEN COUNT(r.id) >= 100 THEN 100
+                            WHEN COUNT(r.id) >= 50 THEN 50
+                            WHEN COUNT(r.id) >= 25 THEN 25
+                            WHEN COUNT(r.id) >= 10 THEN 10
+                            WHEN COUNT(r.id) >= 5 THEN 5
+                            ELSE 1
+                        END AS milestone_count,
+                        MAX(r.checked_in_at) AS last_checkin_at
+                 FROM {$participants} p
+                 JOIN {$records} r ON r.participant_id = p.id
+                 JOIN {$events} e ON e.id = r.event_id
+                 {$where}
+                 GROUP BY p.id
+                 HAVING attendance_count >= 5
+                 ORDER BY milestone_count DESC, attendance_count DESC, last_checkin_at DESC, p.callsign, p.name
+                 LIMIT %d";
+        $params[] = $limit;
+        return $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A) ?: [];
     }
 
     public function list_event_names(): array
@@ -302,6 +386,38 @@ final class Repository
             ],
             ['id' => $event_id]
         );
+        return $updated !== false;
+    }
+
+    public function update_event(int $event_id, array $event): bool
+    {
+        global $wpdb;
+        $data = ['updated_at' => current_time('mysql')];
+        if (array_key_exists('name', $event)) {
+            $name = $this->text($event['name'], 191);
+            if ($name !== '') {
+                $data['name'] = $name;
+            }
+        }
+        if (array_key_exists('event_type', $event)) {
+            $data['event_type'] = $this->nullable_text($event['event_type'], 100);
+        }
+        if (array_key_exists('started_at', $event)) {
+            $data['started_at'] = $this->nullable_datetime($event['started_at']);
+        }
+        if (array_key_exists('ended_at', $event)) {
+            $data['ended_at'] = $this->nullable_datetime($event['ended_at']);
+        }
+        if (array_key_exists('frequency', $event)) {
+            $data['frequency'] = $this->nullable_text($event['frequency'], 100);
+        }
+        if (array_key_exists('net_control', $event)) {
+            $data['net_control'] = $this->normalize_callsign($event['net_control']);
+        }
+        if (array_key_exists('notes', $event)) {
+            $data['notes'] = $this->nullable_longtext($event['notes']);
+        }
+        $updated = $wpdb->update(DB::events_table(), $data, ['id' => $event_id]);
         return $updated !== false;
     }
 
@@ -399,6 +515,15 @@ final class Repository
     {
         $period = strtolower(sanitize_key((string) ($value ?: 'month')));
         return in_array($period, ['day', 'week', 'month', 'year'], true) ? $period : 'month';
+    }
+
+    private function event_filter_where(array $args, string $event_alias = 'e'): array
+    {
+        $event_name = $this->nullable_text($args['event_name'] ?? null, 191);
+        if ($event_name === null || $event_name === '') {
+            return ['', []];
+        }
+        return ["WHERE {$event_alias}.name = %s", [$event_name]];
     }
 
     private function normalize_callsign(mixed $value): ?string

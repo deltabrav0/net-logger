@@ -12,6 +12,10 @@ Administrators can view the internal reports page at:
 
 The page supports:
 
+- Participation Snapshot cards for event count, total check-ins, distinct participants, and average attendance;
+- Top Participants recognition using participant-level check-in counts;
+- New Participants so recent first-time check-ins can be welcomed;
+- Participation Milestones for operators who have reached 5, 10, 25, 50, or 100 check-ins;
 - attendance totals by net name;
 - attendance-over-time charts;
 - grouping by day, week, month, or year;
@@ -33,7 +37,16 @@ Optional shortcode attributes:
 [net_attendance_reports period="week"]
 [net_attendance_reports period="month" event_name="Weekly Net"]
 [net_attendance_reports period="year" show_filters="no"]
+[net_attendance_reports show_leaderboard="no"]
+[net_attendance_reports show_new_participants="no"]
+[net_attendance_reports show_milestones="no"]
 ```
+
+Participation sections default to visible. Use these attributes when a page should emphasize trends over public recognition:
+
+- `show_leaderboard="yes|no"` controls the Top Participants section.
+- `show_new_participants="yes|no"` controls the New Participants section.
+- `show_milestones="yes|no"` controls the Participation Milestones section.
 
 Supported `period` values:
 

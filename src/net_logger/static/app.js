@@ -482,6 +482,19 @@ async function saveWordPressConfig(evt) {
   }
 }
 
+function formatWordPressSendError(err) {
+  const pieces = [err.message || 'WordPress import failed.'];
+  if (err.status) pieces.push(`HTTP/status: ${err.status}`);
+  if (err.data) {
+    if (err.data.details) pieces.push(`Details: ${err.data.details}`);
+    if (err.data.response) {
+      const response = typeof err.data.response === 'string' ? err.data.response : JSON.stringify(err.data.response);
+      pieces.push(`WordPress response: ${response}`);
+    }
+  }
+  return `WordPress send failed.\n\n${pieces.join('\n')}`;
+}
+
 async function sendSessionToWordPress(sessionIdToSend) {
   if (!confirm('Send this saved net to WordPress? This can only be done once from Net Logger.')) return;
   try {
@@ -494,7 +507,9 @@ async function sendSessionToWordPress(sessionIdToSend) {
       await openWordPressConfigDialog('WordPress export is not configured yet. Enter the endpoint, username, and Application Password, then test and save.');
       return;
     }
-    setStatus(err.message);
+    const message = formatWordPressSendError(err);
+    setStatus(message.replace(/\n+/g, ' '));
+    if (typeof alert === 'function') alert(message);
   }
 }
 

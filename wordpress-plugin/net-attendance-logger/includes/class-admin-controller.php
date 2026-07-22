@@ -28,6 +28,7 @@ final class Admin_Controller
         add_action('admin_init', [Capabilities::class, 'grant_net_control_defaults']);
         add_action('admin_post_nal_import_json', [self::class, 'handle_import_json']);
         add_action('admin_post_nal_start_event', [self::class, 'handle_start_event']);
+        add_action('admin_post_nal_update_event', [self::class, 'handle_update_event']);
         add_action('admin_post_nal_rapid_entry', [self::class, 'handle_rapid_entry']);
         add_action('admin_post_nal_add_checkin', [self::class, 'handle_add_checkin']);
         add_action('admin_post_nal_update_checkin', [self::class, 'handle_update_checkin']);
@@ -309,6 +310,9 @@ final class Admin_Controller
             'period' => '',
             'event_name' => '',
             'show_filters' => 'yes',
+            'show_leaderboard' => 'yes',
+            'show_new_participants' => 'yes',
+            'show_milestones' => 'yes',
         ], $atts, 'net_attendance_reports');
 
         ob_start();
@@ -326,14 +330,23 @@ final class Admin_Controller
         $period = self::report_period($period_source ?: 'month');
         $event_name = sanitize_text_field($event_name_source);
         $show_filters = strtolower((string) ($atts['show_filters'] ?? 'yes')) !== 'no';
+        $show_leaderboard = strtolower((string) ($atts['show_leaderboard'] ?? 'yes')) !== 'no';
+        $show_new_participants = strtolower((string) ($atts['show_new_participants'] ?? 'yes')) !== 'no';
+        $show_milestones = strtolower((string) ($atts['show_milestones'] ?? 'yes')) !== 'no';
         $event_names = $repository->list_event_names();
-        $series_rows = $repository->report_attendance_series([
+        $report_args = [
             'period' => $period,
             'event_name' => $event_name,
-        ]);
-        $totals = $repository->report_attendance_totals_by_event_name([
+        ];
+        $event_filter_args = [
             'event_name' => $event_name,
-        ]);
+        ];
+        $series_rows = $repository->report_attendance_series($report_args);
+        $totals = $repository->report_attendance_totals_by_event_name($event_filter_args);
+        $snapshot = $repository->report_participation_snapshot($event_filter_args);
+        $top_participants = $show_leaderboard ? $repository->report_top_participants($event_filter_args + ['limit' => 10]) : [];
+        $new_participants = $show_new_participants ? $repository->report_new_participants($event_filter_args + ['limit' => 10]) : [];
+        $milestones = $show_milestones ? $repository->report_participation_milestones($event_filter_args + ['limit' => 10]) : [];
         $series_by_event = self::group_series_by_event_name($series_rows);
 
         echo '<h1>' . esc_html__('Net Attendance Reports & Charts', 'net-attendance-logger') . '</h1>';
@@ -345,6 +358,24 @@ final class Admin_Controller
             self::render_reports_filter_form($period, $event_name, $event_names, $admin_context);
         }
         self::render_reports_styles();
+
+        echo '<h2>' . esc_html__('Participation Snapshot', 'net-attendance-logger') . '</h2>';
+        self::render_participation_snapshot($snapshot);
+
+        if ($show_leaderboard) {
+            echo '<h2>' . esc_html__('Top Participants', 'net-attendance-logger') . '</h2>';
+            self::render_top_participants_chart($top_participants);
+        }
+
+        if ($show_new_participants) {
+            echo '<h2>' . esc_html__('New Participants', 'net-attendance-logger') . '</h2>';
+            self::render_new_participants($new_participants);
+        }
+
+        if ($show_milestones) {
+            echo '<h2>' . esc_html__('Participation Milestones', 'net-attendance-logger') . '</h2>';
+            self::render_participation_milestones($milestones);
+        }
 
         echo '<h2>' . esc_html__('Attendance by Net', 'net-attendance-logger') . '</h2>';
         self::render_totals_chart($totals);
@@ -389,6 +420,74 @@ final class Admin_Controller
         echo '</select></label>';
         echo '<button type="submit" class="button button-primary nal-report-filter-submit">' . esc_html__('Apply Filters', 'net-attendance-logger') . '</button>';
         echo '</form>';
+    }
+
+    private static function render_participation_snapshot(array $snapshot): void
+    {
+        $cards = [
+            __('Events', 'net-attendance-logger') => (int) ($snapshot['event_count'] ?? 0),
+            __('Total Check-ins', 'net-attendance-logger') => (int) ($snapshot['attendance_count'] ?? 0),
+            __('Distinct Participants', 'net-attendance-logger') => (int) ($snapshot['distinct_participants'] ?? 0),
+            __('Average Attendance', 'net-attendance-logger') => $snapshot['average_attendance'] ?? 0,
+        ];
+        echo '<div class="nal-snapshot-grid">';
+        foreach ($cards as $label => $value) {
+            echo '<div class="nal-snapshot-card"><div class="nal-snapshot-value">' . esc_html((string) $value) . '</div><div class="nal-snapshot-label">' . esc_html((string) $label) . '</div></div>';
+        }
+        echo '</div>';
+    }
+
+    private static function render_top_participants_chart(array $participants): void
+    {
+        if (!$participants) {
+            echo '<div class="notice notice-info inline"><p>' . esc_html__('No participant-level check-ins are available for the selected filters.', 'net-attendance-logger') . '</p></div>';
+            return;
+        }
+
+        $max = max(1, ...array_map(static fn($row) => (int) ($row['attendance_count'] ?? 0), $participants));
+        echo '<div class="nal-bar-chart nal-participant-chart">';
+        foreach ($participants as $index => $row) {
+            $count = (int) ($row['attendance_count'] ?? 0);
+            $width = max(3, (int) round(($count / $max) * 100));
+            $name = trim((string) ($row['callsign'] ?? '') . (!empty($row['name']) ? ' — ' . (string) $row['name'] : ''));
+            echo '<div class="nal-bar-row">';
+            echo '<div class="nal-bar-label"><span class="nal-rank">#' . esc_html((string) ($index + 1)) . '</span> ' . esc_html($name ?: __('Unknown participant', 'net-attendance-logger')) . '</div>';
+            echo '<div class="nal-bar-track"><div class="nal-bar-fill" style="width:' . esc_attr((string) $width) . '%"></div></div>';
+            echo '<div class="nal-bar-value">' . esc_html((string) $count) . '</div>';
+            echo '</div>';
+        }
+        echo '</div>';
+    }
+
+    private static function render_new_participants(array $participants): void
+    {
+        if (!$participants) {
+            echo '<div class="notice notice-info inline"><p>' . esc_html__('No new participant records are available for the selected filters.', 'net-attendance-logger') . '</p></div>';
+            return;
+        }
+
+        echo '<table class="widefat striped nal-report-table"><thead><tr><th>' . esc_html__('Callsign', 'net-attendance-logger') . '</th><th>' . esc_html__('Name', 'net-attendance-logger') . '</th><th>' . esc_html__('First Check-in', 'net-attendance-logger') . '</th><th>' . esc_html__('Total', 'net-attendance-logger') . '</th></tr></thead><tbody>';
+        foreach ($participants as $row) {
+            echo '<tr><td><strong>' . esc_html($row['callsign'] ?? '') . '</strong></td><td>' . esc_html($row['name'] ?? '') . '</td><td>' . esc_html(self::format_datetime($row['first_checkin_at'] ?? null)) . '</td><td>' . esc_html((string) (int) ($row['attendance_count'] ?? 0)) . '</td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+
+    private static function render_participation_milestones(array $milestones): void
+    {
+        if (!$milestones) {
+            echo '<div class="notice notice-info inline"><p>' . esc_html__('No participants have reached a 5-check-in milestone for the selected filters yet.', 'net-attendance-logger') . '</p></div>';
+            return;
+        }
+
+        echo '<div class="nal-milestone-grid">';
+        foreach ($milestones as $row) {
+            $milestone = (int) ($row['milestone_count'] ?? 0);
+            $label = sprintf(_n('%d check-in', '%d check-ins', $milestone, 'net-attendance-logger'), $milestone);
+            $name = trim((string) ($row['callsign'] ?? '') . (!empty($row['name']) ? ' — ' . (string) $row['name'] : ''));
+            echo '<div class="nal-milestone-card"><div class="nal-milestone-badge">' . esc_html($label) . '</div><strong>' . esc_html($name ?: __('Unknown participant', 'net-attendance-logger')) . '</strong><br><span>' . esc_html(sprintf(__('Total: %d', 'net-attendance-logger'), (int) ($row['attendance_count'] ?? 0))) . '</span></div>';
+        }
+        echo '</div>';
     }
 
     private static function render_totals_chart(array $totals): void
@@ -466,6 +565,11 @@ final class Admin_Controller
     {
         echo '<style>
             .nal-bar-chart { max-width: 960px; margin: 12px 0 28px; }
+            .nal-snapshot-grid, .nal-milestone-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; max-width: 960px; margin: 12px 0 28px; }
+            .nal-snapshot-card, .nal-milestone-card { background:#fff; border:1px solid #ccd0d4; border-radius:8px; padding:14px 16px; }
+            .nal-snapshot-value { font-size:28px; line-height:1.1; font-weight:700; color:#1d2327; font-variant-numeric: tabular-nums; }
+            .nal-snapshot-label, .nal-milestone-card span { color:#646970; }
+            .nal-rank, .nal-milestone-badge { display:inline-block; font-weight:700; color:#2271b1; margin-right:6px; }
             .nal-bar-row { display: grid; grid-template-columns: minmax(140px, 220px) 1fr 48px; gap: 10px; align-items: center; margin: 8px 0; }
             .nal-bar-label { font-weight: 600; overflow-wrap: anywhere; }
             .nal-bar-track { height: 18px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
@@ -644,6 +748,27 @@ final class Admin_Controller
             ]);
         }
         self::redirect_with_notice(self::TAKE_SLUG, __('Attendance event started.', 'net-attendance-logger'), 'success', ['event_id' => $event_id]);
+    }
+
+    public static function handle_update_event(): void
+    {
+        self::require_admin_capability(__('You do not have permission to update attendance events.', 'net-attendance-logger'));
+        $event_id = absint($_POST['event_id'] ?? 0);
+        check_admin_referer('nal_update_event_' . $event_id, 'nal_update_event_nonce');
+        $event_name = sanitize_text_field(wp_unslash((string) ($_POST['event_name'] ?? '')));
+        if ($event_id <= 0 || $event_name === '') {
+            self::redirect_with_notice(self::MENU_SLUG, __('Event name is required.', 'net-attendance-logger'), 'error', ['event_id' => $event_id]);
+        }
+        $repository = new Repository();
+        $updated = $repository->update_event($event_id, [
+            'name' => $event_name,
+            'event_type' => sanitize_text_field(wp_unslash((string) ($_POST['event_type'] ?? ''))),
+            'started_at' => sanitize_text_field(wp_unslash((string) ($_POST['started_at'] ?? ''))),
+            'frequency' => sanitize_text_field(wp_unslash((string) ($_POST['frequency'] ?? ''))),
+            'net_control' => sanitize_text_field(wp_unslash((string) ($_POST['net_control'] ?? ''))),
+            'notes' => wp_unslash((string) ($_POST['notes'] ?? '')),
+        ]);
+        self::redirect_with_notice(self::MENU_SLUG, $updated ? __('Event details updated.', 'net-attendance-logger') : __('Event details could not be updated.', 'net-attendance-logger'), $updated ? 'success' : 'error', ['event_id' => $event_id]);
     }
 
     public static function handle_rapid_entry(): void
@@ -901,6 +1026,7 @@ final class Admin_Controller
         echo '<h2>' . esc_html($event['name'] ?? __('Untitled Event', 'net-attendance-logger')) . '</h2>';
         if (Capabilities::can_take_attendance()) {
             self::render_delete_event_form($event_id, false);
+            self::render_edit_event_form($event_id, $event);
         }
         echo '<table class="form-table" role="presentation"><tbody>';
         self::render_detail_row(__('Date', 'net-attendance-logger'), self::format_datetime($event['started_at'] ?? null));
@@ -952,6 +1078,26 @@ final class Admin_Controller
         echo '<input type="hidden" name="event_id" value="' . esc_attr((string) $event_id) . '" />';
         submit_button(__('Delete Event', 'net-attendance-logger'), $compact ? 'delete small' : 'delete', 'submit', false);
         echo '</form>';
+    }
+
+    private static function render_edit_event_form(int $event_id, array $event): void
+    {
+        echo '<details style="max-width: 860px; margin: 0 0 18px; padding: 12px 14px; background:#fff; border:1px solid #ccd0d4;">';
+        echo '<summary style="cursor:pointer; font-weight:600;">' . esc_html__('Edit Event Details', 'net-attendance-logger') . '</summary>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin-top:12px;">';
+        wp_nonce_field('nal_update_event_' . $event_id, 'nal_update_event_nonce');
+        echo '<input type="hidden" name="action" value="nal_update_event" />';
+        echo '<input type="hidden" name="event_id" value="' . esc_attr((string) $event_id) . '" />';
+        echo '<table class="form-table" role="presentation"><tbody>';
+        echo '<tr><th scope="row"><label for="nal_event_name">' . esc_html__('Name', 'net-attendance-logger') . '</label></th><td><input required id="nal_event_name" name="event_name" class="regular-text" value="' . esc_attr($event['name'] ?? '') . '" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_event_type">' . esc_html__('Type', 'net-attendance-logger') . '</label></th><td><input id="nal_event_type" name="event_type" class="regular-text" value="' . esc_attr($event['event_type'] ?? '') . '" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_started_at">' . esc_html__('Started At', 'net-attendance-logger') . '</label></th><td><input id="nal_started_at" name="started_at" class="regular-text" value="' . esc_attr($event['started_at'] ?? '') . '" /><p class="description">' . esc_html__('Use YYYY-MM-DD HH:MM:SS. This updates event metadata only; it does not reopen or modify attendance records.', 'net-attendance-logger') . '</p></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_frequency">' . esc_html__('Frequency', 'net-attendance-logger') . '</label></th><td><input id="nal_frequency" name="frequency" class="regular-text" value="' . esc_attr($event['frequency'] ?? '') . '" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_net_control">' . esc_html__('Net Control', 'net-attendance-logger') . '</label></th><td><input id="nal_net_control" name="net_control" class="regular-text" value="' . esc_attr($event['net_control'] ?? '') . '" /></td></tr>';
+        echo '<tr><th scope="row"><label for="nal_event_notes">' . esc_html__('Notes', 'net-attendance-logger') . '</label></th><td><textarea id="nal_event_notes" name="notes" rows="3" class="large-text">' . esc_textarea($event['notes'] ?? '') . '</textarea></td></tr>';
+        echo '</tbody></table>';
+        submit_button(__('Update Event Details', 'net-attendance-logger'));
+        echo '</form></details>';
     }
 
     private static function render_detail_row(string $label, mixed $value): void

@@ -16,8 +16,8 @@ For DETARC-style role separation, the WordPress site also needs the **Members pl
 
   `POST /wp-json/net-attendance/v1/net-logger/sessions`
 
-- WordPress admin pages for import, reporting, rapid summary entry, and manual attendance-taking.
-- Public shortcode/reporting support documented in the plugin's own docs.
+- WordPress admin pages for import, reporting, rapid summary entry, manual attendance-taking, and event metadata editing.
+- Public shortcode/reporting support documented in the plugin's own docs, including participation snapshot cards, top participants, new participants, milestones, and attendance trend charts.
 
 ## How this relates to Net Logger configuration
 

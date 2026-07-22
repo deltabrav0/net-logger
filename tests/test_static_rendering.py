@@ -744,3 +744,66 @@ def test_station_lookup_hint_previews_unknown_station_when_fcc_misses():
     assert result["calls"] == [["/api/lookup?callsign=K5ZZZ", "GET", ""]]
     assert "Unknown station: <strong>K5ZZZ</strong>" in result["hint"]
     assert "Press Enter to add as callsign-only/check in." in result["hint"]
+
+
+def test_send_wordpress_error_alerts_operator_with_popup():
+    script = """
+const vm = require('node:vm');
+const fs = require('node:fs');
+const code = fs.readFileSync('src/net_logger/static/app.js', 'utf8');
+const elements = new Map();
+const alerts = [];
+const calls = [];
+const makeElement = (id) => ({
+  textContent: '',
+  innerHTML: '',
+  value: '',
+  disabled: false,
+  hidden: false,
+  addEventListener: () => {},
+  classList: { add: () => {}, remove: () => {} },
+});
+const context = {
+  console,
+  alerts,
+  calls,
+  confirm: () => true,
+  alert: (message) => alerts.push(message),
+  document: {
+    addEventListener: () => {},
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    querySelectorAll: () => [],
+  },
+  fetch: async (path, options = {}) => {
+    calls.push([path, options.method || 'GET']);
+    if (path === '/api/sessions/7/send-wordpress') {
+      return {
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        json: async () => ({
+          error: 'WordPress import failed. Confirm the WordPress endpoint URL, username, Application Password, and Net Control role.',
+          details: '<urlopen error [Errno 8] nodename nor servname provided>'
+        }),
+      };
+    }
+    return { ok: true, status: 200, json: async () => ({ sessions: [] }) };
+  },
+};
+vm.createContext(context);
+vm.runInContext(code, context);
+vm.runInContext(`sendSessionToWordPress(7).then(() => {
+  console.log(JSON.stringify({ alerts, status: document.getElementById('status').textContent, calls }));
+});`, context);
+"""
+    result = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert ["/api/sessions/7/send-wordpress", "POST"] in result["calls"]
+    assert len(result["alerts"]) == 1
+    assert "WordPress send failed" in result["alerts"][0]
+    assert "endpoint URL" in result["alerts"][0]
+    assert "nodename nor servname" in result["alerts"][0]
+    assert "WordPress send failed" in result["status"]
