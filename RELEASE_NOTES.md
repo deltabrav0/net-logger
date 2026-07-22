@@ -1,5 +1,18 @@
 # Net Logger Release Notes
 
+## v0.1.3
+
+Release date: 2026-07-22
+
+### Added
+
+- Added WordPress participation reporting for the bundled Net Attendance Logger plugin: participation snapshot, top participants, new participants, and milestone recognition sections with shortcode toggles.
+- Added editable WordPress event metadata for correcting event name, type, start time, frequency, net control, and notes without reopening closed events or changing attendance records.
+
+### Fixed
+
+- Failed Net Logger sends to WordPress now alert the operator with a popup that includes endpoint/connection, HTTP/status, and WordPress response details when available.
+
 ## v0.1.2
 
 Release date: 2026-07-21

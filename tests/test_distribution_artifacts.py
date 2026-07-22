@@ -148,8 +148,8 @@ def test_windows_native_packaging_files_define_pyinstaller_inno_and_ci_build():
     assert "collect_data_files('net_logger')" in spec
     assert "net_logger_launcher.py" in spec
     assert "AppName=Net Logger" in inno
-    assert "AppVersion=0.1.2" in inno
-    assert "OutputBaseFilename=NetLoggerSetup-0.1.2" in inno
+    assert "AppVersion=0.1.3" in inno
+    assert "OutputBaseFilename=NetLoggerSetup-0.1.3" in inno
     assert "Net Logger Data Folder" in inno
     assert "{userappdata}\\Net Logger" in inno
     assert "recursive-include packaging *.py *.spec *.iss *.md" in manifest
@@ -160,7 +160,7 @@ def test_installation_docs_put_windows_installer_first_and_explain_smartscreen()
     dummies = (ROOT / "docs" / "INSTALLATION_FOR_DUMMIES.md").read_text()
 
     assert "## Recommended Windows installation: native installer" in install
-    assert "NetLoggerSetup-0.1.2.exe" in install
+    assert "NetLoggerSetup-0.1.3.exe" in install
     assert "Windows protected your PC" in install
     assert "More info" in install
     assert "Run anyway" in install
@@ -170,7 +170,7 @@ def test_installation_docs_put_windows_installer_first_and_explain_smartscreen()
     assert "PowerShell" in install
 
     assert "Recommended for Windows: use the normal installer" in dummies
-    assert "NetLoggerSetup-0.1.2.exe" in dummies
+    assert "NetLoggerSetup-0.1.3.exe" in dummies
     assert "Windows protected your PC" in dummies
     assert "More info" in dummies
     assert "Run anyway" in dummies

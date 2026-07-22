@@ -36,7 +36,7 @@ Standalone amateur-radio net logger with a simplified two-column Kanban-style ac
 For ordinary Windows users, download the native installer from GitHub Releases:
 
 ```text
-NetLoggerSetup-0.1.2.exe
+NetLoggerSetup-0.1.3.exe
 ```
 
 Run the installer, then start Net Logger from the Start Menu. If Windows SmartScreen says **Windows protected your PC**, use **More info → Run anyway** only when the installer came from the official `deltabrav0/net-logger` GitHub release.
@@ -131,7 +131,7 @@ Or build a wheel:
 
 ```bash
 uv build
-python -m pip install dist/net_logger-0.1.2-py3-none-any.whl
+python -m pip install dist/net_logger-0.1.3-py3-none-any.whl
 net-logger serve
 ```
 

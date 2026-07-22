@@ -19,7 +19,7 @@ You need:
 
 - A Windows, macOS, or Linux computer.
 - A web browser such as Chrome, Edge, Firefox, or Safari.
-- On Windows, the recommended download is the normal installer named `NetLoggerSetup-0.1.2.exe`.
+- On Windows, the recommended download is the normal installer named `NetLoggerSetup-0.1.3.exe`.
 - On macOS/Linux, or for advanced Windows troubleshooting, Python 3.11 or newer is still needed for the command-line installation.
 - If using WordPress export: administrator access to the WordPress site.
 - If using WordPress export: the plugin ZIP file named `net-attendance-logger.zip`.
@@ -41,7 +41,7 @@ Most Windows operators should use the normal installer instead of PowerShell com
 1. Download this file from the official Net Logger GitHub Releases page:
 
    ```text
-   NetLoggerSetup-0.1.2.exe
+   NetLoggerSetup-0.1.3.exe
    ```
 
 2. Double-click the downloaded file.
@@ -55,7 +55,7 @@ If Windows shows a warning that says:
 Windows protected your PC
 ```
 
-that is Microsoft Defender SmartScreen warning you that this is a new, unsigned, low-reputation installer. If you downloaded it from the official `deltabrav0/net-logger` GitHub release and the filename is `NetLoggerSetup-0.1.2.exe`, you may continue this way:
+that is Microsoft Defender SmartScreen warning you that this is a new, unsigned, low-reputation installer. If you downloaded it from the official `deltabrav0/net-logger` GitHub release and the filename is `NetLoggerSetup-0.1.3.exe`, you may continue this way:
 
 1. Click **More info**.
 2. Confirm the app name is Net Logger or NetLoggerSetup.
