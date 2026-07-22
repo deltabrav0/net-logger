@@ -313,6 +313,7 @@ final class Admin_Controller
             'show_leaderboard' => 'yes',
             'show_new_participants' => 'yes',
             'show_milestones' => 'yes',
+            'sections' => 'all',
         ], $atts, 'net_attendance_reports');
 
         ob_start();
@@ -333,6 +334,7 @@ final class Admin_Controller
         $show_leaderboard = strtolower((string) ($atts['show_leaderboard'] ?? 'yes')) !== 'no';
         $show_new_participants = strtolower((string) ($atts['show_new_participants'] ?? 'yes')) !== 'no';
         $show_milestones = strtolower((string) ($atts['show_milestones'] ?? 'yes')) !== 'no';
+        $sections = self::report_sections((string) ($atts['sections'] ?? 'all'));
         $event_names = $repository->list_event_names();
         $report_args = [
             'period' => $period,
@@ -341,12 +343,12 @@ final class Admin_Controller
         $event_filter_args = [
             'event_name' => $event_name,
         ];
-        $series_rows = $repository->report_attendance_series($report_args);
-        $totals = $repository->report_attendance_totals_by_event_name($event_filter_args);
-        $snapshot = $repository->report_participation_snapshot($event_filter_args);
-        $top_participants = $show_leaderboard ? $repository->report_top_participants($event_filter_args + ['limit' => 10]) : [];
-        $new_participants = $show_new_participants ? $repository->report_new_participants($event_filter_args + ['limit' => 10]) : [];
-        $milestones = $show_milestones ? $repository->report_participation_milestones($event_filter_args + ['limit' => 10]) : [];
+        $series_rows = self::section_enabled($sections, 'trends') ? $repository->report_attendance_series($report_args) : [];
+        $totals = self::section_enabled($sections, 'totals') ? $repository->report_attendance_totals_by_event_name($event_filter_args) : [];
+        $snapshot = self::section_enabled($sections, 'snapshot') ? $repository->report_participation_snapshot($event_filter_args) : [];
+        $top_participants = ($show_leaderboard && self::section_enabled($sections, 'leaderboard')) ? $repository->report_top_participants($event_filter_args + ['limit' => 10]) : [];
+        $new_participants = ($show_new_participants && self::section_enabled($sections, 'new_participants')) ? $repository->report_new_participants($event_filter_args + ['limit' => 10]) : [];
+        $milestones = ($show_milestones && self::section_enabled($sections, 'milestones')) ? $repository->report_participation_milestones($event_filter_args + ['limit' => 10]) : [];
         $series_by_event = self::group_series_by_event_name($series_rows);
 
         echo '<h1>' . esc_html__('Net Attendance Reports & Charts', 'net-attendance-logger') . '</h1>';
@@ -359,29 +361,59 @@ final class Admin_Controller
         }
         self::render_reports_styles();
 
-        echo '<h2>' . esc_html__('Participation Snapshot', 'net-attendance-logger') . '</h2>';
-        self::render_participation_snapshot($snapshot);
+        if (self::section_enabled($sections, 'snapshot')) {
+            echo '<h2>' . esc_html__('Participation Snapshot', 'net-attendance-logger') . '</h2>';
+            self::render_participation_snapshot($snapshot);
+        }
 
-        if ($show_leaderboard) {
+        if ($show_leaderboard && self::section_enabled($sections, 'leaderboard')) {
             echo '<h2>' . esc_html__('Top Participants', 'net-attendance-logger') . '</h2>';
             self::render_top_participants_chart($top_participants);
         }
 
-        if ($show_new_participants) {
+        if ($show_new_participants && self::section_enabled($sections, 'new_participants')) {
             echo '<h2>' . esc_html__('New Participants', 'net-attendance-logger') . '</h2>';
             self::render_new_participants($new_participants);
         }
 
-        if ($show_milestones) {
+        if ($show_milestones && self::section_enabled($sections, 'milestones')) {
             echo '<h2>' . esc_html__('Participation Milestones', 'net-attendance-logger') . '</h2>';
             self::render_participation_milestones($milestones);
         }
 
-        echo '<h2>' . esc_html__('Attendance by Net', 'net-attendance-logger') . '</h2>';
-        self::render_totals_chart($totals);
+        if (self::section_enabled($sections, 'totals')) {
+            echo '<h2>' . esc_html__('Attendance by Net', 'net-attendance-logger') . '</h2>';
+            self::render_totals_chart($totals);
+        }
 
-        echo '<h2>' . esc_html__('Attendance Over Time', 'net-attendance-logger') . '</h2>';
-        self::render_series_charts($series_by_event, $period);
+        if (self::section_enabled($sections, 'trends')) {
+            echo '<h2>' . esc_html__('Attendance Over Time', 'net-attendance-logger') . '</h2>';
+            self::render_series_charts($series_by_event, $period);
+        }
+    }
+
+    private static function report_sections(string $value): array
+    {
+        $allowed = ['snapshot', 'leaderboard', 'new_participants', 'milestones', 'totals', 'trends'];
+        $value = strtolower(trim($value));
+        if ($value === '' || $value === 'all') {
+            return $allowed;
+        }
+
+        $sections = [];
+        foreach (preg_split('/[\s,]+/', $value) ?: [] as $section) {
+            $section = sanitize_key($section);
+            if (in_array($section, $allowed, true) && !in_array($section, $sections, true)) {
+                $sections[] = $section;
+            }
+        }
+
+        return $sections ?: $allowed;
+    }
+
+    private static function section_enabled(array $sections, string $section): bool
+    {
+        return in_array($section, $sections, true);
     }
 
     private static function current_user_can_view_reports(): bool

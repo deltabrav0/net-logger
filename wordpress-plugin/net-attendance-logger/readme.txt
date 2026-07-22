@@ -4,7 +4,7 @@ Tags: attendance, amateur radio, nets, meetings, reports
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 8.0
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -78,6 +78,9 @@ Optional shortcode examples:
 [net_attendance_reports show_leaderboard="no"]
 [net_attendance_reports show_new_participants="no"]
 [net_attendance_reports show_milestones="no"]
+[net_attendance_reports sections="snapshot,leaderboard"]
+[net_attendance_reports sections="trends"]
+[net_attendance_reports sections="new_participants,milestones"]
 
 Supported period values:
 
@@ -85,6 +88,8 @@ Supported period values:
 * week
 * month
 * year
+
+Supported section values for split report pages are: snapshot, leaderboard, new_participants, milestones, totals, trends. For example, use sections="snapshot,leaderboard" for a recognition page, sections="trends" for a chart-only trend page, or sections="new_participants,milestones" for a welcome-and-milestones page.
 
 Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.md.
 

@@ -40,11 +40,17 @@ Optional shortcode attributes:
 [net_attendance_reports show_leaderboard="no"]
 [net_attendance_reports show_new_participants="no"]
 [net_attendance_reports show_milestones="no"]
+[net_attendance_reports sections="snapshot,leaderboard"]
+[net_attendance_reports sections="trends"]
+[net_attendance_reports sections="new_participants,milestones"]
 ```
 
 Participation sections default to visible. Use these attributes when a page should emphasize trends over public recognition:
 
-- `show_leaderboard="yes|no"` controls the Top Participants section.
+- `sections="snapshot,leaderboard"` displays only the selected report sections. Supported section values are `snapshot, leaderboard, new_participants, milestones, totals, trends`. Use `sections="all"` or omit the attribute for the full report.
+- `sections="trends"` is useful for a dedicated attendance trend page.
+- `sections="new_participants,milestones"` is useful for a participation-recognition page that avoids the full leaderboard.
+- `show_leaderboard="yes|no"` controls the Top Participants section when `leaderboard` is included in `sections`.
 - `show_new_participants="yes|no"` controls the New Participants section.
 - `show_milestones="yes|no"` controls the Participation Milestones section.
 

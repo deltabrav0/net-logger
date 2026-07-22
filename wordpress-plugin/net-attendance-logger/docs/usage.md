@@ -145,6 +145,7 @@ Supported attributes:
 period="day|week|month|year"
 event_name="Exact imported event name"
 show_filters="yes|no"
+sections="snapshot,leaderboard,new_participants,milestones,totals,trends"
 ```
 
 Examples:
@@ -153,7 +154,12 @@ Examples:
 [net_attendance_reports period="week"]
 [net_attendance_reports period="month" event_name="Weekly Net"]
 [net_attendance_reports period="year" show_filters="no"]
+[net_attendance_reports sections="snapshot,leaderboard"]
+[net_attendance_reports sections="trends"]
+[net_attendance_reports sections="new_participants,milestones"]
 ```
+
+Use `sections` to create separate report pages without custom code. Supported section values are `snapshot, leaderboard, new_participants, milestones, totals, trends`. Omit `sections` or use `sections="all"` for the full report.
 
 If filters are shown, users can change the grouping period and event-name filter in the frontend form. The form submits `period` and `event_name` query parameters to the same page.
 

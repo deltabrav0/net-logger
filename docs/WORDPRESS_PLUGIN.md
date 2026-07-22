@@ -41,6 +41,7 @@ The imported plugin documentation is kept with the plugin:
 - `wordpress-plugin/net-attendance-logger/docs/usage.md` — admin pages, manual attendance, and shortcodes
 - `wordpress-plugin/net-attendance-logger/docs/api.md` — REST endpoints and payloads
 - `wordpress-plugin/net-attendance-logger/docs/reports.md` — report behavior and shortcode access
+- `wordpress-plugin/net-attendance-logger/RELEASE_NOTES.md` — plugin-specific release notes
 - `wordpress-plugin/net-attendance-logger/readme.txt` — WordPress plugin readme
 
 For a non-technical end-to-end checklist covering both Net Logger and WordPress, see [Installation for Dummies](INSTALLATION_FOR_DUMMIES.md).

@@ -14,8 +14,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Plugin Name: Net & Meeting Attendance", text)
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
-        self.assertIn("Version: 0.1.4", text)
-        self.assertIn("define('NAL_VERSION', '0.1.4')", text)
+        self.assertIn("Version: 0.1.5", text)
+        self.assertIn("define('NAL_VERSION', '0.1.5')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -305,6 +305,45 @@ class PluginScaffoldTests(unittest.TestCase):
             "milestone_count",
         ]:
             self.assertIn(token, repo)
+
+    def test_reports_shortcode_supports_sections_attribute_for_separate_chart_pages(self):
+        admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
+        reports = (PLUGIN / "docs" / "reports.md").read_text()
+        readme = (PLUGIN / "readme.txt").read_text()
+
+        for token in [
+            "'sections' => 'all'",
+            "report_sections",
+            "section_enabled($sections, 'snapshot')",
+            "section_enabled($sections, 'leaderboard')",
+            "section_enabled($sections, 'new_participants')",
+            "section_enabled($sections, 'milestones')",
+            "section_enabled($sections, 'totals')",
+            "section_enabled($sections, 'trends')",
+        ]:
+            self.assertIn(token, admin)
+
+        for token in [
+            'sections="snapshot,leaderboard"',
+            'sections="trends"',
+            'sections="new_participants,milestones"',
+            "snapshot, leaderboard, new_participants, milestones, totals, trends",
+        ]:
+            self.assertIn(token, reports)
+            self.assertIn(token, readme)
+
+    def test_plugin_release_notes_document_current_plugin_version(self):
+        notes = PLUGIN / "RELEASE_NOTES.md"
+        self.assertTrue(notes.exists())
+        text = notes.read_text()
+        for token in [
+            "## v0.1.5",
+            "sections=\"snapshot,leaderboard\"",
+            "separate report pages",
+            "## v0.1.4",
+            "participation reporting",
+        ]:
+            self.assertIn(token, text)
 
     def test_event_detail_supports_editing_event_metadata_without_reopening_attendance(self):
         admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
