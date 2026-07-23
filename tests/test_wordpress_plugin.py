@@ -15,8 +15,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
         self.assertIn("NAL_PLUGIN_BASENAME", text)
-        self.assertIn("Version: 0.1.7", text)
-        self.assertIn("define('NAL_VERSION', '0.1.7')", text)
+        self.assertIn("Version: 0.1.8", text)
+        self.assertIn("define('NAL_VERSION', '0.1.8')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -213,6 +213,12 @@ class PluginScaffoldTests(unittest.TestCase):
             "$has_capability",
             "Save API Permissions",
             "Plugin Documentation",
+            "Award Structure",
+            "nal-award-structure",
+            "Bronze — 10 lifetime check-ins",
+            "Current Streak — 3 consecutive ISO weeks",
+            "Net Control — one or more sessions served",
+            "net_attendance_logger_participation_awards",
             "nal-plugin-documentation",
             "docs/usage.md",
             "docs/reports.md",
@@ -388,6 +394,11 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertTrue(notes.exists())
         text = notes.read_text()
         for token in [
+            "## v0.1.8",
+            "Award Structure",
+            "Settings page",
+            "Bronze",
+            "Current Streak",
             "## v0.1.7",
             "[net_attendance_awards]",
             "participation-awards page",
@@ -448,6 +459,8 @@ class PluginScaffoldTests(unittest.TestCase):
             "Rookie",
             "Current Streak",
             "Net Control",
+            "Award Structure",
+            "Settings page",
         ]:
             self.assertIn(token, text)
 
@@ -503,6 +516,8 @@ class PluginScaffoldTests(unittest.TestCase):
             "API Import Permissions",
             "Members plugin by MemberPress",
             "Plugin documentation",
+            "Award Structure",
+            "Settings page",
             "docs/reports.md",
             "Participation Awards",
             "Current Streak",

@@ -78,7 +78,7 @@ Current awards:
 - Net Control — service as net control, counted when the attendance role is `net_control` or the participant callsign matches the event net-control callsign.
 - Current Streak — consecutive ISO weeks with at least one check-in.
 
-Current Streak is calculated across the selected report scope. If `event_name` is supplied, the streak is net-specific; otherwise it is based on participation in any imported net/event during each ISO week.
+Current Streak is calculated across the selected report scope. If `event_name` is supplied, the streak is net-specific; otherwise it is based on participation in any imported net/event during each ISO week. The Settings page includes an Award Structure section that explains the awards for administrators and site operators.
 
 
 ## Standalone participation-awards page

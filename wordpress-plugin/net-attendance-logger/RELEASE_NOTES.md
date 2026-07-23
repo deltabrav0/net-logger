@@ -2,6 +2,12 @@
 
 These notes are specific to the WordPress plugin packaged from `wordpress-plugin/net-attendance-logger`.
 
+## v0.1.8
+
+- Added visible Award Structure documentation to the Net Attendance settings page.
+- Documented how Bronze, Silver, Gold, Century Club, Rookie, Net Control, and Current Streak awards are earned.
+- Noted that developers can customize award labels, icons, and thresholds with the `net_attendance_logger_participation_awards` filter.
+
 ## v0.1.7
 
 - Added a dedicated `[net_attendance_awards]` shortcode for a standalone participation-awards page.

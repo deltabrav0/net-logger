@@ -4,7 +4,7 @@ Tags: attendance, amateur radio, nets, meetings, reports
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 8.0
-Stable tag: 0.1.7
+Stable tag: 0.1.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,7 +93,7 @@ Supported period values:
 
 Supported section values for split report pages are: snapshot, leaderboard, new_participants, milestones, totals, trends. For example, use sections="snapshot,leaderboard" for a recognition page, sections="trends" for a chart-only trend page, or sections="new_participants,milestones" for a welcome-and-milestones page.
 
-Plugin documentation is bundled with the ZIP: docs/installation.md, docs/usage.md, docs/reports.md, docs/api.md, and RELEASE_NOTES.md. Use `[net_attendance_awards]` for a participation-awards page with only recognition cards. Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.md.
+The Settings page includes an Award Structure section explaining Bronze, Silver, Gold, Century Club, Rookie, Net Control, and Current Streak awards. Plugin documentation is bundled with the ZIP: docs/installation.md, docs/usage.md, docs/reports.md, docs/api.md, and RELEASE_NOTES.md. Use `[net_attendance_awards]` for a participation-awards page with only recognition cards. Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.md.
 
 == Access Control ==
 

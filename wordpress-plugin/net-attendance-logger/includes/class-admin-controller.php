@@ -241,10 +241,34 @@ final class Admin_Controller
         submit_button(__('Save API Permissions', 'net-attendance-logger'));
         echo '</form>';
         echo '<p><strong>' . esc_html__('Required capability:', 'net-attendance-logger') . '</strong> <code>' . esc_html(Capabilities::IMPORT) . '</code></p>';
+        self::render_award_structure_documentation();
         self::render_documentation_links();
         echo '</div>';
     }
 
+
+
+    private static function render_award_structure_documentation(): void
+    {
+        $awards = [
+            '🥉 Bronze — 10 lifetime check-ins' => __('First lifetime check-in threshold for regular participation.', 'net-attendance-logger'),
+            '🥈 Silver — 25 lifetime check-ins' => __('Mid-level lifetime recognition for consistent participation.', 'net-attendance-logger'),
+            '🥇 Gold — 50 lifetime check-ins' => __('High lifetime recognition for sustained participation.', 'net-attendance-logger'),
+            '💯 Century Club — 100 lifetime check-ins' => __('Top lifetime recognition for long-term participation.', 'net-attendance-logger'),
+            '⭐ Rookie — first recorded check-in' => __('Welcomes first-time participants in the selected reporting scope.', 'net-attendance-logger'),
+            '🎙️ Net Control — one or more sessions served' => __('Counts records with the net_control role or callsigns matching the event net-control callsign.', 'net-attendance-logger'),
+            '🔥 Current Streak — 3 consecutive ISO weeks' => __('Recognizes current consecutive weekly participation in the selected reporting scope.', 'net-attendance-logger'),
+        ];
+
+        echo '<h2 id="nal-award-structure">' . esc_html__('Award Structure', 'net-attendance-logger') . '</h2>';
+        echo '<p>' . esc_html__('Participation Awards are calculated from attendance records at report time. Summary-only events contribute to aggregate totals, but not to participant awards because they do not contain individual callsigns.', 'net-attendance-logger') . '</p>';
+        echo '<table class="widefat striped" style="max-width: 980px;"><thead><tr><th>' . esc_html__('Award', 'net-attendance-logger') . '</th><th>' . esc_html__('How it is earned', 'net-attendance-logger') . '</th></tr></thead><tbody>';
+        foreach ($awards as $award => $description) {
+            echo '<tr><td><strong>' . esc_html($award) . '</strong></td><td>' . esc_html($description) . '</td></tr>';
+        }
+        echo '</tbody></table>';
+        echo '<p class="description">' . esc_html__('Developers can customize award labels, icons, and thresholds with the net_attendance_logger_participation_awards filter.', 'net-attendance-logger') . '</p>';
+    }
 
     private static function render_documentation_links(): void
     {
