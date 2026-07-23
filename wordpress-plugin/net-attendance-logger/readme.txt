@@ -4,7 +4,7 @@ Tags: attendance, amateur radio, nets, meetings, reports
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 8.0
-Stable tag: 0.1.5
+Stable tag: 0.1.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,7 +25,7 @@ Current MVP capabilities:
 * attendance event metadata editing and event deletion from wp-admin;
 * rapid summary entry for paper logs or historical nets with only date/time, net name, frequency, and head count;
 * simple manual attendance-taking page for use when Net Logger is unavailable;
-* frontend report embedding with the [net_attendance_reports] shortcode, including participation snapshot cards, top participants, new participants, participation milestones, and attendance trend charts.
+* frontend report embedding with the [net_attendance_reports] shortcode, including participation snapshot cards, top participants, new participants, Participation Awards (Bronze, Silver, Gold, Century Club, Rookie, Net Control, and Current Streak), and attendance trend charts.
 
 Current development environment:
 
@@ -91,7 +91,7 @@ Supported period values:
 
 Supported section values for split report pages are: snapshot, leaderboard, new_participants, milestones, totals, trends. For example, use sections="snapshot,leaderboard" for a recognition page, sections="trends" for a chart-only trend page, or sections="new_participants,milestones" for a welcome-and-milestones page.
 
-Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.md.
+Plugin documentation is bundled with the ZIP: docs/installation.md, docs/usage.md, docs/reports.md, docs/api.md, and RELEASE_NOTES.md. Detailed usage and shortcode instructions are in docs/usage.md and docs/reports.md.
 
 == Access Control ==
 

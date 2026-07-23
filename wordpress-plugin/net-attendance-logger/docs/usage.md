@@ -108,9 +108,19 @@ The reports page shows:
 - attendance totals by net/event name;
 - attendance over time;
 - grouping by day, week, month, or year;
-- optional filtering by exact imported event name.
+- optional filtering by exact imported event name;
+- Participation Awards for Bronze, Silver, Gold, Century Club, Rookie, Net Control, and Current Streak recognition.
 
 Reports bucket attendance by `checked_in_at`, falling back to the event `started_at` when a record lacks its own check-in timestamp.
+
+
+### Participation Awards
+
+The Reports & Charts page and `[net_attendance_reports]` shortcode include a Participation Awards section. Awards currently include Bronze, Silver, Gold, Century Club, Rookie, Net Control, and Current Streak.
+
+Current Streak means consecutive ISO weeks with at least one check-in in the selected report scope. Use `event_name` to calculate awards for one net, or omit it for all imported nets/events.
+
+Plugin documentation is also visible from Net Attendance → Settings under Plugin Documentation. The bundled ZIP includes `docs/installation.md`, `docs/usage.md`, `docs/reports.md`, `docs/api.md`, and `RELEASE_NOTES.md`.
 
 ## Shortcodes
 

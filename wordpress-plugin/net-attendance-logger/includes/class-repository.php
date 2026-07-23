@@ -274,6 +274,125 @@ final class Repository
 
     public function report_participation_milestones(array $args = []): array
     {
+        return $this->report_participation_awards($args);
+    }
+
+    public function report_participation_awards(array $args = []): array
+    {
+        $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 25;
+        $awards = [];
+
+        foreach ($this->report_lifetime_awards($args + ['limit' => $limit]) as $row) {
+            $awards[] = $row;
+        }
+        foreach ($this->report_new_participants($args + ['limit' => $limit]) as $row) {
+            $awards[] = $this->award_row($row, 'rookie', 1, __('First recorded check-in', 'net-attendance-logger'));
+        }
+        foreach ($this->report_net_control_awards($args + ['limit' => $limit]) as $row) {
+            $awards[] = $row;
+        }
+        foreach ($this->report_weekly_streaks($args + ['limit' => $limit]) as $row) {
+            $awards[] = $row;
+        }
+
+        usort($awards, static function (array $a, array $b): int {
+            $priority = ['century' => 10, 'gold' => 20, 'silver' => 30, 'bronze' => 40, 'streak' => 50, 'net_control' => 60, 'rookie' => 70];
+            $a_priority = $priority[$a['award_slug'] ?? ''] ?? 99;
+            $b_priority = $priority[$b['award_slug'] ?? ''] ?? 99;
+            if ($a_priority !== $b_priority) {
+                return $a_priority <=> $b_priority;
+            }
+            $metric = ((int) ($b['metric_value'] ?? 0)) <=> ((int) ($a['metric_value'] ?? 0));
+            if ($metric !== 0) {
+                return $metric;
+            }
+            return strcmp((string) ($a['callsign'] ?? ''), (string) ($b['callsign'] ?? ''));
+        });
+
+        return array_slice($awards, 0, $limit);
+    }
+
+    public function report_weekly_streaks(array $args = []): array
+    {
+        global $wpdb;
+        $events = DB::events_table();
+        $records = DB::records_table();
+        $participants = DB::participants_table();
+        [$where, $params] = $this->event_filter_where($args, 'e');
+        $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 25;
+        $definitions = self::participation_awards();
+        $threshold = (int) ($definitions['streak']['threshold'] ?? 3);
+        $sql = "SELECT p.id, p.callsign, p.name,
+                        DATE_FORMAT(COALESCE(r.checked_in_at, e.started_at), '%x-W%v') AS iso_week,
+                        MAX(COALESCE(r.checked_in_at, e.started_at)) AS last_checkin_at
+                 FROM {$participants} p
+                 JOIN {$records} r ON r.participant_id = p.id
+                 JOIN {$events} e ON e.id = r.event_id
+                 {$where}
+                 GROUP BY p.id, iso_week
+                 ORDER BY p.id ASC, iso_week DESC";
+        if ($params) {
+            $sql = $wpdb->prepare($sql, ...$params);
+        }
+        $rows = $wpdb->get_results($sql, ARRAY_A) ?: [];
+        $by_participant = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $by_participant[$id][] = $row;
+            }
+        }
+
+        $awards = [];
+        foreach ($by_participant as $participant_rows) {
+            $streak = 0;
+            $expected = null;
+            foreach ($participant_rows as $row) {
+                $week = (string) ($row['iso_week'] ?? '');
+                if ($week === '') {
+                    continue;
+                }
+                if ($expected !== null && $week !== $expected) {
+                    break;
+                }
+                $streak++;
+                $expected = $this->previous_iso_week($week);
+            }
+            if ($streak >= $threshold) {
+                $awards[] = $this->award_row($participant_rows[0], 'streak', $streak, sprintf(_n('%d consecutive week', '%d consecutive weeks', $streak, 'net-attendance-logger'), $streak));
+            }
+        }
+
+        usort($awards, static fn(array $a, array $b): int => ((int) ($b['metric_value'] ?? 0)) <=> ((int) ($a['metric_value'] ?? 0)));
+        return array_slice($awards, 0, $limit);
+    }
+
+    public function report_net_control_awards(array $args = []): array
+    {
+        global $wpdb;
+        $events = DB::events_table();
+        $records = DB::records_table();
+        $participants = DB::participants_table();
+        [$where, $params] = $this->event_filter_where($args, 'e');
+        $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 25;
+        $sql = "SELECT p.id, p.callsign, p.name, COUNT(DISTINCT e.id) AS net_control_count,
+                        MAX(COALESCE(r.checked_in_at, e.started_at)) AS last_checkin_at
+                 FROM {$participants} p
+                 JOIN {$records} r ON r.participant_id = p.id
+                 JOIN {$events} e ON e.id = r.event_id
+                 {$where}
+                 " . ($where === '' ? 'WHERE' : 'AND') . " (LOWER(r.role) = 'net_control' OR LOWER(p.callsign) = LOWER(e.net_control))
+                 GROUP BY p.id
+                 HAVING net_control_count >= 1
+                 ORDER BY net_control_count DESC, last_checkin_at DESC, p.callsign, p.name
+                 LIMIT %d";
+        $params[] = $limit;
+        $rows = $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A) ?: [];
+        return array_map(fn(array $row): array => $this->award_row($row, 'net_control', (int) ($row['net_control_count'] ?? 0), sprintf(_n('%d session served', '%d sessions served', (int) ($row['net_control_count'] ?? 0), 'net-attendance-logger'), (int) ($row['net_control_count'] ?? 0))), $rows);
+    }
+
+    private function report_lifetime_awards(array $args = []): array
+    {
         global $wpdb;
         $events = DB::events_table();
         $records = DB::records_table();
@@ -281,25 +400,72 @@ final class Repository
         [$where, $params] = $this->event_filter_where($args, 'e');
         $limit = isset($args['limit']) ? max(1, min(100, absint($args['limit']))) : 25;
         $sql = "SELECT p.id, p.callsign, p.name, COUNT(r.id) AS attendance_count,
-                        CASE
-                            WHEN COUNT(r.id) >= 100 THEN 100
-                            WHEN COUNT(r.id) >= 50 THEN 50
-                            WHEN COUNT(r.id) >= 25 THEN 25
-                            WHEN COUNT(r.id) >= 10 THEN 10
-                            WHEN COUNT(r.id) >= 5 THEN 5
-                            ELSE 1
-                        END AS milestone_count,
+                        MIN(r.checked_in_at) AS first_checkin_at,
                         MAX(r.checked_in_at) AS last_checkin_at
                  FROM {$participants} p
                  JOIN {$records} r ON r.participant_id = p.id
                  JOIN {$events} e ON e.id = r.event_id
                  {$where}
                  GROUP BY p.id
-                 HAVING attendance_count >= 5
-                 ORDER BY milestone_count DESC, attendance_count DESC, last_checkin_at DESC, p.callsign, p.name
+                 HAVING attendance_count >= 10
+                 ORDER BY attendance_count DESC, last_checkin_at DESC, p.callsign, p.name
                  LIMIT %d";
         $params[] = $limit;
-        return $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A) ?: [];
+        $rows = $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A) ?: [];
+        $awards = [];
+        foreach ($rows as $row) {
+            $count = (int) ($row['attendance_count'] ?? 0);
+            $slug = 'bronze';
+            foreach (['century', 'gold', 'silver', 'bronze'] as $candidate) {
+                $threshold = (int) (self::participation_awards()[$candidate]['threshold'] ?? 0);
+                if ($count >= $threshold) {
+                    $slug = $candidate;
+                    break;
+                }
+            }
+            $awards[] = $this->award_row($row, $slug, $count, sprintf(_n('%d lifetime check-in', '%d lifetime check-ins', $count, 'net-attendance-logger'), $count));
+        }
+        return $awards;
+    }
+
+    private static function participation_awards(): array
+    {
+        return apply_filters('net_attendance_logger_participation_awards', [
+            'bronze' => ['award_slug' => 'bronze', 'award_label' => 'Bronze', 'emoji' => '🥉', 'type' => 'lifetime_checkins', 'threshold' => 10],
+            'silver' => ['award_slug' => 'silver', 'award_label' => 'Silver', 'emoji' => '🥈', 'type' => 'lifetime_checkins', 'threshold' => 25],
+            'gold' => ['award_slug' => 'gold', 'award_label' => 'Gold', 'emoji' => '🥇', 'type' => 'lifetime_checkins', 'threshold' => 50],
+            'century' => ['award_slug' => 'century', 'award_label' => 'Century Club', 'emoji' => '💯', 'type' => 'lifetime_checkins', 'threshold' => 100],
+            'rookie' => ['award_slug' => 'rookie', 'award_label' => 'Rookie', 'emoji' => '⭐', 'type' => 'first_checkin'],
+            'net_control' => ['award_slug' => 'net_control', 'award_label' => 'Net Control', 'emoji' => '🎙️', 'type' => 'net_control_sessions', 'threshold' => 1],
+            'streak' => ['award_slug' => 'streak', 'award_label' => 'Current Streak', 'emoji' => '🔥', 'type' => 'weekly_streak', 'threshold' => 3],
+        ]);
+    }
+
+    private function award_row(array $row, string $slug, int $metric_value, string $metric_label): array
+    {
+        $definition = self::participation_awards()[$slug] ?? ['award_label' => ucfirst($slug), 'emoji' => ''];
+        return [
+            'id' => (int) ($row['id'] ?? 0),
+            'callsign' => (string) ($row['callsign'] ?? ''),
+            'name' => (string) ($row['name'] ?? ''),
+            'award_slug' => $slug,
+            'award_label' => (string) ($definition['award_label'] ?? ucfirst($slug)),
+            'emoji' => (string) ($definition['emoji'] ?? ''),
+            'metric_value' => $metric_value,
+            'metric_label' => $metric_label,
+            'attendance_count' => (int) ($row['attendance_count'] ?? $metric_value),
+            'last_checkin_at' => (string) ($row['last_checkin_at'] ?? ''),
+        ];
+    }
+
+    private function previous_iso_week(string $week): ?string
+    {
+        if (!preg_match('/^(\d{4})-W(\d{2})$/', $week, $matches)) {
+            return null;
+        }
+        $date = new \DateTimeImmutable();
+        $date = $date->setISODate((int) $matches[1], (int) $matches[2], 1)->modify('-1 week');
+        return $date->format('o-\\WW');
     }
 
     public function list_event_names(): array

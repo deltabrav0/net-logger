@@ -241,7 +241,26 @@ final class Admin_Controller
         submit_button(__('Save API Permissions', 'net-attendance-logger'));
         echo '</form>';
         echo '<p><strong>' . esc_html__('Required capability:', 'net-attendance-logger') . '</strong> <code>' . esc_html(Capabilities::IMPORT) . '</code></p>';
+        self::render_documentation_links();
         echo '</div>';
+    }
+
+
+    private static function render_documentation_links(): void
+    {
+        echo '<h2 id="nal-plugin-documentation">' . esc_html__('Plugin Documentation', 'net-attendance-logger') . '</h2>';
+        echo '<p>' . esc_html__('Bundled documentation is included in the plugin ZIP for administrators and site operators.', 'net-attendance-logger') . '</p>';
+        echo '<ul>';
+        foreach ([
+            'docs/installation.md' => __('Installation and configuration', 'net-attendance-logger'),
+            'docs/usage.md' => __('Operator usage guide', 'net-attendance-logger'),
+            'docs/reports.md' => __('Reports, shortcode examples, and participation awards', 'net-attendance-logger'),
+            'docs/api.md' => __('REST API import reference', 'net-attendance-logger'),
+            'RELEASE_NOTES.md' => __('Plugin release notes', 'net-attendance-logger'),
+        ] as $path => $label) {
+            echo '<li><code>' . esc_html($path) . '</code> — ' . esc_html($label) . '</li>';
+        }
+        echo '</ul>';
     }
 
     public static function render_take_attendance_page(): void
@@ -348,7 +367,7 @@ final class Admin_Controller
         $snapshot = self::section_enabled($sections, 'snapshot') ? $repository->report_participation_snapshot($event_filter_args) : [];
         $top_participants = ($show_leaderboard && self::section_enabled($sections, 'leaderboard')) ? $repository->report_top_participants($event_filter_args + ['limit' => 10]) : [];
         $new_participants = ($show_new_participants && self::section_enabled($sections, 'new_participants')) ? $repository->report_new_participants($event_filter_args + ['limit' => 10]) : [];
-        $milestones = ($show_milestones && self::section_enabled($sections, 'milestones')) ? $repository->report_participation_milestones($event_filter_args + ['limit' => 10]) : [];
+        $milestones = ($show_milestones && self::section_enabled($sections, 'milestones')) ? $repository->report_participation_awards($event_filter_args + ['limit' => 12]) : [];
         $series_by_event = self::group_series_by_event_name($series_rows);
 
         echo '<h1>' . esc_html__('Net Attendance Reports & Charts', 'net-attendance-logger') . '</h1>';
@@ -377,7 +396,7 @@ final class Admin_Controller
         }
 
         if ($show_milestones && self::section_enabled($sections, 'milestones')) {
-            echo '<h2>' . esc_html__('Participation Milestones', 'net-attendance-logger') . '</h2>';
+            echo '<h2>' . esc_html__('Participation Awards', 'net-attendance-logger') . '</h2>';
             self::render_participation_milestones($milestones);
         }
 
@@ -508,16 +527,16 @@ final class Admin_Controller
     private static function render_participation_milestones(array $milestones): void
     {
         if (!$milestones) {
-            echo '<div class="notice notice-info inline"><p>' . esc_html__('No participants have reached a 5-check-in milestone for the selected filters yet.', 'net-attendance-logger') . '</p></div>';
+            echo '<div class="notice notice-info inline"><p>' . esc_html__('No participation awards are available for the selected filters yet.', 'net-attendance-logger') . '</p></div>';
             return;
         }
 
         echo '<div class="nal-milestone-grid">';
         foreach ($milestones as $row) {
-            $milestone = (int) ($row['milestone_count'] ?? 0);
-            $label = sprintf(_n('%d check-in', '%d check-ins', $milestone, 'net-attendance-logger'), $milestone);
+            $label = trim((string) ($row['emoji'] ?? '') . ' ' . (string) ($row['award_label'] ?? __('Award', 'net-attendance-logger')));
+            $metric = (string) ($row['metric_label'] ?? '');
             $name = trim((string) ($row['callsign'] ?? '') . (!empty($row['name']) ? ' — ' . (string) $row['name'] : ''));
-            echo '<div class="nal-milestone-card"><div class="nal-milestone-badge">' . esc_html($label) . '</div><strong>' . esc_html($name ?: __('Unknown participant', 'net-attendance-logger')) . '</strong><br><span>' . esc_html(sprintf(__('Total: %d', 'net-attendance-logger'), (int) ($row['attendance_count'] ?? 0))) . '</span></div>';
+            echo '<div class="nal-milestone-card"><div class="nal-milestone-badge">' . esc_html($label) . '</div><strong>' . esc_html($name ?: __('Unknown participant', 'net-attendance-logger')) . '</strong><br><span>' . esc_html($metric) . '</span></div>';
         }
         echo '</div>';
     }

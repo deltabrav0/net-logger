@@ -14,8 +14,9 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Plugin Name: Net & Meeting Attendance", text)
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
-        self.assertIn("Version: 0.1.5", text)
-        self.assertIn("define('NAL_VERSION', '0.1.5')", text)
+        self.assertIn("NAL_PLUGIN_BASENAME", text)
+        self.assertIn("Version: 0.1.6", text)
+        self.assertIn("define('NAL_VERSION', '0.1.6')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -62,6 +63,9 @@ class PluginScaffoldTests(unittest.TestCase):
             "report_participation_snapshot",
             "report_new_participants",
             "report_participation_milestones",
+            "report_participation_awards",
+            "report_weekly_streaks",
+            "report_net_control_awards",
             "list_event_names",
             "report_attendance_series",
             "report_attendance_totals_by_event_name",
@@ -205,6 +209,11 @@ class PluginScaffoldTests(unittest.TestCase):
             "Capabilities::IMPORT",
             "$has_capability",
             "Save API Permissions",
+            "Plugin Documentation",
+            "nal-plugin-documentation",
+            "docs/usage.md",
+            "docs/reports.md",
+            "docs/api.md",
             "handle_start_event",
             "handle_add_checkin",
             "handle_update_checkin",
@@ -280,14 +289,14 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("nal-report-filter-submit", admin)
         self.assertNotIn("submit_button(__('Apply Filters'", admin)
 
-    def test_reports_include_participation_snapshot_leaderboard_newcomers_and_milestones(self):
+    def test_reports_include_participation_snapshot_leaderboard_newcomers_and_awards(self):
         admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
         repo = (PLUGIN / "includes" / "class-repository.php").read_text()
         for token in [
             "Participation Snapshot",
             "Top Participants",
             "New Participants",
-            "Participation Milestones",
+            "Participation Awards",
             "render_participation_snapshot",
             "render_top_participants_chart",
             "render_new_participants",
@@ -298,11 +307,24 @@ class PluginScaffoldTests(unittest.TestCase):
         ]:
             self.assertIn(token, admin)
         for token in [
+            "function participation_awards",
+            "net_attendance_logger_participation_awards",
+            "'bronze'",
+            "'silver'",
+            "'gold'",
+            "'century'",
+            "'rookie'",
+            "'net_control'",
+            "'streak'",
             "COUNT(DISTINCT p.id) AS distinct_participants",
             "MIN(r.checked_in_at) AS first_checkin_at",
             "MAX(r.checked_in_at) AS last_checkin_at",
-            "HAVING attendance_count >= 5",
-            "milestone_count",
+            "DATE_FORMAT(COALESCE(r.checked_in_at, e.started_at), '%x-W%v')",
+            "LOWER(r.role) = 'net_control'",
+            "LOWER(p.callsign) = LOWER(e.net_control)",
+            "award_slug",
+            "award_label",
+            "metric_label",
         ]:
             self.assertIn(token, repo)
 
@@ -337,11 +359,14 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertTrue(notes.exists())
         text = notes.read_text()
         for token in [
+            "## v0.1.6",
+            "Participation Awards",
+            "Bronze",
+            "Current Streak",
+            "Net Control",
             "## v0.1.5",
             "sections=\"snapshot,leaderboard\"",
             "separate report pages",
-            "## v0.1.4",
-            "participation reporting",
         ]:
             self.assertIn(token, text)
 
@@ -379,10 +404,18 @@ class PluginScaffoldTests(unittest.TestCase):
             "Participation Snapshot",
             "Top Participants",
             "New Participants",
-            "Participation Milestones",
+            "Participation Awards",
             "show_leaderboard=\"yes|no\"",
             "show_new_participants=\"yes|no\"",
             "show_milestones=\"yes|no\"",
+            "Participation Awards",
+            "Bronze",
+            "Silver",
+            "Gold",
+            "Century Club",
+            "Rookie",
+            "Current Streak",
+            "Net Control",
         ]:
             self.assertIn(token, text)
 
@@ -437,6 +470,10 @@ class PluginScaffoldTests(unittest.TestCase):
             "import_net_attendance",
             "API Import Permissions",
             "Members plugin by MemberPress",
+            "Plugin documentation",
+            "docs/reports.md",
+            "Participation Awards",
+            "Current Streak",
         ]:
             self.assertIn(token, readme_text)
 

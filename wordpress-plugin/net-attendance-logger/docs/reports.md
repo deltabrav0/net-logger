@@ -15,7 +15,7 @@ The page supports:
 - Participation Snapshot cards for event count, total check-ins, distinct participants, and average attendance;
 - Top Participants recognition using participant-level check-in counts;
 - New Participants so recent first-time check-ins can be welcomed;
-- Participation Milestones for operators who have reached 5, 10, 25, 50, or 100 check-ins;
+- Participation Awards for Bronze, Silver, Gold, Century Club, Rookie, Net Control service, and Current Streak recognition;
 - attendance totals by net name;
 - attendance-over-time charts;
 - grouping by day, week, month, or year;
@@ -52,7 +52,7 @@ Participation sections default to visible. Use these attributes when a page shou
 - `sections="new_participants,milestones"` is useful for a participation-recognition page that avoids the full leaderboard.
 - `show_leaderboard="yes|no"` controls the Top Participants section when `leaderboard` is included in `sections`.
 - `show_new_participants="yes|no"` controls the New Participants section.
-- `show_milestones="yes|no"` controls the Participation Milestones section.
+- `show_milestones="yes|no"` controls the Participation Awards section.
 
 Supported `period` values:
 
@@ -62,6 +62,23 @@ Supported `period` values:
 - `year`
 
 When filters are shown, the frontend form submits `period` and `event_name` query parameters to the same page.
+
+
+## Participation Awards
+
+The awards section is intentionally lightweight gamification. It recognizes participation and service without adding a separate points table. Award definitions are centralized in code and can be customized by developers with the `net_attendance_logger_participation_awards` WordPress filter.
+
+Current awards:
+
+- Bronze — 10 lifetime check-ins.
+- Silver — 25 lifetime check-ins.
+- Gold — 50 lifetime check-ins.
+- Century Club — 100 lifetime check-ins.
+- Rookie — first recorded check-in, useful for welcoming new participants.
+- Net Control — service as net control, counted when the attendance role is `net_control` or the participant callsign matches the event net-control callsign.
+- Current Streak — consecutive ISO weeks with at least one check-in.
+
+Current Streak is calculated across the selected report scope. If `event_name` is supplied, the streak is net-specific; otherwise it is based on participation in any imported net/event during each ISO week.
 
 ## Linking from a WordPress menu
 
