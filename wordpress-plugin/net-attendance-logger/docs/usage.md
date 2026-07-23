@@ -195,6 +195,25 @@ Suggested content:
 [net_attendance_reports]
 ```
 
+
+## Standalone participation-awards page
+
+Create a page for awards only by adding this shortcode:
+
+```text
+[net_attendance_awards]
+```
+
+Useful variations:
+
+```text
+[net_attendance_awards event_name="Weekly Net"]
+[net_attendance_awards show_filters="no"]
+[net_attendance_awards limit="20"]
+```
+
+Use this when you want a participation-awards page without the snapshot, leaderboard, new-participants, totals, or trend charts.
+
 ## Troubleshooting shortcode publishing
 
 If WordPress reports:

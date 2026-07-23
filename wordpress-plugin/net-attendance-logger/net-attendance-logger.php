@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Net & Meeting Attendance
  * Description: Store, import, report, and display attendance for radio nets and meetings.
- * Version: 0.1.6
+ * Version: 0.1.7
  * Author: Danny Butler
  * Text Domain: net-attendance-logger
  * Requires at least: 6.0
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('NAL_VERSION', '0.1.6');
+define('NAL_VERSION', '0.1.7');
 define('NAL_PLUGIN_FILE', __FILE__);
 define('NAL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('NAL_PLUGIN_URL', plugin_dir_url(__FILE__));

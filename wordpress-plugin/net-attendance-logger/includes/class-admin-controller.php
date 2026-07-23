@@ -342,6 +342,31 @@ final class Admin_Controller
         return (string) ob_get_clean();
     }
 
+
+    public static function render_awards_shortcode($atts = []): string
+    {
+        $atts = is_array($atts) ? $atts : [];
+
+        if (!self::current_user_can_view_reports()) {
+            if (!is_user_logged_in()) {
+                return '<p class="net-attendance-awards-login-required">' . esc_html__('Please log in with a DETARC Member account to view these participation awards.', 'net-attendance-logger') . '</p>';
+            }
+            return '<p class="net-attendance-awards-not-authorized">' . esc_html__('You do not have permission to view these net attendance participation awards.', 'net-attendance-logger') . '</p>';
+        }
+
+        $atts = shortcode_atts([
+            'event_name' => '',
+            'show_filters' => 'yes',
+            'limit' => '12',
+        ], $atts, 'net_attendance_awards');
+
+        ob_start();
+        echo '<div class="net-attendance-awards">';
+        self::render_awards_content($atts);
+        echo '</div>';
+        return (string) ob_get_clean();
+    }
+
     private static function render_reports_content(bool $admin_context, array $atts = []): void
     {
         $repository = new Repository();
@@ -409,6 +434,43 @@ final class Admin_Controller
             echo '<h2>' . esc_html__('Attendance Over Time', 'net-attendance-logger') . '</h2>';
             self::render_series_charts($series_by_event, $period);
         }
+    }
+
+
+    private static function render_awards_content(array $atts = []): void
+    {
+        $repository = new Repository();
+        $event_name_source = isset($_GET['event_name']) ? (string) wp_unslash($_GET['event_name']) : (string) ($atts['event_name'] ?? '');
+        $event_name = sanitize_text_field($event_name_source);
+        $show_filters = strtolower((string) ($atts['show_filters'] ?? 'yes')) !== 'no';
+        $limit = isset($atts['limit']) ? max(1, min(100, absint($atts['limit']))) : 12;
+        $event_names = $show_filters ? $repository->list_event_names() : [];
+        $awards = $repository->report_participation_awards([
+            'event_name' => $event_name,
+            'limit' => $limit,
+        ]);
+
+        echo '<h1>' . esc_html__('Participation Awards', 'net-attendance-logger') . '</h1>';
+        echo '<p>' . esc_html__('Recognize check-in milestones, rookie participation, net-control service, and current weekly streaks.', 'net-attendance-logger') . '</p>';
+        self::render_reports_styles();
+        if ($show_filters) {
+            self::render_awards_filter_form($event_name, $event_names);
+        }
+        self::render_participation_milestones($awards);
+    }
+
+    private static function render_awards_filter_form(string $event_name, array $event_names): void
+    {
+        echo '<form method="get" style="margin: 16px 0 24px; padding: 12px; background: #fff; border: 1px solid #ccd0d4; display: flex; gap: 16px; align-items: end; flex-wrap: wrap;">';
+        echo '<label><span style="display:block; font-weight:600; margin-bottom:4px;">' . esc_html__('Net name', 'net-attendance-logger') . '</span>';
+        echo '<select name="event_name">';
+        echo '<option value="">' . esc_html__('All nets', 'net-attendance-logger') . '</option>';
+        foreach ($event_names as $name) {
+            echo '<option value="' . esc_attr($name) . '"' . selected($event_name, $name, false) . '>' . esc_html($name) . '</option>';
+        }
+        echo '</select></label>';
+        echo '<button class="button nal-report-filter-submit" type="submit">' . esc_html__('Apply Filter', 'net-attendance-logger') . '</button>';
+        echo '</form>';
     }
 
     private static function report_sections(string $value): array

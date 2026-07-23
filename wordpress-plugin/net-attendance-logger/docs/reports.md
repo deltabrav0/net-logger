@@ -80,6 +80,25 @@ Current awards:
 
 Current Streak is calculated across the selected report scope. If `event_name` is supplied, the streak is net-specific; otherwise it is based on participation in any imported net/event during each ISO week.
 
+
+## Standalone participation-awards page
+
+Create a page for awards only by adding this shortcode:
+
+```text
+[net_attendance_awards]
+```
+
+Useful variations:
+
+```text
+[net_attendance_awards event_name="Weekly Net"]
+[net_attendance_awards show_filters="no"]
+[net_attendance_awards limit="20"]
+```
+
+Use this when you want a participation-awards page without the snapshot, leaderboard, new-participants, totals, or trend charts.
+
 ## Linking from a WordPress menu
 
 Recommended approach:

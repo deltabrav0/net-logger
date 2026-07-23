@@ -15,8 +15,8 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("Text Domain: net-attendance-logger", text)
         self.assertIn("Net_Attendance_Logger\\Plugin::init", text)
         self.assertIn("NAL_PLUGIN_BASENAME", text)
-        self.assertIn("Version: 0.1.6", text)
-        self.assertIn("define('NAL_VERSION', '0.1.6')", text)
+        self.assertIn("Version: 0.1.7", text)
+        self.assertIn("define('NAL_VERSION', '0.1.7')", text)
 
     def test_plugin_loader_and_public_css_exist(self):
         self.assertTrue((PLUGIN / "includes" / "class-plugin.php").exists())
@@ -173,6 +173,7 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertIn("includes/class-admin-controller.php", plugin_text)
         self.assertIn("Admin_Controller::register", plugin_text)
         self.assertIn("add_shortcode('net_attendance_reports'", plugin_text)
+        self.assertIn("add_shortcode('net_attendance_awards'", plugin_text)
         admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
         for token in [
             "add_menu_page",
@@ -189,6 +190,8 @@ class PluginScaffoldTests(unittest.TestCase):
             "render_import_page",
             "render_reports_page",
             "render_reports_shortcode",
+            "render_awards_shortcode",
+            "render_awards_content",
             "render_take_attendance_page",
             "render_settings_page",
             "render_rapid_entry_page",
@@ -328,6 +331,32 @@ class PluginScaffoldTests(unittest.TestCase):
         ]:
             self.assertIn(token, repo)
 
+
+    def test_participation_awards_shortcode_renders_awards_only(self):
+        plugin_text = (PLUGIN / "includes" / "class-plugin.php").read_text()
+        admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
+        reports = (PLUGIN / "docs" / "reports.md").read_text()
+        usage = (PLUGIN / "docs" / "usage.md").read_text()
+        readme = (PLUGIN / "readme.txt").read_text()
+
+        self.assertIn("add_shortcode('net_attendance_awards'", plugin_text)
+        for token in [
+            "function render_awards_shortcode($atts = [])",
+            "shortcode_atts",
+            "net_attendance_awards",
+            "render_awards_content",
+            "report_participation_awards",
+            "show_filters",
+            "limit",
+            "Participation Awards",
+            "net-attendance-awards",
+        ]:
+            self.assertIn(token, admin)
+
+        for doc in [reports, usage, readme]:
+            self.assertIn("[net_attendance_awards]", doc)
+            self.assertIn("participation-awards page", doc)
+
     def test_reports_shortcode_supports_sections_attribute_for_separate_chart_pages(self):
         admin = (PLUGIN / "includes" / "class-admin-controller.php").read_text()
         reports = (PLUGIN / "docs" / "reports.md").read_text()
@@ -359,6 +388,9 @@ class PluginScaffoldTests(unittest.TestCase):
         self.assertTrue(notes.exists())
         text = notes.read_text()
         for token in [
+            "## v0.1.7",
+            "[net_attendance_awards]",
+            "participation-awards page",
             "## v0.1.6",
             "Participation Awards",
             "Bronze",

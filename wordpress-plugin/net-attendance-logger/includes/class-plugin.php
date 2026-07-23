@@ -28,6 +28,7 @@ final class Plugin
         add_action('wp_enqueue_scripts', [self::class, 'register_public_assets']);
         add_filter('plugin_action_links_' . NAL_PLUGIN_BASENAME, [self::class, 'plugin_action_links']);
         add_shortcode('net_attendance_reports', [Admin_Controller::class, 'render_reports_shortcode']);
+        add_shortcode('net_attendance_awards', [Admin_Controller::class, 'render_awards_shortcode']);
         Rest_Controller::register();
         Admin_Controller::register();
     }

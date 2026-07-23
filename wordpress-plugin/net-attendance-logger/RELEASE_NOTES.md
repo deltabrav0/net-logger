@@ -2,6 +2,12 @@
 
 These notes are specific to the WordPress plugin packaged from `wordpress-plugin/net-attendance-logger`.
 
+## v0.1.7
+
+- Added a dedicated `[net_attendance_awards]` shortcode for a standalone participation-awards page.
+- Supported awards-only shortcode attributes: `event_name`, `show_filters`, and `limit`.
+- Updated bundled readme and reports/usage docs with awards-only page examples.
+
 ## v0.1.6
 
 - Added Participation Awards as a scalable award-definition layer using `net_attendance_logger_participation_awards`.
